@@ -71,6 +71,139 @@
 (defonce watcher-just-started (atom true))
 (defonce throw-on-gl-error (atom true))
 
+(defn- slurp-fs
+  "do whatever it takes to modify shadertoy fragment shader source to
+  be useable"
+  [locals filename]
+  (let [{:keys [tex-types]} @locals
+        ;;file-str (slurp filename)
+        file-str (str "#version 150\n"
+                      "uniform vec3      iResolution;\n"
+                      "uniform float     iGlobalTime;\n"
+                      "uniform float     iChannelTime[4];\n"
+                      "uniform vec3      iChannelResolution[4];\n"
+;;                       "uniform vec4      iMouse; \n"
+                      ; (uniform-sampler-type-str tex-types 0)
+                      ; (uniform-sampler-type-str tex-types 1)
+                      ; (uniform-sampler-type-str tex-types 2)
+                      ; (uniform-sampler-type-str tex-types 3)
+                      ; "uniform sampler2D iCam0; \n"
+                      ; "uniform sampler2D iCam1; \n"
+                      ; "uniform sampler2D iCam2; \n"
+                      ; "uniform sampler2D iCam3; \n"
+                      ; "uniform sampler2D iCam4; \n"
+                      ; "uniform sampler2D iVideo0; \n"
+                      ; "uniform sampler2D iVideo1; \n"
+                      ; "uniform sampler2D iVideo2; \n"
+                      ; "uniform sampler2D iVideo3; \n"
+                      ; "uniform sampler2D iVideo4; \n"
+                      ; "uniform vec4      iDate;\n"
+                      ; "uniform sampler2D iFftWave; \n"
+                      ; "uniform float iDataArray[256]; \n"
+                      ; "uniform sampler2D iPreviousFrame; \n"
+                      ; "uniform sampler2D iText; \n"
+                      "\n"
+                      (slurp filename))]
+    file-str))
+
+(defn- init-window
+  "Initialise a shader-powered window with the specified
+   display-mode. If true-fullscreen? is true, fullscreen mode is
+   attempted if the display-mode is compatible. See display-modes for a
+   list of available modes and fullscreen-display-modes for a list of
+   fullscreen compatible modes.."
+  [locals display-mode title shader-filename shader-str-atom tex-filenames cams videos true-fullscreen? display-sync-hz]
+    (when-not (org.lwjgl.glfw.GLFW/glfwInit)
+    (throw (IllegalStateException. "Unable to initialize GLFW")))
+
+    (let [
+        width               (nth display-mode 0) ;(:width @locals)
+        height              (nth display-mode 1);(:height @locals)
+        monitor             (org.lwjgl.glfw.GLFW/glfwGetPrimaryMonitor)
+        mode                (org.lwjgl.glfw.GLFW/glfwGetVideoMode monitor)
+        current-time-millis (System/currentTimeMillis)
+        ;tex-filenames       (fill-filenames tex-filenames no-textures)
+        ;videos              (fill-filenames videos no-videos)
+        ;cams                (sort-cams cams)
+        ;tttt                (sort-videos locals videos)
+        ;tex-types           (map get-texture-type tex-filenames)
+        ]
+        (swap! locals
+           assoc
+           :active          :yes
+           :width           width
+           :height          height
+           :title           title
+           :display-sync-hz display-sync-hz
+           :start-time      current-time-millis
+           :last-time       current-time-millis
+           :shader-filename shader-filename
+           :shader-str-atom shader-str-atom
+           :tex-filenames   tex-filenames
+           :cams            cams
+           :videos          videos
+           ;:tex-types       tex-types
+           )
+        (println "begin shader slurping")
+        (let [shader-str (if (nil? shader-filename)
+                       @shader-str-atom
+                       (slurp-fs locals (:shader-filename @locals)))])
+
+        (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        ;(org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_PROFILE        org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
+        ;(org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT org.lwjgl.glfw.GLFW/GLFW_FALSE)
+         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR 3)
+         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MINOR 1)
+
+        (swap! locals assoc
+           :window (org.lwjgl.glfw.GLFW/glfwCreateWindow width height title 0 0))
+            (when (= (:window @locals) nil)
+            (throw (RuntimeException. "Failed to create the GLFW window")))
+        (swap! locals assoc
+           :keyCallback
+           (proxy [GLFWKeyCallback] []
+             (invoke [window key scancode action mods]
+               (when (and (= key org.lwjgl.glfw.GLFW/GLFW_KEY_ESCAPE)
+                          (= action org.lwjgl.glfw.GLFW/GLFW_RELEASE))
+                            (org.lwjgl.glfw.GLFW/glfwSetWindowShouldClose (:window @locals) true)))))
+        (org.lwjgl.glfw.GLFW/glfwSetKeyCallback (:window @locals) (:keyCallback @locals))
+        (org.lwjgl.glfw.GLFW/glfwMakeContextCurrent (:window @locals))
+        (org.lwjgl.glfw.GLFW/glfwSwapInterval 2)
+        (org.lwjgl.glfw.GLFW/glfwShowWindow (:window @locals))))
+
+(defn- run-thread
+  [locals mode shader-filename shader-str-atom tex-filenames cams videos title true-fullscreen? display-sync-hz]
+  (println "init-window")
+  (init-window locals mode title shader-filename shader-str-atom tex-filenames cams videos true-fullscreen? display-sync-hz)
+  ;(println "init-gl")
+  ;(init-gl locals)
+  ; (reset! (:frameCount @locals) 0)
+  ; (try-reload-shader locals)
+  ; (let [startTime               (atom (System/nanoTime))]
+  ;   (println "start thread")
+  ; (while (and (= :yes (:active @locals))
+  ;             (not (org.lwjgl.glfw.GLFW/glfwWindowShouldClose (:window @locals))))
+  ;
+  ;   ;(time (do
+  ;   (reset! startTime (System/nanoTime))
+  ;   (update-and-draw locals)
+  ;   (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
+  ;   (org.lwjgl.glfw.GLFW/glfwPollEvents)
+  ;   ;(write-text (str (- (System/nanoTime) @startTime) ) 300 800 10 100 100 0 50 1 true)
+  ;   (Thread/sleep  (sleepTime @startTime (System/nanoTime) display-sync-hz))
+  ;   ;(write-text (str (- (System/nanoTime) @startTime) ) 300 800 10 100 100 0 50 1 true)
+  ;   ;))
+  ;   )
+  ;   (destroy-gl locals)
+  ;   (.free (:keyCallback @locals))
+  ;   (org.lwjgl.glfw.GLFW/glfwPollEvents)
+  ;   (org.lwjgl.glfw.GLFW/glfwDestroyWindow (:window @locals))
+  ;   (org.lwjgl.glfw.GLFW/glfwPollEvents)
+  ;   (swap! locals assoc :active :no))
+  )
 
 
 (defn- files-exist
@@ -193,20 +326,17 @@
       (reset! the-window-state default-state-values)
 
       ;; start the requested shader
-      ; (.start (Thread.
-      ;          (fn [] (run-thread the-window-state
-      ;                            mode
-      ;                            shader-filename
-      ;                            shader-str-atom
-      ;                            textures
-      ;                            cams
-      ;                            videos
-      ;                            title
-      ;                            true-fullscreen?
-      ;                            user-fn
-      ;                            display-sync-hz))))
-
-                                 )))
+      (.start (Thread.
+               (fn [] (run-thread the-window-state
+                                 mode
+                                 shader-filename
+                                 shader-str-atom
+                                 textures
+                                 cams
+                                 videos
+                                 title
+                                 true-fullscreen?
+                                 display-sync-hz)))))))
 
 
 (defn start
