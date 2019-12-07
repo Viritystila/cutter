@@ -139,7 +139,6 @@
     (if (not (future-cancel f))
       (println "ERROR: unable to stop-watcher!"))))
 
-
 (defn active?
   "Returns true if the shader display is currently running"
   []
@@ -191,11 +190,7 @@
         (add-watch shader-str-atom :shader-str-watch watch-shader-str-atom))
 
       ;; set a global window-state instead of creating a new one
-      ;(reset! the-window-state default-state-values)
-
-      ;; set user data
-
-      ;(reset! shader-user-data user-data)
+      (reset! the-window-state default-state-values)
 
       ;; start the requested shader
       ; (.start (Thread.
