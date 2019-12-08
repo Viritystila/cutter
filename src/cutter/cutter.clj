@@ -5,6 +5,7 @@
             [watchtower.core :as watcher]
             [clojure.java.io :as io]
             [while-let.core :as while-let]
+            [cutter.shader :refer :all]
             [clojure.core.async
              :as async
              :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
@@ -57,80 +58,18 @@
     :shader-str              ""
     :vs-id                   0
     :fs-id                   0
-    :pgm-id                  0})
+    :pgm-id                  0
+    ;; shader uniforms
+    :i-resolution-loc        0
+    :i-global-time-loc       0
+    :i-channel-time-loc      0})
 
 ;; GLOBAL STATE ATOMS
 (defonce the-window-state (atom default-state-values))
-;; The reload-shader atom communicates across the gl & watcher threads
-(defonce reload-shader (atom false))
-(defonce reload-shader-str (atom ""))
-;; Atom for the directory watcher future
-(defonce watcher-future (atom (future (fn [] nil))))
-;; Flag to help avoid reloading shader right after loading it for the
-;; first time.
-(defonce watcher-just-started (atom true))
-(defonce throw-on-gl-error (atom true))
-
-(defn- slurp-fs
-  "do whatever it takes to modify shadertoy fragment shader source to
-  be useable"
-  [locals filename]
-  (let [{:keys [tex-types]} @locals
-        ;;file-str (slurp filename)
-        file-str (str "#version 150\n"
-                      "uniform vec3      iResolution;\n"
-                      "uniform float     iGlobalTime;\n"
-                      "uniform float     iChannelTime[4];\n"
-                      "uniform vec3      iChannelResolution[4];\n"
-;;                       "uniform vec4      iMouse; \n"
-                      ; (uniform-sampler-type-str tex-types 0)
-                      ; (uniform-sampler-type-str tex-types 1)
-                      ; (uniform-sampler-type-str tex-types 2)
-                      ; (uniform-sampler-type-str tex-types 3)
-                      ; "uniform sampler2D iCam0; \n"
-                      ; "uniform sampler2D iCam1; \n"
-                      ; "uniform sampler2D iCam2; \n"
-                      ; "uniform sampler2D iCam3; \n"
-                      ; "uniform sampler2D iCam4; \n"
-                      ; "uniform sampler2D iVideo0; \n"
-                      ; "uniform sampler2D iVideo1; \n"
-                      ; "uniform sampler2D iVideo2; \n"
-                      ; "uniform sampler2D iVideo3; \n"
-                      ; "uniform sampler2D iVideo4; \n"
-                      ; "uniform vec4      iDate;\n"
-                      ; "uniform sampler2D iFftWave; \n"
-                      ; "uniform float iDataArray[256]; \n"
-                      ; "uniform sampler2D iPreviousFrame; \n"
-                      ; "uniform sampler2D iText; \n"
-                      "\n"
-                      (slurp filename))]
-    file-str))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; ======================================================================
-;; code modified from
-;; https://github.com/ztellman/penumbra/blob/master/src/penumbra/opengl/core.clj
-(defn- get-fields [#^Class static-class]
-  (. static-class getFields))
-(defn- gl-enum-name
-  "Takes the numeric value of a gl constant (i.e. GL_LINEAR), and gives the name"
-  [enum-value]
-  (if (= 0 enum-value)
-    "NONE"
-    (.getName #^Field (some
-                       #(if (= enum-value (.get #^Field % nil)) % nil)
-                       (mapcat get-fields [GL11 GL12 GL13 GL15 GL20])))))
-(defn except-gl-errors
-  [msg]
-  (let [error (GL11/glGetError)
-        error-string (str "OpenGL Error(" error "):"
-                          (gl-enum-name error) ": " msg)]
-    (if (and (not (zero? error)) @throw-on-gl-error)
-      (throw (Exception. error-string)))))
-
 
 (defn- init-window
   "Initialise a shader-powered window with the specified
@@ -278,6 +217,7 @@
       ;        (user-fn :init (:pgm-id @locals) (:tex-id-fftwave @locals)))
               ))
 
+;
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom tex-filenames cams videos title true-fullscreen? display-sync-hz]
@@ -285,8 +225,7 @@
   (init-window locals mode title shader-filename shader-str-atom tex-filenames cams videos true-fullscreen? display-sync-hz)
   (println "init-gl")
   (init-gl locals)
-  ; (reset! (:frameCount @locals) 0)
-  ; (try-reload-shader locals)
+  (try-reload-shader locals)
   ; (let [startTime               (atom (System/nanoTime))]
   ;   (println "start thread")
   ; (while (and (= :yes (:active @locals))
