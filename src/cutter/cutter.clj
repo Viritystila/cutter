@@ -117,10 +117,6 @@
         (let [shader-str (if (nil? shader-filename)
                        @shader-str-atom
                        (slurp-fs locals (:shader-filename @locals)))])
-        (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE    org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR  4)
@@ -168,10 +164,10 @@
           indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
                         (.put indices)
                         (.flip))
-                                    ;; create & bind Vertex Array Object
+          ;; create & bind Vertex Array Object
           vao-id              (GL30/glGenVertexArrays)
           _                   (GL30/glBindVertexArray vao-id)
-                  ;; create & bind Vertex Buffer Object for vertices
+          ;; create & bind Vertex Buffer Object for vertices
           vbo-id              (GL15/glGenBuffers)
           _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
           _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER
@@ -179,13 +175,13 @@
                                           GL15/GL_STATIC_DRAW)
           _                   (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0)
           _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-                  ;; create & bind VBO for colors
+          ;; create & bind VBO for colors
           vboc-id             (GL15/glGenBuffers)
           _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
           _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
           _                   (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
           _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-              ;; deselect the VAO
+          ;; deselect the VAO
           _                   (GL30/glBindVertexArray 0)
           ;; create & bind VBO for indices
           vboi-id             (GL15/glGenBuffers)
@@ -220,9 +216,6 @@
       ;        (user-fn :init (:pgm-id @locals) (:tex-id-fftwave @locals)))
               ))
 
-;
-
-
 (defn- draw
   [locals]
   (let [{:keys [width height i-resolution-loc
@@ -230,9 +223,6 @@
                 i-date-loc
                 pgm-id vbo-id vao-id vboi-id vboc-id
                 vertices-count
-;;                 i-mouse-loc
-;;                 mouse-pos-x mouse-pos-y
-;;                 mouse-ori-x mouse-ori-y
                 i-channel-time-loc
                 ;i-channel-loc i-fftwave-loc i-cam-loc i-video-loc
                 i-channel-res-loc
@@ -253,15 +243,7 @@
         _           (.put ^FloatBuffer channel-time-buffer 2 (float cur-time))
         _           (.put ^FloatBuffer channel-time-buffer 3 (float cur-time))
         ;_           (.flip (.put ^FloatBuffer dataArrayBuffer  (float-array dataArray)))
-
-        ; cur-date    (Calendar/getInstance)
-        ; cur-year    (.get cur-date Calendar/YEAR)         ;; four digit year
-        ; cur-month   (.get cur-date Calendar/MONTH)        ;; month 0-11
-        ; cur-day     (.get cur-date Calendar/DAY_OF_MONTH) ;; day 1-31
-        ; cur-seconds (+ (* (.get cur-date Calendar/HOUR_OF_DAY) 60.0 60.0)
-        ;                (* (.get cur-date Calendar/MINUTE) 60.0)
-        ;                (.get cur-date Calendar/SECOND))
-                       ]
+ ]
 
     (except-gl-errors "@ draw before clear")
 
@@ -451,24 +433,17 @@
      (println "Start thread")
      (while (and (= :yes (:active @locals))
                (not (org.lwjgl.glfw.GLFW/glfwWindowShouldClose (:window @locals))))
-        ;(time (do
         (reset! startTime (System/nanoTime))
-        ;(println "asd")
-      (update-and-draw locals)
-      (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
-      (org.lwjgl.glfw.GLFW/glfwPollEvents)
-  ;   ;(write-text (str (- (System/nanoTime) @startTime) ) 300 800 10 100 100 0 50 1 true)
-      ;(Thread/sleep  (sleepTime @startTime (System/nanoTime) display-sync-hz))
-  ;   ;(write-text (str (- (System/nanoTime) @startTime) ) 300 800 10 100 100 0 50 1 true)
-  ;   ;))
-     )
+        (update-and-draw locals)
+        (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
+        (org.lwjgl.glfw.GLFW/glfwPollEvents)
+      (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz)))
      (destroy-gl locals)
      (.free (:keyCallback @locals))
      (org.lwjgl.glfw.GLFW/glfwPollEvents)
      (org.lwjgl.glfw.GLFW/glfwDestroyWindow (:window @locals))
      (org.lwjgl.glfw.GLFW/glfwPollEvents)
      (swap! locals assoc :active :no)))
-
 
 (defn- files-exist
   "Check to see that the filenames actually exist.  One tweak is to
@@ -536,6 +511,22 @@
     (if (not (future-cancel f))
       (println "ERROR: unable to stop-watcher!"))))
 
+(defn undecorate-display!
+  "All future display windows will be undecorated (i.e. no title bar)"
+  []
+  (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_FALSE)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE))
+
+(defn decorate-display!
+  "All future display windows will be decorated (i.e. have a title bar)"
+  []
+  (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_TRUE)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_TRUE))
+
 (defn active?
   "Returns true if the shader display is currently running."
   []
@@ -588,7 +579,6 @@
 
       ;; set a global window-state instead of creating a new one
       (reset! the-window-state default-state-values)
-
       ;; start the requested shader
       (.start (Thread.
                (fn [] (run-thread the-window-state
@@ -602,20 +592,19 @@
                                  true-fullscreen?
                                  display-sync-hz)))))))
 
-
 (defn start
   "Start a new shader display."
   [shader-filename-or-str-atom
    &{:keys [width height title display-sync-hz
             textures cams videos user-data]
-     :or {width           1920
-          height          1080
+     :or {width           1280
+          height          800
           title           "cutter"
-          display-sync-hz 6
+          display-sync-hz 30
           textures        []
           cams            []
           videos          []}}]
    (let [mode  [width height]]
     ;(decorate-display!)
-    ;(undecorate-display!)
+    (undecorate-display!)
     (start-shader-display mode shader-filename-or-str-atom textures cams videos title false display-sync-hz)))
