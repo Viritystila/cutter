@@ -1,4 +1,4 @@
-(ns #^{:author "(Shadertone), Mikael Reponen (Viritystone)"
+(ns #^{:author "Mikael Reponen"
        :doc " Core library derived from Shadertone (Roger Allen https://github.com/overtone/shadertone)."}
   cutter.cutter
   (:require [clojure.tools.namespace.repl :refer [refresh]]
@@ -81,7 +81,7 @@
    display-mode. If true-fullscreen? is true, fullscreen mode is
    attempted if the display-mode is compatible. See display-modes for a
    list of available modes and fullscreen-display-modes for a list of
-   fullscreen compatible modes.."
+   fullscreen compatible modes."
   [locals display-mode title shader-filename shader-str-atom tex-filenames cams videos true-fullscreen? display-sync-hz]
     (when-not (org.lwjgl.glfw.GLFW/glfwInit)
     (throw (IllegalStateException. "Unable to initialize GLFW")))
@@ -114,7 +114,7 @@
            :videos          videos
            ;:tex-types       tex-types
            )
-        (println "begin shader slurping")
+        (println "Begin shader slurping.")
         (let [shader-str (if (nil? shader-filename)
                        @shader-str-atom
                        (slurp-fs locals (:shader-filename @locals)))])
@@ -130,7 +130,7 @@
         (swap! locals assoc
            :window (org.lwjgl.glfw.GLFW/glfwCreateWindow width height title 0 0))
             (when (= (:window @locals) nil)
-            (throw (RuntimeException. "Failed to create the GLFW window")))
+            (throw (RuntimeException. "Failed to create the GLFW window.")))
         (swap! locals assoc
            :keyCallback
            (proxy [GLFWKeyCallback] []
@@ -472,7 +472,7 @@
 
 
 (defn- files-exist
-  "check to see that the filenames actually exist.  One tweak is to
+  "Check to see that the filenames actually exist.  One tweak is to
   allow nil or keyword 'filenames'.  Those are important placeholders.
   Another tweak is to expand names for cubemap textures."
   [filenames]
@@ -517,8 +517,8 @@
         (reset! reload-shader true)))))
 
 (defn- start-watcher
-  "create a watch for glsl shaders in the directory and return the global
-  future atom for that watcher"
+  "Create a watch for glsl shaders in the directory and return the global
+  future atom for that watcher."
   [shader-filename]
   (let [dir (.getParent (File. ^String shader-filename))
         _   (println "dir" dir)]
@@ -531,14 +531,14 @@
      (watcher/on-change (partial if-match-reload-shader shader-filename)))))
 
 (defn- stop-watcher
-  "given a watcher-future f, put a stop to it"
+  "Given a watcher-future f, put a stop to it."
   [f]
   (when-not (or (future-done? f) (future-cancelled? f))
     (if (not (future-cancel f))
       (println "ERROR: unable to stop-watcher!"))))
 
 (defn active?
-  "Returns true if the shader display is currently running"
+  "Returns true if the shader display is currently running."
   []
   (= :yes (:active @the-window-state)))
 
