@@ -10,7 +10,6 @@
   (:use [clojure.data])
   (:require
    [cutter.cutter :refer :all]
-   [cutter.shader :refer :all]
    [clojure.tools.namespace.repl :refer [refresh]]))
 
   (defn main

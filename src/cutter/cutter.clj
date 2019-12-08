@@ -209,7 +209,7 @@
       ;(init-textures locals)
       ;(init-cams locals)
       ;(init-videos locals)
-      ;(init-shaders locals)
+      (init-shaders locals)
       ;(swap! locals assoc :tex-id-fftwave (GL11/glGenTextures))
       ;(init-text-tex locals)
       ;(init-frame-tex locals)
@@ -219,6 +219,42 @@
 
 ;
 
+(defn- destroy-gl
+  [locals]
+  (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn cams]} @locals]
+     ;;Stop and release cams
+    ;(println " Cams tbd" (:cams @the-window-state))
+    ;(doseq [i (remove nil? (:cams @the-window-state))](println "release cam " i)(release-cam-textures i))
+    ;(swap! locals assoc :cams (vec (replicate no-cams nil)))
+    ;Stop and release video release-cam-textures
+    ;(println " Videos tbd" (:videos @the-window-state))
+    ;(doseq [i (:video-no-id @the-window-state)]
+  ;      (if (= @i nil) (println "no video")  (do (release-video-textures @i))))
+  ;  (swap! locals assoc :videos (vec (replicate no-videos nil)))
+    ;stop recording
+    ;(closeV4L2output)
+    ;; Delete any user state
+    ;(when user-fn
+  ;    (user-fn :destroy pgm-id (:tex-id-fftwave @locals)))
+    ;; Delete the shaders
+    (GL20/glUseProgram 0)
+    (GL20/glDetachShader pgm-id vs-id)
+    (GL20/glDetachShader pgm-id fs-id)
+    (GL20/glDeleteShader vs-id)
+    (GL20/glDeleteShader fs-id)
+    (GL20/glDeleteProgram pgm-id)
+    ;; Select the VAO
+    (GL30/glBindVertexArray vao-id)
+    (GL20/glDisableVertexAttribArray 0)
+    (GL20/glDisableVertexAttribArray 1)
+
+    ;; Delete the vertex VBO
+    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+    (GL15/glDeleteBuffers ^Integer vbo-id)
+        ;; Delete the VAO
+    (GL30/glBindVertexArray 0)
+    (GL30/glDeleteVertexArrays vao-id)))
+
 (defn- run-thread
   [locals mode shader-filename shader-str-atom tex-filenames cams videos title true-fullscreen? display-sync-hz]
   (println "init-window")
@@ -226,29 +262,26 @@
   (println "init-gl")
   (init-gl locals)
   (try-reload-shader locals)
-  ; (let [startTime               (atom (System/nanoTime))]
-  ;   (println "start thread")
-  ; (while (and (= :yes (:active @locals))
-  ;             (not (org.lwjgl.glfw.GLFW/glfwWindowShouldClose (:window @locals))))
-  ;
-  ;   ;(time (do
-  ;   (reset! startTime (System/nanoTime))
+  (let [startTime               (atom (System/nanoTime))]
+     (println "start thread")
+     (while (and (= :yes (:active @locals))
+               (not (org.lwjgl.glfw.GLFW/glfwWindowShouldClose (:window @locals))))
+        ;(time (do
+        (reset! startTime (System/nanoTime))
   ;   (update-and-draw locals)
-  ;   (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
-  ;   (org.lwjgl.glfw.GLFW/glfwPollEvents)
+      (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
+      (org.lwjgl.glfw.GLFW/glfwPollEvents)
   ;   ;(write-text (str (- (System/nanoTime) @startTime) ) 300 800 10 100 100 0 50 1 true)
-  ;   (Thread/sleep  (sleepTime @startTime (System/nanoTime) display-sync-hz))
+      ;(Thread/sleep  (sleepTime @startTime (System/nanoTime) display-sync-hz))
   ;   ;(write-text (str (- (System/nanoTime) @startTime) ) 300 800 10 100 100 0 50 1 true)
   ;   ;))
-  ;   )
-  ;   (destroy-gl locals)
+     )
+     (destroy-gl locals)
      (.free (:keyCallback @locals))
      (org.lwjgl.glfw.GLFW/glfwPollEvents)
      (org.lwjgl.glfw.GLFW/glfwDestroyWindow (:window @locals))
      (org.lwjgl.glfw.GLFW/glfwPollEvents)
-     (swap! locals assoc :active :no)
-     ;)
-  )
+     (swap! locals assoc :active :no)))
 
 
 (defn- files-exist

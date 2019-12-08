@@ -1,39 +1,6 @@
-// The shadertoy uniform variables are available by default.
-// iChannel0,2 should contain 2D textures
-// use iChannel0's alpha to blend between 1 & 2
-uniform float iOvertoneVolume;
-
 void main(void) {
   vec2 uv = (gl_FragCoord.xy / iResolution.xy);
   uv.y=1.0-uv.y;
-  vec2 uv2 = (gl_FragCoord.xy / iResolution.xy);
-  	vec2 p = gl_FragCoord.xy / iResolution.x;//normalized coords with some cheat
-  uv2.y=1.0-uv2.y; //*iDataArray[1]*255;
- //*iDataArray[1]
-  float prop = iResolution.x / iResolution.y;//screen proroption
-  vec2 m = vec2(0.5, 0.5 / prop);//center coords
-  vec2 d = p - m;//vector from center to current fragment
-  float r = sqrt(dot(d, d)); // distance of pixel from center
-
-  float power = ( 1.0 * 3.141592 / (2.0 * sqrt(dot(m, m))) ) *
-				(200*sin(1.15*iGlobalTime) / iResolution.x - 0.5);//amount of effect
-  float bind;//radius of 1:1 effect
-	if (power > 0.0) bind = sqrt(dot(m, m));//stick to corners
-	else {if (prop < 1.0) bind = m.x; else bind = m.y;}//stick to borders
-    vec2 uv3;
-    if (power > 0.0)//fisheye
-		uv3 = m + normalize(d) * tan(r * power) * bind / tan( bind * power);
-	else if (power < 0.0)//antifisheye
-		uv3 = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
-	else uv3 = p;//no effect for power = 1.0
-
-    vec2 uv4 = (gl_FragCoord.xy / iResolution.xy);
-    uv4.y=1.0-uv4.y;
-
-    vec2 uv5 = (gl_FragCoord.xy / iResolution.xy);
-    //uv.y=1.0-uv.y;
-
-
   uv.x = uv.x + 5.5*sin(0.15*iGlobalTime);
   uv.y = uv.y + 2.5*cos(1.03*iGlobalTime);
   //vec4 c1 = texture2D(iChannel0, uv);
@@ -66,7 +33,6 @@ void main(void) {
   //vec4 cf5 = mix(cf3,c2,sin(cf4.r));
   //vec4 cf6 = mix(c,c2, 0.5); //iDataArray[0]);
 
-  vec4 op = [1, sin(iGlobalTime), 3, 4];
-  gl_FragColor =;
-
+  vec4 op = [0, 0, 0, 0];
+  out = op;
 }
