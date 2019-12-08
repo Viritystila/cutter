@@ -7,11 +7,12 @@
             clojure.string)
   (:import (java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
            (org.lwjgl BufferUtils)
+           (java.io File FileInputStream)
            (java.lang.reflect Field)
            (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
 
-;
+
 ;; The reload-shader atom communicates across the gl & watcher threads
 (defonce reload-shader (atom false))
 (defonce reload-shader-str (atom ""))
@@ -32,7 +33,7 @@
                       "uniform vec3      iResolution;\n"
                       "uniform float     iGlobalTime;\n"
                       "uniform float     iChannelTime[4];\n"
-                      "uniform vec3      iChannelResolution[4];\n"
+                      ;"uniform vec3      iChannelResolution[4];\n"
 ;;                       "uniform vec4      iMouse; \n"
                       ; (uniform-sampler-type-str tex-types 0)
                       ; (uniform-sampler-type-str tex-types 1)
@@ -284,3 +285,48 @@
                    ;:i-channel-res-loc i-channel-res-loc
                    ;:i-date-loc i-date-loc
                    :shader-str fs-shader)))))))
+;
+
+;; watch the shader-str-atom to reload on a change
+(defn- watch-shader-str-atom
+  [key identity old new]
+  (when (not= old new)
+    ;; if already reloading, wait for that to finish
+    (while @reload-shader
+      ;; FIXME this can hang.  We should timeout instead
+      (Thread/sleep 100))
+    (reset! reload-shader-str new)
+    (reset! reload-shader true)))
+
+;; watch the shader directory & reload the current shader if it changes.
+(defn- if-match-reload-shader
+  [shader-filename files]
+  (if @watcher-just-started
+    ;; allow first, automatic call to pass unnoticed
+    (reset! watcher-just-started false)
+    ;; otherwise do the reload check
+    (doseq [f files]
+      (when (= (.getPath ^File f) shader-filename)
+        ;; set a flag that the opengl thread will use
+        (reset! reload-shader true)))))
+
+(defn- start-watcher
+  "create a watch for glsl shaders in the directory and return the global
+  future atom for that watcher"
+  [shader-filename]
+  (let [dir (.getParent (File. ^String shader-filename))
+        _   (println "dir" dir)]
+    (reset! watcher-just-started true)
+    (watcher/watcher
+     [dir]
+     (watcher/rate 100)
+     (watcher/file-filter watcher/ignore-dotfiles)
+     (watcher/file-filter (watcher/extensions :glsl))
+     (watcher/on-change (partial if-match-reload-shader shader-filename)))))
+
+(defn- stop-watcher
+  "given a watcher-future f, put a stop to it"
+  [f]
+  (when-not (or (future-done? f) (future-cancelled? f))
+    (if (not (future-cancel f))
+      (println "ERROR: unable to stop-watcher!"))))

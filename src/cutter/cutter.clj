@@ -62,7 +62,12 @@
     ;; shader uniforms
     :i-resolution-loc        0
     :i-global-time-loc       0
-    :i-channel-time-loc      0})
+    :i-channel-time-loc      0
+    ;Data
+    :channel-time-buffer     (-> (BufferUtils/createFloatBuffer 4)
+                                (.put (float-array
+                                [0.0 0.0 0.0 0.0]))
+                                (.flip))})
 
 ;; GLOBAL STATE ATOMS
 (defonce the-window-state (atom default-state-values))
@@ -117,10 +122,10 @@
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_PROFILE         org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR  4)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MINOR  6)
+        ;(org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_PROFILE         org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
+        ;(org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR  3)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MINOR  1)
 
         (swap! locals assoc
            :window (org.lwjgl.glfw.GLFW/glfwCreateWindow width height title 0 0))
@@ -219,6 +224,179 @@
 
 ;
 
+
+(defn- draw
+  [locals]
+  (let [{:keys [width height i-resolution-loc
+                start-time last-time i-global-time-loc
+                i-date-loc
+                pgm-id vbo-id vao-id vboi-id
+                vertices-count
+;;                 i-mouse-loc
+;;                 mouse-pos-x mouse-pos-y
+;;                 mouse-ori-x mouse-ori-y
+                i-channel-time-loc
+                ;i-channel-loc i-fftwave-loc i-cam-loc i-video-loc
+                i-channel-res-loc
+                ;i-dataArray-loc i-previous-frame-loc i-text-loc
+                channel-time-buffer
+                ;channel-res-buffer bytebuffer-frame  buffer-channel dataArrayBuffer dataArray
+                old-pgm-id old-fs-id
+                ;tex-ids cams text-id-cam videos text-id-video tex-types tex-id-previous-frame tex-id-text-texture
+                ;user-fn
+                ;pixel-read-enable
+                ;pixel-read-pos-x pixel-read-pos-y
+                ;pixel-read-data
+                ;save-frames
+                ]} @locals
+        cur-time    (/ (- last-time start-time) 1000.0)
+        _           (.put ^FloatBuffer channel-time-buffer 0 (float cur-time))
+        _           (.put ^FloatBuffer channel-time-buffer 1 (float cur-time))
+        _           (.put ^FloatBuffer channel-time-buffer 2 (float cur-time))
+        _           (.put ^FloatBuffer channel-time-buffer 3 (float cur-time))
+        ;_           (.flip (.put ^FloatBuffer dataArrayBuffer  (float-array dataArray)))
+
+        ; cur-date    (Calendar/getInstance)
+        ; cur-year    (.get cur-date Calendar/YEAR)         ;; four digit year
+        ; cur-month   (.get cur-date Calendar/MONTH)        ;; month 0-11
+        ; cur-day     (.get cur-date Calendar/DAY_OF_MONTH) ;; day 1-31
+        ; cur-seconds (+ (* (.get cur-date Calendar/HOUR_OF_DAY) 60.0 60.0)
+        ;                (* (.get cur-date Calendar/MINUTE) 60.0)
+        ;                (.get cur-date Calendar/SECOND))
+                       ]
+
+    (except-gl-errors "@ draw before clear")
+
+    ;(reset! (:frameCount @locals) (+ @(:frameCount @locals) 1))
+
+    (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+
+    ; ;; activate textures
+    ; (dotimes [i (count tex-ids)]
+    ;   (when (nth tex-ids i)
+    ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (nth tex-ids i)))
+    ;     (cond
+    ;      (= :cubemap (nth tex-types i))
+    ;      (GL11/glBindTexture GL13/GL_TEXTURE_CUBE_MAP (nth tex-ids i))
+    ;      :default
+    ;      (GL11/glBindTexture GL11/GL_TEXTURE_2D (nth tex-ids i)))))
+
+    (except-gl-errors "@ draw after activate textures")
+
+     ;(loop-get-cam-textures locals cams)
+     ;(loop-get-video-textures locals videos)
+     ;(set-text-opengl-texture locals)
+;;
+;;     ;; setup our uniform
+    (GL20/glUniform3f i-resolution-loc width height 1.0)
+    (GL20/glUniform1f i-global-time-loc cur-time)
+    (GL20/glUniform1fv  ^Integer i-channel-time-loc ^FloatBuffer channel-time-buffer)
+
+
+;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
+;     (GL20/glUniform1i (nth i-channel-loc 1) 2)
+;     (GL20/glUniform1i (nth i-channel-loc 2) 3)
+;     (GL20/glUniform1i (nth i-channel-loc 3) 4)
+;     (GL20/glUniform1i (nth i-cam-loc 0) 5)
+;     (GL20/glUniform1i (nth i-cam-loc 1) 6)
+;     (GL20/glUniform1i (nth i-cam-loc 2) 7)
+;     (GL20/glUniform1i (nth i-cam-loc 3) 8)
+;     (GL20/glUniform1i (nth i-cam-loc 4) 9)
+;     (GL20/glUniform1i (nth i-video-loc 0) 10)
+;     (GL20/glUniform1i (nth i-video-loc 1) 11)
+;     (GL20/glUniform1i (nth i-video-loc 2) 12)
+;     (GL20/glUniform1i (nth i-video-loc 3) 13)
+;     (GL20/glUniform1i (nth i-video-loc 4) 14)
+;     (GL20/glUniform1i (nth i-fftwave-loc 0) 15)
+;     (GL20/glUniform1i (nth i-text-loc 0) 16)
+     ;
+     ; (GL20/glUniform3fv  ^Integer i-channel-res-loc ^FloatBuffer channel-res-buffer)
+     ; (GL20/glUniform4f i-date-loc cur-year cur-month cur-day cur-seconds)
+     ; (GL20/glUniform1fv  ^Integer i-dataArray-loc ^FloatBuffer dataArrayBuffer)
+
+    ;; get vertex array ready
+     (GL30/glBindVertexArray vao-id)
+     (GL20/glEnableVertexAttribArray 0)
+     (GL20/glEnableVertexAttribArray 1)
+
+     (GL11/glEnableClientState GL11/GL_VERTEX_ARRAY)
+     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
+     (GL11/glVertexPointer 4 GL11/GL_FLOAT 0 0)
+
+     (except-gl-errors "@ draw prior to DrawArrays")
+
+     ;; Draw the vertices
+     (GL11/glDrawArrays GL11/GL_TRIANGLES 0 vertices-count)
+
+     (except-gl-errors "@ draw after DrawArrays")
+     ;; Put everything back to default (deselect)
+     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+     (GL20/glDisableVertexAttribArray 0)
+     (GL20/glDisableVertexAttribArray 1)
+     (GL30/glBindVertexArray 0)
+     (GL11/glDisableClientState GL11/GL_VERTEX_ARRAY)
+    ; ;; unbind textures
+    ; (doseq [i (remove nil? tex-ids)]
+    ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 i))
+    ;     (GL11/glBindTexture GL13/GL_TEXTURE_CUBE_MAP 0)
+    ;     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
+    ;
+    ; ;cams
+    ; (dotimes [i (count text-id-cam)]
+    ;     (when (nth text-id-cam i)
+    ;     (if (= nil @(nth (:frame-set-cam @locals) i))
+    ;         (do (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 i))
+    ;         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
+    ;         nil )))
+    ; ;videos
+    ; (dotimes [i (count text-id-video)]
+    ;     (when (nth text-id-video i)
+    ;         (if (= nil @(nth (:frame-set-video @locals) i))
+    ;             (do (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 @(nth text-id-video i)))
+    ;                 (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
+    ;             nil)))
+    ; (do
+    ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-text-texture))
+    ;     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
+    ;
+    ; (except-gl-errors "@ draw prior to post-draw")
+    ;
+    ; (GL20/glUseProgram 0)
+    ; (except-gl-errors "@ draw after post-draw")
+    ;             ;Copying the previous image to its own texture
+    ; (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-previous-frame))
+    ; (GL11/glBindTexture GL11/GL_TEXTURE_2D tex-id-previous-frame)
+    ; (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
+    ; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+    ;
+    (except-gl-errors "@ draw after copy")
+
+
+      ))
+
+
+(defn- update-and-draw
+  [locals]
+  (let [{:keys [width height last-time pgm-id
+                ]} @locals
+                cur-time (System/currentTimeMillis)]
+    (swap! locals
+           assoc
+           :last-time cur-time
+           )
+    (if (:shader-good @locals)
+      (do
+        (if @reload-shader
+          (try-reload-shader locals)  ; this must call glUseProgram
+          (GL20/glUseProgram pgm-id)) ; else, normal path...
+        (draw locals))
+      ;; else clear to prevent strobing awfulness
+      (do
+        (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+        (except-gl-errors "@ bad-draw glClear ")
+        (if @reload-shader
+          (try-reload-shader locals))))))
+
 (defn- destroy-gl
   [locals]
   (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn cams]} @locals]
@@ -263,12 +441,13 @@
   (init-gl locals)
   (try-reload-shader locals)
   (let [startTime               (atom (System/nanoTime))]
-     (println "start thread")
+     (println "Start thread")
      (while (and (= :yes (:active @locals))
                (not (org.lwjgl.glfw.GLFW/glfwWindowShouldClose (:window @locals))))
         ;(time (do
         (reset! startTime (System/nanoTime))
-  ;   (update-and-draw locals)
+        ;(println "asd")
+      (update-and-draw locals)
       (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
       (org.lwjgl.glfw.GLFW/glfwPollEvents)
   ;   ;(write-text (str (- (System/nanoTime) @startTime) ) 300 800 10 100 100 0 50 1 true)

@@ -1,3 +1,4 @@
+out vec4 op;
 void main(void) {
   vec2 uv = (gl_FragCoord.xy / iResolution.xy);
   uv.y=1.0-uv.y;
@@ -33,6 +34,6 @@ void main(void) {
   //vec4 cf5 = mix(cf3,c2,sin(cf4.r));
   //vec4 cf6 = mix(c,c2, 0.5); //iDataArray[0]);
 
-  vec4 op = [0, 0, 0, 0];
-  out = op;
+  op = vec4(1.0, 1.0, sin(iGlobalTime), 1.0);
+  //out = op;
 }
