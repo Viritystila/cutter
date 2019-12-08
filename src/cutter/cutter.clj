@@ -106,6 +106,32 @@
                       (slurp filename))]
     file-str))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;Init window and opengl;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ======================================================================
+;; code modified from
+;; https://github.com/ztellman/penumbra/blob/master/src/penumbra/opengl/core.clj
+(defn- get-fields [#^Class static-class]
+  (. static-class getFields))
+(defn- gl-enum-name
+  "Takes the numeric value of a gl constant (i.e. GL_LINEAR), and gives the name"
+  [enum-value]
+  (if (= 0 enum-value)
+    "NONE"
+    (.getName #^Field (some
+                       #(if (= enum-value (.get #^Field % nil)) % nil)
+                       (mapcat get-fields [GL11 GL12 GL13 GL15 GL20])))))
+(defn except-gl-errors
+  [msg]
+  (let [error (GL11/glGetError)
+        error-string (str "OpenGL Error(" error "):"
+                          (gl-enum-name error) ": " msg)]
+    (if (and (not (zero? error)) @throw-on-gl-error)
+      (throw (Exception. error-string)))))
+
+
 (defn- init-window
   "Initialise a shader-powered window with the specified
    display-mode. If true-fullscreen? is true, fullscreen mode is
@@ -148,15 +174,14 @@
         (let [shader-str (if (nil? shader-filename)
                        @shader-str-atom
                        (slurp-fs locals (:shader-filename @locals)))])
-
         (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        ;(org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_PROFILE        org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
-        ;(org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT org.lwjgl.glfw.GLFW/GLFW_FALSE)
-         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR 3)
-         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MINOR 1)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_PROFILE         org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR  4)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MINOR  6)
 
         (swap! locals assoc
            :window (org.lwjgl.glfw.GLFW/glfwCreateWindow width height title 0 0))
@@ -169,17 +194,97 @@
                (when (and (= key org.lwjgl.glfw.GLFW/GLFW_KEY_ESCAPE)
                           (= action org.lwjgl.glfw.GLFW/GLFW_RELEASE))
                             (org.lwjgl.glfw.GLFW/glfwSetWindowShouldClose (:window @locals) true)))))
-        (org.lwjgl.glfw.GLFW/glfwSetKeyCallback (:window @locals) (:keyCallback @locals))
-        (org.lwjgl.glfw.GLFW/glfwMakeContextCurrent (:window @locals))
-        (org.lwjgl.glfw.GLFW/glfwSwapInterval 2)
-        (org.lwjgl.glfw.GLFW/glfwShowWindow (:window @locals))))
+        (org.lwjgl.glfw.GLFW/glfwSetKeyCallback       (:window @locals) (:keyCallback @locals))
+        (org.lwjgl.glfw.GLFW/glfwMakeContextCurrent   (:window @locals))
+        (org.lwjgl.glfw.GLFW/glfwSwapInterval         2)
+        (org.lwjgl.glfw.GLFW/glfwShowWindow           (:window @locals))))
+
+
+(defn- init-buffers
+  [locals]
+  (let [vertices  (float-array  [-1.0 -1.0 0.0 1.0
+                                 1.0 -1.0 0.0 1.0
+                                -1.0  1.0 0.0 1.0
+                                -1.0  1.0 0.0 1.0
+                                 1.0 -1.0 0.0 1.0
+                                 1.0  1.0 0.0 1.0])
+                   vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
+                                        (.put vertices)
+                                        (.flip))
+                   vertices-count      (count vertices)
+                   colors (float-array
+                          [1.0 0.0 0.0
+                          0.0 1.0 0.0
+                          0.0 0.0 1.0])
+                  colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
+                                (.put colors)
+                                (.flip))
+                  indices (byte-array
+                            (map byte
+                            [0 1 2])) ;; otherwise it whines about longs
+                  indices-count (count indices)
+                  indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
+                                    (.put indices)
+                                    (.flip))
+                                    ;; create & bind Vertex Array Object
+                  vao-id              (GL30/glGenVertexArrays)
+                  _                   (GL30/glBindVertexArray vao-id)
+                  ;; create & bind Vertex Buffer Object for vertices
+                  vbo-id              (GL15/glGenBuffers)
+                  _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
+                  _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER
+                                                      ^FloatBuffer vertices-buffer
+                                                      GL15/GL_STATIC_DRAW)
+                  _                   (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0)
+                  _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+                  ;; create & bind VBO for colors
+                  vboc-id             (GL15/glGenBuffers)
+                  _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
+                  _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
+                  _                   (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
+                  _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+                  ;; deselect the VAO
+                  _                   (GL30/glBindVertexArray 0)
+                  ;; create & bind VBO for indices
+                  vboi-id             (GL15/glGenBuffers)
+                  _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
+                  _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
+                  _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+                  _ (except-gl-errors "@ end of init-buffers")]
+                  (swap! locals
+                    assoc
+                    :vbo-id vbo-id
+                    :vao-id vao-id
+                    :vboc-id vboc-id
+                    :vboi-id vboi-id
+                    :vertices-count vertices-count)))
+
+  (defn- init-gl
+    [locals]
+    (let [{:keys [width height user-fn]} @locals]
+      (GL/createCapabilities)
+      (println "OpenGL version:" (GL11/glGetString GL11/GL_VERSION))
+      (GL11/glClearColor 0.0 0.0 0.0 0.0)
+      (GL11/glViewport 0 0 width height)
+      (init-buffers locals)
+      ;(init-textures locals)
+      ;(init-cams locals)
+      ;(init-videos locals)
+      ;(init-shaders locals)
+      ;(swap! locals assoc :tex-id-fftwave (GL11/glGenTextures))
+      ;(init-text-tex locals)
+      ;(init-frame-tex locals)
+      ;(when (and (not (nil? user-fn)) (:shader-good @locals))
+      ;        (user-fn :init (:pgm-id @locals) (:tex-id-fftwave @locals)))
+              ))
+
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom tex-filenames cams videos title true-fullscreen? display-sync-hz]
   (println "init-window")
   (init-window locals mode title shader-filename shader-str-atom tex-filenames cams videos true-fullscreen? display-sync-hz)
-  ;(println "init-gl")
-  ;(init-gl locals)
+  (println "init-gl")
+  (init-gl locals)
   ; (reset! (:frameCount @locals) 0)
   ; (try-reload-shader locals)
   ; (let [startTime               (atom (System/nanoTime))]
@@ -198,11 +303,12 @@
   ;   ;))
   ;   )
   ;   (destroy-gl locals)
-  ;   (.free (:keyCallback @locals))
-  ;   (org.lwjgl.glfw.GLFW/glfwPollEvents)
-  ;   (org.lwjgl.glfw.GLFW/glfwDestroyWindow (:window @locals))
-  ;   (org.lwjgl.glfw.GLFW/glfwPollEvents)
-  ;   (swap! locals assoc :active :no))
+     (.free (:keyCallback @locals))
+     (org.lwjgl.glfw.GLFW/glfwPollEvents)
+     (org.lwjgl.glfw.GLFW/glfwDestroyWindow (:window @locals))
+     (org.lwjgl.glfw.GLFW/glfwPollEvents)
+     (swap! locals assoc :active :no)
+     ;)
   )
 
 
