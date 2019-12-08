@@ -34,6 +34,6 @@ void main(void) {
   //vec4 cf5 = mix(cf3,c2,sin(cf4.r));
   //vec4 cf6 = mix(c,c2, 0.5); //iDataArray[0]);
 
-  op = vec4(cos(iGlobalTime*2), 0.2, sin(iGlobalTime), 1);
+  op = vec4(cos(iGlobalTime*1.41), 0.1, sin(iGlobalTime*3.14), 1);
   //out = op;
 }

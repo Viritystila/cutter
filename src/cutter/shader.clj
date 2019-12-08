@@ -23,43 +23,24 @@
 (defonce watcher-just-started (atom true))
 (defonce throw-on-gl-error (atom true))
 
-(def uniform-keys ["iResolution"
-                  "iGlobalTime"])
+;(GL20/glGetUniformLocation pgm-id (name x))
+(defn generate-uniform-locs [locals pgm-id]
+  (let [{:keys [i-uniforms]} @locals
+        loc-keys (keys i-uniforms)
+        i-uniforms (into {} (map (fn [x] {x (assoc (x i-uniforms) :loc (GL20/glGetUniformLocation pgm-id (name x))  )} ) loc-keys))]
+               i-uniforms))
 
+(defn uniforms-to-string [locals]
+  (let [{:keys [i-uniforms]} @locals]
+  (clojure.string/join (mapv (fn [x](str "uniform " (:type (x i-uniforms)) " " (name x) "; \n" ) ) (keys i-uniforms)  ))))
 
 (defn slurp-fs
-  "do whatever it takes to modify shadertoy fragment shader source to
-  be useable"
   [locals filename]
-  (let [{:keys [tex-types]} @locals
+  (let [{:keys [tex-types shader-ver]} @locals
         ;;file-str (slurp filename)
-        file-str (str "#version 460 core\n"
-                      "uniform vec3      iResolution;\n"
-                      "uniform float     iGlobalTime;\n"
-                      ;"uniform float iDataArray[256]; \n"
-                      ;"uniform sampler2D iPreviousFrame; \n"
-                      ;"uniform sampler2D iText; \n"
-                      ;"uniform vec3      iChannelResolution[4];\n"
-;;                       "uniform vec4      iMouse; \n"
-                      ; (uniform-sampler-type-str tex-types 0)
-                      ; (uniform-sampler-type-str tex-types 1)
-                      ; (uniform-sampler-type-str tex-types 2)
-                      ; (uniform-sampler-type-str tex-types 3)
-                      ; "uniform sampler2D iCam0; \n"
-                      ; "uniform sampler2D iCam1; \n"
-                      ; "uniform sampler2D iCam2; \n"
-                      ; "uniform sampler2D iCam3; \n"
-                      ; "uniform sampler2D iCam4; \n"
-                      ; "uniform sampler2D iVideo0; \n"
-                      ; "uniform sampler2D iVideo1; \n"
-                      ; "uniform sampler2D iVideo2; \n"
-                      ; "uniform sampler2D iVideo3; \n"
-                      ; "uniform sampler2D iVideo4; \n"
-                      ; "uniform vec4      iDate;\n"
-                      ; "uniform sampler2D iFftWave; \n"
-                      ; "uniform float iDataArray[256]; \n"
-                      ; "uniform sampler2D iPreviousFrame; \n"
-                      ; "uniform sampler2D iText; \n"
+        file-str (str shader-ver
+                      "\n"
+                      (uniforms-to-string locals)
                       "\n"
                       (slurp filename))]
     file-str))
@@ -135,8 +116,9 @@
                                     (println "ERROR: Linking Shaders:")
                                     (println (GL20/glGetProgramInfoLog pgm-id 10000)))
             _                     (except-gl-errors "@ let before GetUniformLocation")
-            i-resolution-loc      (GL20/glGetUniformLocation pgm-id "iResolution")
-            i-global-time-loc     (GL20/glGetUniformLocation pgm-id "iGlobalTime")
+            i-uniforms                     (generate-uniform-locs locals pgm-id)
+            ;i-resolution-loc      (GL20/glGetUniformLocation pgm-id "iResolution")
+            ;i-global-time-loc     (GL20/glGetUniformLocation pgm-id "iGlobalTime")
 ;;             i-mouse-loc             (GL20/glGetUniformLocation pgm-id "iMouse")
             ;
             ; i-channel0-loc          (GL20/glGetUniformLocation pgm-id "iChannel0")
@@ -175,8 +157,9 @@
                :vs-id vs-id
                :fs-id fs-id
                :pgm-id pgm-id
-               :i-resolution-loc i-resolution-loc
-               :i-global-time-loc i-global-time-loc
+               :i-uniforms i-uniforms
+               ;:i-resolution-loc i-resolution-loc
+               ;:i-global-time-loc i-global-time-loc
 ;;                :i-mouse-loc i-mouse-loc
                ; :i-channel-loc [i-channel0-loc i-channel1-loc i-channel2-loc i-channel3-loc]
                ; :i-fftwave-loc [i-fftwave-loc]
@@ -227,8 +210,9 @@
             (GL20/glUseProgram pgm-id)
             (except-gl-errors "@ try-reload-shader useProgram2"))
           (let [_ (println "Reloading shader:" shader-filename)
-                i-resolution-loc    (GL20/glGetUniformLocation new-pgm-id "iResolution")
-                i-global-time-loc   (GL20/glGetUniformLocation new-pgm-id "iGlobalTime")
+                i-uniforms                     (generate-uniform-locs locals new-pgm-id )
+                ;i-resolution-loc    (GL20/glGetUniformLocation new-pgm-id "iResolution")
+                ;i-global-time-loc   (GL20/glGetUniformLocation new-pgm-id "iGlobalTime")
 ;;                 i-mouse-loc         (GL20/glGetUniformLocation new-pgm-id "iMouse")
                 ; i-channel0-loc      (GL20/glGetUniformLocation new-pgm-id "iChannel0")
                 ; i-channel1-loc      (GL20/glGetUniformLocation new-pgm-id "iChannel1")
@@ -271,8 +255,9 @@
                    :shader-good true
                    :fs-id new-fs-id
                    :pgm-id new-pgm-id
-                   :i-resolution-loc i-resolution-loc
-                   :i-global-time-loc i-global-time-loc
+                   :i-uniforms i-uniforms
+                   ;:i-resolution-loc i-resolution-loc
+                   ;:i-global-time-loc i-global-time-loc
 ;;                    :i-mouse-loc i-mouse-loc
                    ;i-channel-loc [i-channel0-loc i-channel1-loc i-channel2-loc i-channel3-loc]
                    ;;:i-fftwave-loc [i-fftwave-loc]

@@ -53,6 +53,7 @@
     :vboi-id                 0
     :indices-count           0
     ;; shader program
+    :shader-ver              "#version 460 core"
     :shader-good             true ;; false in error condition
     :shader-filename         nil
     :shader-str-atom         (atom nil)
@@ -61,17 +62,11 @@
     :fs-id                   0
     :pgm-id                  0
     ;; shader uniforms
-    :i-resolution-loc        0
-    :i-global-time-loc       0
-    :i-uniform-locs          {}
-    :i-uniform-keys          []
-    :i-uniform-types         []
-    ;Data
-    :channel-time-buffer     (-> (BufferUtils/createFloatBuffer 4)
-                                (.put (float-array
-                                [0.0 0.0 0.0 0.0]))
-                                (.flip))})
-
+    :i-resolution-loc        0 ;deprecate
+    :i-global-time-loc       0 ;deprecate
+    :i-uniforms              {:iResolution {:type "vec3", :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z))},
+                              :iGlobalTime {:type "float", :loc 0 :gltype (fn [id x] (GL20/glUniform1f id x))}}
+                   })
 ;; GLOBAL STATE ATOMS
 (defonce the-window-state (atom default-state-values))
 
@@ -245,8 +240,8 @@
                 vertices-count
                 ;i-channel-loc i-fftwave-loc i-cam-loc i-video-loc
                 i-channel-res-loc
+                i-uniforms
                 ;i-dataArray-loc i-previous-frame-loc i-text-loc
-                channel-time-buffer
                 ;channel-res-buffer bytebuffer-frame  buffer-channel dataArrayBuffer dataArray
                 old-pgm-id old-fs-id
                 ;tex-ids cams text-id-cam videos text-id-video tex-types tex-id-previous-frame tex-id-text-texture
@@ -257,10 +252,6 @@
                 ;save-frames
                 ]} @locals
         cur-time    (/ (- last-time start-time) 1000.0)
-        _           (.put ^FloatBuffer channel-time-buffer 0 (float cur-time))
-        _           (.put ^FloatBuffer channel-time-buffer 1 (float cur-time))
-        _           (.put ^FloatBuffer channel-time-buffer 2 (float cur-time))
-        _           (.put ^FloatBuffer channel-time-buffer 3 (float cur-time))
         ;_           (.flip (.put ^FloatBuffer dataArrayBuffer  (float-array dataArray)))
         ]
 
@@ -287,8 +278,13 @@
      ;(set-text-opengl-texture locals)
 ;;
 ;;     ;; setup our uniform
-    (GL20/glUniform3f i-resolution-loc width height 1.0)
-    (GL20/glUniform1f i-global-time-loc cur-time)
+    ;(:loc (:iResolution i-uniforms))
+    ;(:loc (:iGlobalTime i-uniforms))
+    ;:gltype
+    ;(@(resolve (symbol "squared")) 2)
+    ;(println (:gltype (:iResolution i-uniforms)))
+    ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
+    ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
 
 ;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
 ;     (GL20/glUniform1i (nth i-channel-loc 1) 2)
@@ -482,7 +478,6 @@
   (Thread/sleep 200)))
   (remove-watch (:shader-str-atom @the-window-state) :shader-str-watch)
   (stop-watcher @watcher-future))
-
 
 (defn start-shader-display
   "Start a new shader display with the specified mode. Prefer start or
