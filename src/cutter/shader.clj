@@ -29,7 +29,7 @@
   [locals filename]
   (let [{:keys [tex-types]} @locals
         ;;file-str (slurp filename)
-        file-str (str "#version 330\n"
+        file-str (str "#version 460 core\n"
                       "uniform vec3      iResolution;\n"
                       "uniform float     iGlobalTime;\n"
                       "uniform float     iChannelTime[4];\n"
@@ -81,17 +81,11 @@
 ;; ======================================================================
 
 (def vs-shader
-  (str "#version 330\n"
-       "layout(location = 0) in vec3 vertexPosition_modelspace;"
-       "\n"
-       "in vec4 in_Position;\n"
-       "in vec4 in_Color;\n"
-       "uniform float in_Angle;\n"
-       "\n"
-       "out vec4 pass_Color;\n"
+  (str "#version 460 core\n"
+       "layout(location = 0) in vec4 vertexPosition_modelspace;"
        "\n"
        "void main(void) {\n"
-       "    gl_Position = in_Position;\n"
+       "    gl_Position = vertexPosition_modelspace;\n"
        "}\n"))
 
 (defn- load-shader

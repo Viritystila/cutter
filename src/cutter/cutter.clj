@@ -124,8 +124,8 @@
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE         org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
         ;(org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR  3)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MINOR  3)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR  4)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MINOR  6)
 
         (swap! locals assoc
            :window (org.lwjgl.glfw.GLFW/glfwCreateWindow width height title 0 0))
@@ -315,13 +315,14 @@
      ; (GL20/glUniform1fv  ^Integer i-dataArray-loc ^FloatBuffer dataArrayBuffer)
 
     ;; get vertex array ready
-     ;(GL30/glBindVertexArray vao-id)
+     (GL30/glBindVertexArray vao-id)
      (GL20/glEnableVertexAttribArray 0)
      ;(GL20/glEnableVertexAttribArray 1)
 
      ;(GL11/glEnableClientState GL11/GL_VERTEX_ARRAY)
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
-     (GL20/glVertexAttribPointer 0 vertices-count GL11/GL_FLOAT false 0 0);
+     ;(println "asasas vertices count" vertices-count)
+     (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0);
     ;// attribute 0. No particular reason for 0, but must match the layout in the shader.
     ;// size
     ;// type
@@ -329,15 +330,15 @@
     ; // stride
     ;// array buffer offset
      ;(GL11/glVertexPointer 4 GL11/GL_FLOAT 0 0)
-
+     ;(println "asdsadasddddddd")
      (except-gl-errors "@ draw prior to DrawArrays")
 
      ;; Draw the vertices
      (GL11/glDrawArrays GL11/GL_TRIANGLES 0 vertices-count)
 
-     (except-gl-errors "@ draw after DrawArrays")
+     ;(except-gl-errors "@ draw after DrawArrays")
      ;; Put everything back to default (deselect)
-     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+     ;(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
      (GL20/glDisableVertexAttribArray 0)
      ;(GL20/glDisableVertexAttribArray 1)
      ;(GL30/glBindVertexArray 0)
@@ -376,7 +377,7 @@
     ; (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
     ; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
     ;
-    (except-gl-errors "@ draw after copy")
+    ;(except-gl-errors "@ draw after copy")
 
 
       ))
