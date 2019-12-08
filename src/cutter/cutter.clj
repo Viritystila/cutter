@@ -6,6 +6,7 @@
             [clojure.java.io :as io]
             [while-let.core :as while-let]
             [cutter.shader :refer :all]
+            [cutter.general :refel :all]
             [clojure.core.async
              :as async
              :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
@@ -329,8 +330,6 @@
     ; // normalized?
     ; // stride
     ;// array buffer offset
-     ;(GL11/glVertexPointer 4 GL11/GL_FLOAT 0 0)
-     ;(println "asdsadasddddddd")
      (except-gl-errors "@ draw prior to DrawArrays")
 
      ;; Draw the vertices
@@ -338,7 +337,7 @@
 
      ;(except-gl-errors "@ draw after DrawArrays")
      ;; Put everything back to default (deselect)
-     ;(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
      (GL20/glDisableVertexAttribArray 0)
      ;(GL20/glDisableVertexAttribArray 1)
      ;(GL30/glBindVertexArray 0)
@@ -612,7 +611,7 @@
      :or {width           1920
           height          1080
           title           "cutter"
-          display-sync-hz 60
+          display-sync-hz 6
           textures        []
           cams            []
           videos          []}}]
