@@ -75,7 +75,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defn- init-window
   "Initialise a shader-powered window with the specified
    display-mode. If true-fullscreen? is true, fullscreen mode is
@@ -85,7 +84,6 @@
   [locals display-mode title shader-filename shader-str-atom tex-filenames cams videos true-fullscreen? display-sync-hz]
     (when-not (org.lwjgl.glfw.GLFW/glfwInit)
     (throw (IllegalStateException. "Unable to initialize GLFW")))
-
     (let [
         width               (nth display-mode 0) ;(:width @locals)
         height              (nth display-mode 1);(:height @locals)
@@ -122,11 +120,10 @@
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE)
-        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE         org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
-        ;(org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE    org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
+        (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR  4)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MINOR  6)
-
         (swap! locals assoc
            :window (org.lwjgl.glfw.GLFW/glfwCreateWindow width height title 0 0))
             (when (= (:window @locals) nil)
@@ -152,56 +149,56 @@
                                 -1.0  1.0 0.0 1.0
                                  1.0 -1.0 0.0 1.0
                                  1.0  1.0 0.0 1.0])
-                   vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
-                                        (.put vertices)
-                                        (.flip))
-                   vertices-count      (count vertices)
-                   colors (float-array
-                          [1.0 0.0 0.0
-                          0.0 1.0 0.0
-                          0.0 0.0 1.0])
-                  colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
-                                (.put colors)
+          vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
+                                (.put vertices)
                                 (.flip))
-                  indices (byte-array
-                            (map byte
-                            [0 1 2])) ;; otherwise it whines about longs
-                  indices-count (count indices)
-                  indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
-                                    (.put indices)
-                                    (.flip))
+          vertices-count      (count vertices)
+          colors (float-array
+                [1.0 0.0 0.0
+                0.0 1.0 0.0
+                0.0 0.0 1.0])
+          colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
+              (.put colors)
+              (.flip))
+          indices (byte-array
+            (map byte
+            [0 1 2])) ;; otherwise it whines about longs
+          indices-count (count indices)
+          indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
+                        (.put indices)
+                        (.flip))
                                     ;; create & bind Vertex Array Object
-                  vao-id              (GL30/glGenVertexArrays)
-                  _                   (GL30/glBindVertexArray vao-id)
+          vao-id              (GL30/glGenVertexArrays)
+          _                   (GL30/glBindVertexArray vao-id)
                   ;; create & bind Vertex Buffer Object for vertices
-                  vbo-id              (GL15/glGenBuffers)
-                  _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
-                  _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER
-                                                      ^FloatBuffer vertices-buffer
-                                                      GL15/GL_STATIC_DRAW)
-                  _                   (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0)
-                  _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+          vbo-id              (GL15/glGenBuffers)
+          _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
+          _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER
+                                          ^FloatBuffer vertices-buffer
+                                          GL15/GL_STATIC_DRAW)
+          _                   (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0)
+          _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
                   ;; create & bind VBO for colors
-                  vboc-id             (GL15/glGenBuffers)
-                  _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
-                  _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
-                  _                   (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
-                  _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-                  ;; deselect the VAO
-                  _                   (GL30/glBindVertexArray 0)
-                  ;; create & bind VBO for indices
-                  vboi-id             (GL15/glGenBuffers)
-                  _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
-                  _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
-                  _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-                  _ (except-gl-errors "@ end of init-buffers")]
-                  (swap! locals
-                    assoc
-                    :vbo-id vbo-id
-                    :vao-id vao-id
-                    :vboc-id vboc-id
-                    :vboi-id vboi-id
-                    :vertices-count vertices-count)))
+          vboc-id             (GL15/glGenBuffers)
+          _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
+          _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
+          _                   (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
+          _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+              ;; deselect the VAO
+          _                   (GL30/glBindVertexArray 0)
+          ;; create & bind VBO for indices
+          vboi-id             (GL15/glGenBuffers)
+          _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
+          _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
+          _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+          _ (except-gl-errors "@ end of init-buffers")]
+            (swap! locals
+              assoc
+              :vbo-id vbo-id
+              :vao-id vao-id
+              :vboc-id vboc-id
+              :vboi-id vboi-id
+              :vertices-count vertices-count)))
 
   (defn- init-gl
     [locals]
@@ -230,7 +227,7 @@
   (let [{:keys [width height i-resolution-loc
                 start-time last-time i-global-time-loc
                 i-date-loc
-                pgm-id vbo-id vao-id vboi-id
+                pgm-id vbo-id vao-id vboi-id vboc-id
                 vertices-count
 ;;                 i-mouse-loc
 ;;                 mouse-pos-x mouse-pos-y
@@ -320,9 +317,12 @@
      ;(GL20/glEnableVertexAttribArray 1)
 
      ;(GL11/glEnableClientState GL11/GL_VERTEX_ARRAY)
+     ;Inidices
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
-     ;(println "asasas vertices count" vertices-count)
      (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0);
+     ;Colors
+     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
+     (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0);
     ;// attribute 0. No particular reason for 0, but must match the layout in the shader.
     ;// size
     ;// type

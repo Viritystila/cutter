@@ -84,6 +84,8 @@
   (str "#version 460 core\n"
        "layout(location = 0) in vec4 vertexPosition_modelspace;"
        "\n"
+       "layout(location = 1) in vec3 colors_modelspace;"
+       "\n"
        "void main(void) {\n"
        "    gl_Position = vertexPosition_modelspace;\n"
        "}\n"))
