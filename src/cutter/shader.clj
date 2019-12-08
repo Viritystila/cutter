@@ -29,7 +29,7 @@
   [locals filename]
   (let [{:keys [tex-types]} @locals
         ;;file-str (slurp filename)
-        file-str (str "#version 150\n"
+        file-str (str "#version 330\n"
                       "uniform vec3      iResolution;\n"
                       "uniform float     iGlobalTime;\n"
                       "uniform float     iChannelTime[4];\n"
@@ -81,7 +81,8 @@
 ;; ======================================================================
 
 (def vs-shader
-  (str "#version 150\n"
+  (str "#version 330\n"
+       "layout(location = 0) in vec3 vertexPosition_modelspace;"
        "\n"
        "in vec4 in_Position;\n"
        "in vec4 in_Color;\n"
