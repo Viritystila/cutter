@@ -4,7 +4,10 @@
   (:require [clojure.tools.namespace.repl :refer [refresh]]
             [watchtower.core :as watcher]
             [clojure.java.io :as io]
-            clojure.string))
+            clojure.string)
+  (:import (java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
+           (org.lwjgl BufferUtils)
+           (java.io File FileInputStream)))
 
 ;
 (def not-nil? (complement nil?))
@@ -18,3 +21,22 @@
             dt      (- fpdelms dtms)
             dtout  (if (< dt 0)  0  dt)]
             dtout))
+
+(defn files-exist
+  "Check to see that the filenames actually exist."
+  [filenames]
+  (let [full-filenames (flatten filenames)]
+    (reduce #(and %1 %2) ; kibit keep
+            (for [fn full-filenames]
+              (if (or (nil? fn)
+                      (and (keyword? fn) (= fn :previous-frame))
+                      (.exists (File. ^String fn)))
+                true
+                (do
+                  (println "ERROR:" fn "does not exist.")
+                  false))))))
+
+(defn sane-user-inputs
+  [shader-filename shader-str]
+  (and (files-exist (flatten [shader-filename]))
+       (not (and (nil? shader-filename) (nil? shader-str)))))

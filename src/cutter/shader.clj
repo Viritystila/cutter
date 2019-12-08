@@ -23,6 +23,10 @@
 (defonce watcher-just-started (atom true))
 (defonce throw-on-gl-error (atom true))
 
+(def uniform-keys ["iResolution"
+                  "iGlobalTime"])
+
+
 (defn slurp-fs
   "do whatever it takes to modify shadertoy fragment shader source to
   be useable"
@@ -32,7 +36,9 @@
         file-str (str "#version 460 core\n"
                       "uniform vec3      iResolution;\n"
                       "uniform float     iGlobalTime;\n"
-                      "uniform float     iChannelTime[4];\n"
+                      ;"uniform float iDataArray[256]; \n"
+                      ;"uniform sampler2D iPreviousFrame; \n"
+                      ;"uniform sampler2D iText; \n"
                       ;"uniform vec3      iChannelResolution[4];\n"
 ;;                       "uniform vec4      iMouse; \n"
                       ; (uniform-sampler-type-str tex-types 0)
@@ -93,13 +99,13 @@
 (defn- load-shader
   [^String shader-str ^Integer shader-type]
   (let [shader-id         (GL20/glCreateShader shader-type)
-        _ (except-gl-errors "@ load-shader glCreateShader ")
+        _                 (except-gl-errors "@ load-shader glCreateShader ")
         _                 (GL20/glShaderSource shader-id shader-str)
-        _ (except-gl-errors "@ load-shader glShaderSource ")
+        _                 (except-gl-errors "@ load-shader glShaderSource ")
         _                 (GL20/glCompileShader shader-id)
-        _ (except-gl-errors "@ load-shader glCompileShader ")
+        _                 (except-gl-errors "@ load-shader glCompileShader ")
         gl-compile-status (GL20/glGetShaderi shader-id GL20/GL_COMPILE_STATUS)
-        _ (except-gl-errors "@ end of let load-shader")]
+        _                 (except-gl-errors "@ end of let load-shader")]
     (when (== gl-compile-status GL11/GL_FALSE)
       (println "ERROR: Loading a Shader:")
       (println (GL20/glGetShaderInfoLog shader-id 10000)))
@@ -116,22 +122,21 @@
         [ok? fs-id] (load-shader (:shader-str @locals) GL20/GL_FRAGMENT_SHADER)]
     (if (== ok? GL11/GL_TRUE)
       (let [pgm-id                (GL20/glCreateProgram)
-            _ (except-gl-errors "@ let init-shaders glCreateProgram")
+            _                     (except-gl-errors "@ let init-shaders glCreateProgram")
             _                     (GL20/glAttachShader pgm-id vs-id)
-            _ (except-gl-errors "@ let init-shaders glAttachShader VS")
+            _                     (except-gl-errors "@ let init-shaders glAttachShader VS")
             _                     (GL20/glAttachShader pgm-id fs-id)
-            _ (except-gl-errors "@ let init-shaders glAttachShader FS")
+            _                     (except-gl-errors "@ let init-shaders glAttachShader FS")
             _                     (GL20/glLinkProgram pgm-id)
-            _ (except-gl-errors "@ let init-shaders glLinkProgram")
+            _                     (except-gl-errors "@ let init-shaders glLinkProgram")
             gl-link-status        (GL20/glGetProgrami pgm-id GL20/GL_LINK_STATUS)
-            _ (except-gl-errors "@ let init-shaders glGetProgram link status")
+            _                     (except-gl-errors "@ let init-shaders glGetProgram link status")
             _                     (when (== gl-link-status GL11/GL_FALSE)
                                     (println "ERROR: Linking Shaders:")
                                     (println (GL20/glGetProgramInfoLog pgm-id 10000)))
-            _ (except-gl-errors "@ let before GetUniformLocation")
-            i-resolution-loc        (GL20/glGetUniformLocation pgm-id "iResolution")
-            i-global-time-loc       (GL20/glGetUniformLocation pgm-id "iGlobalTime")
-            i-channel-time-loc      (GL20/glGetUniformLocation pgm-id "iChannelTime")
+            _                     (except-gl-errors "@ let before GetUniformLocation")
+            i-resolution-loc      (GL20/glGetUniformLocation pgm-id "iResolution")
+            i-global-time-loc     (GL20/glGetUniformLocation pgm-id "iGlobalTime")
 ;;             i-mouse-loc             (GL20/glGetUniformLocation pgm-id "iMouse")
             ;
             ; i-channel0-loc          (GL20/glGetUniformLocation pgm-id "iChannel0")
@@ -172,7 +177,6 @@
                :pgm-id pgm-id
                :i-resolution-loc i-resolution-loc
                :i-global-time-loc i-global-time-loc
-               :i-channel-time-loc i-channel-time-loc
 ;;                :i-mouse-loc i-mouse-loc
                ; :i-channel-loc [i-channel0-loc i-channel1-loc i-channel2-loc i-channel3-loc]
                ; :i-fftwave-loc [i-fftwave-loc]
@@ -225,7 +229,6 @@
           (let [_ (println "Reloading shader:" shader-filename)
                 i-resolution-loc    (GL20/glGetUniformLocation new-pgm-id "iResolution")
                 i-global-time-loc   (GL20/glGetUniformLocation new-pgm-id "iGlobalTime")
-                i-channel-time-loc  (GL20/glGetUniformLocation new-pgm-id "iChannelTime")
 ;;                 i-mouse-loc         (GL20/glGetUniformLocation new-pgm-id "iMouse")
                 ; i-channel0-loc      (GL20/glGetUniformLocation new-pgm-id "iChannel0")
                 ; i-channel1-loc      (GL20/glGetUniformLocation new-pgm-id "iChannel1")
@@ -270,7 +273,6 @@
                    :pgm-id new-pgm-id
                    :i-resolution-loc i-resolution-loc
                    :i-global-time-loc i-global-time-loc
-                   :i-channel-time-loc i-channel-time-loc
 ;;                    :i-mouse-loc i-mouse-loc
                    ;i-channel-loc [i-channel0-loc i-channel1-loc i-channel2-loc i-channel3-loc]
                    ;;:i-fftwave-loc [i-fftwave-loc]
@@ -285,7 +287,7 @@
 ;
 
 ;; watch the shader-str-atom to reload on a change
-(defn- watch-shader-str-atom
+(defn watch-shader-str-atom
   [key identity old new]
   (when (not= old new)
     ;; if already reloading, wait for that to finish
@@ -307,7 +309,7 @@
         ;; set a flag that the opengl thread will use
         (reset! reload-shader true)))))
 
-(defn- start-watcher
+(defn start-watcher
   "create a watch for glsl shaders in the directory and return the global
   future atom for that watcher"
   [shader-filename]
@@ -321,7 +323,7 @@
      (watcher/file-filter (watcher/extensions :glsl))
      (watcher/on-change (partial if-match-reload-shader shader-filename)))))
 
-(defn- stop-watcher
+(defn stop-watcher
   "given a watcher-future f, put a stop to it"
   [f]
   (when-not (or (future-done? f) (future-cancelled? f))

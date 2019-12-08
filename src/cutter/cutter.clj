@@ -63,7 +63,9 @@
     ;; shader uniforms
     :i-resolution-loc        0
     :i-global-time-loc       0
-    :i-channel-time-loc      0
+    :i-uniform-locs          {}
+    :i-uniform-keys          []
+    :i-uniform-types         []
     ;Data
     :channel-time-buffer     (-> (BufferUtils/createFloatBuffer 4)
                                 (.put (float-array
@@ -76,6 +78,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn undecorate-display!
+  "All future display windows will be undecorated (i.e. no title bar)"
+  []
+  (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_FALSE)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE))
+
+(defn decorate-display!
+  "All future display windows will be decorated (i.e. have a title bar)"
+  []
+  (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_TRUE)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_TRUE))
+
 (defn- init-window
   "Initialise a shader-powered window with the specified
    display-mode. If true-fullscreen? is true, fullscreen mode is
@@ -117,6 +136,7 @@
         (let [shader-str (if (nil? shader-filename)
                        @shader-str-atom
                        (slurp-fs locals (:shader-filename @locals)))])
+        (undecorate-display!)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE    org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_CONTEXT_VERSION_MAJOR  4)
@@ -223,7 +243,6 @@
                 i-date-loc
                 pgm-id vbo-id vao-id vboi-id vboc-id
                 vertices-count
-                i-channel-time-loc
                 ;i-channel-loc i-fftwave-loc i-cam-loc i-video-loc
                 i-channel-res-loc
                 ;i-dataArray-loc i-previous-frame-loc i-text-loc
@@ -243,7 +262,7 @@
         _           (.put ^FloatBuffer channel-time-buffer 2 (float cur-time))
         _           (.put ^FloatBuffer channel-time-buffer 3 (float cur-time))
         ;_           (.flip (.put ^FloatBuffer dataArrayBuffer  (float-array dataArray)))
- ]
+        ]
 
     (except-gl-errors "@ draw before clear")
 
@@ -270,8 +289,6 @@
 ;;     ;; setup our uniform
     (GL20/glUniform3f i-resolution-loc width height 1.0)
     (GL20/glUniform1f i-global-time-loc cur-time)
-    (GL20/glUniform1fv  ^Integer i-channel-time-loc ^FloatBuffer channel-time-buffer)
-
 
 ;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
 ;     (GL20/glUniform1i (nth i-channel-loc 1) 2)
@@ -445,88 +462,6 @@
      (org.lwjgl.glfw.GLFW/glfwPollEvents)
      (swap! locals assoc :active :no)))
 
-(defn- files-exist
-  "Check to see that the filenames actually exist.  One tweak is to
-  allow nil or keyword 'filenames'.  Those are important placeholders.
-  Another tweak is to expand names for cubemap textures."
-  [filenames]
-  (let [full-filenames (flatten filenames)]
-    (reduce #(and %1 %2) ; kibit keep
-            (for [fn full-filenames]
-              (if (or (nil? fn)
-                      (and (keyword? fn) (= fn :previous-frame))
-                      (.exists (File. ^String fn)))
-                true
-                (do
-                  (println "ERROR:" fn "does not exist.")
-                  false))))))
-
-
-(defn- sane-user-inputs
-  [shader-filename shader-str textures title true-fullscreen?]
-  (and (files-exist (flatten [shader-filename]))
-       (not (and (nil? shader-filename) (nil? shader-str)))))
-
-;; watch the shader-str-atom to reload on a change
-(defn- watch-shader-str-atom
-  [key identity old new]
-  (when (not= old new)
-    ;; if already reloading, wait for that to finish
-    (while @reload-shader
-      ;; FIXME this can hang.  We should timeout instead
-      (Thread/sleep 100))
-    (reset! reload-shader-str new)
-    (reset! reload-shader true)))
-
-;; watch the shader directory & reload the current shader if it changes.
-(defn- if-match-reload-shader
-  [shader-filename files]
-  (if @watcher-just-started
-    ;; allow first, automatic call to pass unnoticed
-    (reset! watcher-just-started false)
-    ;; otherwise do the reload check
-    (doseq [f files]
-      (when (= (.getPath ^File f) shader-filename)
-        ;; set a flag that the opengl thread will use
-        (reset! reload-shader true)))))
-
-(defn- start-watcher
-  "Create a watch for glsl shaders in the directory and return the global
-  future atom for that watcher."
-  [shader-filename]
-  (let [dir (.getParent (File. ^String shader-filename))
-        _   (println "dir" dir)]
-    (reset! watcher-just-started true)
-    (watcher/watcher
-     [dir]
-     (watcher/rate 100)
-     (watcher/file-filter watcher/ignore-dotfiles)
-     (watcher/file-filter (watcher/extensions :glsl))
-     (watcher/on-change (partial if-match-reload-shader shader-filename)))))
-
-(defn- stop-watcher
-  "Given a watcher-future f, put a stop to it."
-  [f]
-  (when-not (or (future-done? f) (future-cancelled? f))
-    (if (not (future-cancel f))
-      (println "ERROR: unable to stop-watcher!"))))
-
-(defn undecorate-display!
-  "All future display windows will be undecorated (i.e. no title bar)"
-  []
-  (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
-  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_FALSE)
-  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
-  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE))
-
-(defn decorate-display!
-  "All future display windows will be decorated (i.e. have a title bar)"
-  []
-  (org.lwjgl.glfw.GLFW/glfwDefaultWindowHints)
-  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_TRUE)
-  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
-  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_TRUE))
-
 (defn active?
   "Returns true if the shader display is currently running."
   []
@@ -567,7 +502,7 @@
                           (atom nil))
         shader-str      (if-not is-filename
                           @shader-str-atom)]
-    (when (sane-user-inputs shader-filename shader-str textures title true-fullscreen?)
+    (when (cutter.general/sane-user-inputs shader-filename shader-str)
       ;; stop the current shader
       (stop)
       ;; start the watchers
@@ -606,5 +541,5 @@
           videos          []}}]
    (let [mode  [width height]]
     ;(decorate-display!)
-    (undecorate-display!)
+    ;(undecorate-display!)
     (start-shader-display mode shader-filename-or-str-atom textures cams videos title false display-sync-hz)))
