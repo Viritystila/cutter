@@ -29,14 +29,16 @@
     (reduce #(and %1 %2) ; kibit keep
             (for [fn full-filenames]
               (if (or (nil? fn)
-                      (and (keyword? fn) (= fn :previous-frame))
                       (.exists (File. ^String fn)))
                 true
                 (do
                   (println "ERROR:" fn "does not exist.")
-                  false))))))
+                  nil))))))
 
 (defn sane-user-inputs
   [shader-filename shader-str]
   (and (files-exist (flatten [shader-filename]))
        (not (and (nil? shader-filename) (nil? shader-str)))))
+
+
+(defn remove-inexistent [filenames] (vec (remove nil? (map (fn [x] (files-exist [x])) filenames))))

@@ -6,7 +6,8 @@
             [clojure.java.io :as io]
             [while-let.core :as while-let]
             [cutter.shader :refer :all]
-            [cutter.general :refel :all]
+            [cutter.general :refer :all]
+            [cutter.gl_init :refer :all]
             [clojure.core.async
              :as async
              :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
@@ -61,6 +62,23 @@
     :vs-id                   0
     :fs-id                   0
     :pgm-id                  0
+    ;; Textures, cameras and video paths
+    :maximum-textures        1000
+    :maximum-texture-folders 1000
+    :maximum-cameras         1000
+    :maximum-videos          1000
+    :maximum-running-cameras 10
+    :maximum-running-videos  10
+    :maximum-running-buffer  10
+    :maximum-buffer-length   250  ;Frames
+    :texture-filenames       []
+    :texture-folders         []
+    :camera-devices          []
+    :video-filenames         []
+    :textures                {} ;{:filename, :tex-id, :height, :width, :matn :internal-format, :format}
+    :texture-arrays          {}
+    :cameras                 {}
+    :videos                  {}
     ;; shader uniforms
     :i-resolution-loc        0 ;deprecate
     :i-global-time-loc       0 ;deprecate
@@ -73,7 +91,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defn undecorate-display!
   "Borderless window"
   []
@@ -89,9 +106,7 @@
   (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_VISIBLE                org.lwjgl.glfw.GLFW/GLFW_TRUE)
   (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_RESIZABLE              org.lwjgl.glfw.GLFW/GLFW_FALSE)
   (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_DECORATED              org.lwjgl.glfw.GLFW/GLFW_FALSE)
-  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_AUTO_ICONIFY,          org.lwjgl.glfw.GLFW/GLFW_FALSE)
-  )
-
+  (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_AUTO_ICONIFY           org.lwjgl.glfw.GLFW/GLFW_FALSE))
 
 (defn getMonitor [input true-fullscreen?]
   (let [monitors            (org.lwjgl.glfw.GLFW/glfwGetMonitors)
@@ -102,40 +117,37 @@
 (defn- init-window
   "Initialise a shader-powered window with the specified
    display-mode. If true-fullscreen? is true, fullscreen mode is
-   attempted if the display-mode is compatible. See display-modes for a
-   list of available modes and fullscreen-display-modes for a list of
-   fullscreen compatible modes."
-  [locals display-mode title shader-filename shader-str-atom tex-filenames cams videos true-fullscreen? display-sync-hz window-idx]
+   attempted."
+  [locals display-mode title shader-filename shader-str-atom texture-filenames texture-folders camera-devices video-filenames true-fullscreen? display-sync-hz window-idx]
     (when-not (org.lwjgl.glfw.GLFW/glfwInit)
     (throw (IllegalStateException. "Unable to initialize GLFW")))
     (let [
         primaryMonitor      (org.lwjgl.glfw.GLFW/glfwGetPrimaryMonitor)
         currentMonitor      (getMonitor window-idx true-fullscreen?)
-        mode                (if (= 0 currentMonitor) primaryMonitor (org.lwjgl.glfw.GLFW/glfwGetVideoMode currentMonitor))
+        ;mode                (if (= 0 currentMonitor) primaryMonitor (org.lwjgl.glfw.GLFW/glfwGetVideoMode currentMonitor))
         current-time-millis (System/currentTimeMillis)
         width               (nth display-mode 0)
-        height              (nth display-mode 1)        
-        ;tex-filenames       (fill-filenames tex-filenames no-textures)
-        ;videos              (fill-filenames videos no-videos)
-        ;cams                (sort-cams cams)
-        ;tttt                (sort-videos locals videos)
-        ;tex-types           (map get-texture-type tex-filenames)
+        height              (nth display-mode 1)
+        texture-filenames   (cutter.general/remove-inexistent texture-filenames)
+        texture-folders     (cutter.general/remove-inexistent texture-folders)
+        camera-devices      (cutter.general/remove-inexistent camera-devices)
+        video-filenames     (cutter.general/remove-inexistent video-filenames)
         ]
         (swap! locals
            assoc
-           :active          :yes
-           :width           width
-           :height          height
-           :title           title
-           :display-sync-hz display-sync-hz
-           :start-time      current-time-millis
-           :last-time       current-time-millis
-           :shader-filename shader-filename
-           :shader-str-atom shader-str-atom
-           :tex-filenames   tex-filenames
-           :cams            cams
-           :videos          videos
-           ;:tex-types       tex-types
+           :active            :yes
+           :width             width
+           :height            height
+           :title             title
+           :display-sync-hz   display-sync-hz
+           :start-time        current-time-millis
+           :last-time         current-time-millis
+           :shader-filename   shader-filename
+           :shader-str-atom   shader-str-atom
+           :texture-filenames texture-filenames
+           :texture-folders   texture-folders
+           :camera-devices    camera-devices
+           :video-filenames   video-filenames
            )
         (println "Begin shader slurping.")
         (let [shader-str (if (nil? shader-filename)
@@ -446,9 +458,9 @@
     (GL30/glDeleteVertexArrays vao-id)))
 
 (defn- run-thread
-  [locals mode shader-filename shader-str-atom tex-filenames cams videos title true-fullscreen? display-sync-hz window-idx]
+  [locals mode shader-filename shader-str-atom tex-filenames texture-folders cams videos title true-fullscreen? display-sync-hz window-idx]
   (println "init-window")
-  (init-window locals mode title shader-filename shader-str-atom tex-filenames cams videos true-fullscreen? display-sync-hz window-idx)
+  (init-window locals mode title shader-filename shader-str-atom tex-filenames texture-folders cams videos true-fullscreen? display-sync-hz window-idx)
   (println "init-gl")
   (init-gl locals)
   (try-reload-shader locals)
@@ -492,7 +504,7 @@
 (defn start-shader-display
   "Start a new shader display with the specified mode. Prefer start or
    start-fullscreen for simpler usage."
-  [mode shader-filename-or-str-atom textures cams videos title true-fullscreen? display-sync-hz window-idx]
+  [mode shader-filename-or-str-atom texture-filenames texture-folders cam-devices video-filenames title true-fullscreen? display-sync-hz window-idx]
   (let [is-filename     (not (instance? clojure.lang.Atom shader-filename-or-str-atom))
         shader-filename (if is-filename
                           shader-filename-or-str-atom)
@@ -525,9 +537,10 @@
                                  mode
                                  shader-filename
                                  shader-str-atom
-                                 textures
-                                 cams
-                                 videos
+                                 texture-filenames
+                                 texture-folders
+                                 cam-devices
+                                 video-filenames
                                  title
                                  true-fullscreen?
                                  display-sync-hz
@@ -537,32 +550,34 @@
   "Start a new shader display."
   [shader-filename-or-str-atom
    &{:keys [width height title display-sync-hz
-            textures cams videos fullscreen? window-idx]
-     :or {width           1280
-          height          800
-          title           "cutter"
-          display-sync-hz 30
-          textures        []
-          cams            []
-          videos          []
-          fullscreen?     false
-          window-idx      0}}]
+            texture-filenames texture-folders cam-devices video-filenames fullscreen? window-idx]
+     :or {width             1280
+          height            800
+          title             "cutter"
+          display-sync-hz   30
+          texture-filenames []
+          texture-folders   []
+          camera-devices    []
+          video-filenames   []
+          fullscreen?       false
+          window-idx        0}}]
    (let [mode  [width height]]
-    (start-shader-display mode shader-filename-or-str-atom textures cams videos title false display-sync-hz window-idx)))
+    (start-shader-display mode shader-filename-or-str-atom texture-filenames texture-folders cam-devices video-filenames title false display-sync-hz window-idx)))
 
 (defn start-fullscreen
   "Start a new shader display."
   [shader-filename-or-str-atom
    &{:keys [width height title display-sync-hz
-            textures cams videos fullscreen? window-idx]
+            texture-filenames texture-folders cam-devices video-filenames fullscreen? window-idx]
      :or {width           1280
           height          800
           title           "cutter"
           display-sync-hz 30
-          textures        []
-          cams            []
-          videos          []
+          texture-filenames []
+          texture-folders   []
+          camera-devices    []
+          video-filenames   []
           fullscreen?     true
           window-idx      0}}]
    (let [mode  [width height]]
-    (start-shader-display mode shader-filename-or-str-atom textures cams videos title true display-sync-hz window-idx)))
+    (start-shader-display mode shader-filename-or-str-atom texture-filenames texture-folders cam-devices video-filenames title true display-sync-hz window-idx)))
