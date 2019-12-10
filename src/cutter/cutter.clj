@@ -109,12 +109,12 @@
     (when-not (org.lwjgl.glfw.GLFW/glfwInit)
     (throw (IllegalStateException. "Unable to initialize GLFW")))
     (let [
-        width               (nth display-mode 0) ;(:width @locals)
-        height              (nth display-mode 1);(:height @locals)
         primaryMonitor      (org.lwjgl.glfw.GLFW/glfwGetPrimaryMonitor)
         currentMonitor      (getMonitor window-idx true-fullscreen?)
         mode                (if (= 0 currentMonitor) primaryMonitor (org.lwjgl.glfw.GLFW/glfwGetVideoMode currentMonitor))
         current-time-millis (System/currentTimeMillis)
+        width               (nth display-mode 0)
+        height              (nth display-mode 1)        
         ;tex-filenames       (fill-filenames tex-filenames no-textures)
         ;videos              (fill-filenames videos no-videos)
         ;cams                (sort-cams cams)
@@ -550,7 +550,6 @@
    (let [mode  [width height]]
     (start-shader-display mode shader-filename-or-str-atom textures cams videos title false display-sync-hz window-idx)))
 
-;
 (defn start-fullscreen
   "Start a new shader display."
   [shader-filename-or-str-atom
