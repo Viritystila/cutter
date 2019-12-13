@@ -112,29 +112,23 @@
     :bff                        (atom 0)
     :isInitialized              (atom false)
     ;; shader uniforms
-    :i-uniforms                 {:iResolution {:type "vec3", :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)), :extra ""},
-                                :iGlobalTime {:type "float", :loc 0 :gltype (fn [id x] (GL20/glUniform1f id x)), :extra ""},
-                                :iPreviousFrame {:type "sampler2D", :loc 0 :gltype (fn [id x] (GL20/glUniform1f id x)), :extra ""},
-                                :iDataArray1 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"},
-                                :iDataArray2 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"},
-                                :iDataArray3 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"},
-                                :iDataArray4 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"}}
+    :i-uniforms                 {:iResolution   {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout ""},
+                                :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout ""},
+                                :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout(binding=0) "},
+                                :iText          {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout(binding=1) "},
+                                :iDataArray1    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
+                                :iDataArray2    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
+                                :iDataArray3    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
+                                :iDataArray4    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""}}
      ;textures
-     :i-textures     {:iPreviousFrame {:tex-id 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3},
-                      :iText {:tex-id 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3}}
+     :i-textures     {:iPreviousFrame {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
+                      :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0}}
      })
 ;; GLOBAL STATE ATOMS iPreviousFrame
 (defonce the-window-state (atom default-state-values))
 ;Opencv Java related
 (org.bytedeco.javacpp.Loader/load org.bytedeco.javacpp.opencv_java)
-(def matConverter (new org.viritystila.opencvMatConvert))
-(defn matInfo [mat] [(.dataAddr mat)
-                     (.rows mat)
-                     (.step1 mat)
-                     (.elemSize1 mat)
-                     (.height mat)
-                     (.width mat)
-                     (.channels mat)])
+
 ;;Data array
 (defn set-dataArray1-item [idx val]
     (let [  oa  (:dataArray1  @the-window-state)
@@ -162,12 +156,14 @@
 
 ;Text
 (defn write-text
+  "(cutter.cutter/write-text \"cutter\" 0 220 10 100 0.2 0.4 20 10 true)"
     [text x y size r g b thickness linetype clear]
         (let [  i-textures          (:i-textures @the-window-state)
                 texture             (:iText i-textures)
                 width               (:width texture)
                 height              (:height texture)
                 oldmat              (:mat texture)
+                queue               (:queue texture)
                 mat                 (if clear (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3) oldmat)
                 corner              (new org.opencv.core.Point x y)
                 style               (org.opencv.imgproc.Imgproc/FONT_HERSHEY_TRIPLEX)
@@ -177,10 +173,10 @@
                 texture             (assoc texture :mat mat)
                 texture             (assoc texture :buffer buffer)
                 i-textures          (assoc i-textures :iText texture)]
+                (async/offer! queue (matInfo mat))
                 (swap! the-window-state assoc :i-textures i-textures))
                 nil)
 ;v4l2
-
 (defn openV4L2output [device]
   (let [h (:height @the-window-state)
           w                (:width @the-window-state)
@@ -379,6 +375,7 @@
       (init-buffers locals)
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
+      ;(println (:i-textures @locals))
       ;(println :i-textures @locals)
       ;(init-textures locals)
       ;(init-cams locals)
@@ -390,7 +387,69 @@
       ;(when (and (not (nil? user-fn)) (:shader-good @locals))
       ;        (user-fn :init (:pgm-id @locals) (:tex-id-fftwave @locals)))
               ))
+              ;
 
+; ;
+(defn- set-opengl-texture [locals texture-key image]
+   (let[  i-textures          (:i-textures @locals )
+          texture             (texture-key i-textures)
+          target              (:target texture)
+          internal-format     (:internal-format texture)
+          format              (:format texture)
+          wset                (:width texture)
+          hset                (:height texture)
+          bset                (:channels texture)
+          init?               (:init-opengl texture)
+          tex-id              (:tex-id texture)
+          queue               (:queue texture)
+          height              (nth image 4)
+          width               (nth image 5)
+          image-bytes         (nth image 6)
+          ;_ (println "aAAAAA " wset hset bset)
+          ;_ (println "asdasd" image)
+          setnbytes           (* wset hset bset)
+          tex-image-target    ^Integer (+ 0 target)
+          nbytes              (* width height image-bytes)
+          buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))]
+          ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id))
+          ;(GL11/glBindTexture target tex-id)
+          (if (or init? (not= setnbytes nbytes))
+            (do
+              (try (GL11/glTexImage2D ^Integer tex-image-target 0 ^Integer internal-format
+                ^Integer width  ^Integer height 0
+                ^Integer format
+                GL11/GL_UNSIGNED_BYTE
+                buffer))
+                (let [texture     (assoc texture :width width :height height :channels image-bytes :init-opengl false)
+                      i-textures  (assoc i-textures texture-key texture)]
+                      (swap! locals assoc :i-textures i-textures)))
+            (do
+              (if (< 0 (nth image 0))
+                (try (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
+                    ^Integer width  ^Integer height
+                    ^Integer format
+                    GL11/GL_UNSIGNED_BYTE
+                    buffer)))))
+          ;(GL11/glBindTexture target 0)
+          (except-gl-errors "@ end of load-texture if-stmt")))
+;
+(defn- get-textures
+    [locals texture-key i-uniforms]
+    (let [i-textures          (:i-textures @locals)
+          texture             (texture-key i-textures)
+          queue               (:queue texture)
+          tex-id              (:tex-id texture)
+          target              (:target texture)
+          target              (:target texture)
+          image               (if (= nil queue) nil (async/poll! queue))]
+          (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id))
+          (GL11/glBindTexture target tex-id)
+          (if  (not (nil? image))
+                (do (set-opengl-texture locals texture-key image)
+                )
+                nil)
+          (GL11/glBindTexture target 0)
+          ))
 (defn- draw
   [locals]
   (let [{:keys [width height ;i-resolution-loc
@@ -435,23 +494,32 @@
     ;      (GL11/glBindTexture GL11/GL_TEXTURE_2D (nth tex-ids i)))))
 
     (except-gl-errors "@ draw after activate textures")
-
      ;(loop-get-cam-textures locals cams)
      ;(loop-get-video-textures locals videos)
      ;(set-text-opengl-texture locals)
 ;;
+    (get-textures locals :iText i-uniforms)
+
 ;;     ;; setup our uniform
     ;(:loc (:iResolution i-uniforms))
     ;(:loc (:iGlobalTime i-uniforms))
     ;:gltype
     ;(@(resolve (symbol "squared")) 2)
     ;(println (:gltype (:iResolution i-uniforms)))
+
+
+
     ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
     ((:gltype (:iDataArray1 i-uniforms)) (:loc (:iDataArray1 i-uniforms)) dataArray1 dataArray1Buffer)
     ((:gltype (:iDataArray2 i-uniforms)) (:loc (:iDataArray2 i-uniforms)) dataArray2 dataArray2Buffer)
     ((:gltype (:iDataArray3 i-uniforms)) (:loc (:iDataArray3 i-uniforms)) dataArray4 dataArray3Buffer)
     ((:gltype (:iDataArray4 i-uniforms)) (:loc (:iDataArray4 i-uniforms)) dataArray1 dataArray4Buffer)
+
+    ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) 0)
+
+
+
 ;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
 ;     (GL20/glUniform1i (nth i-channel-loc 1) 2)
 ;     (GL20/glUniform1i (nth i-channel-loc 2) 3)

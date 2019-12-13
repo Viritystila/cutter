@@ -32,7 +32,16 @@
            (org.lwjgl BufferUtils)
            (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
+;
 
+(def matConverter (new org.viritystila.opencvMatConvert))
+(defn matInfo [mat] [(.dataAddr mat)
+                     (.rows mat)
+                     (.step1 mat)
+                     (.elemSize1 mat)
+                     (.height mat)
+                     (.width mat)
+                     (.channels mat)])
 
 (defn oc-tex-internal-format
  "return the internal-format for the glTexImage2D call for this image"

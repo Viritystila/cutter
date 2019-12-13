@@ -45,22 +45,19 @@
         format              (oc-tex-format mat)
         buffer              (oc-mat-to-bytebuffer mat)
         channels            (.channels mat)
-        texture             { :tex-id         tex-id,
-                              :height          height,
+        queue               (async/chan (async/buffer 1))
+        texture             { :tex-id           tex-id,
+                              :target           target,
+                              :height           height,
                               :width            width
                               :mat              mat,
                               :buffer           buffer,
                               :internal-format  internal-format,
                               :format           format
-                              :channels         channels} ]
-        ;(swap! locals assoc input_type (assoc texture-container (key tex-id) texture))
-        ; (reset! (nth (:target-cam @locals) cam-id) target)
-        ; (reset! (nth (:text-id-cam @locals) cam-id) tex-id)
-        ; (reset! (nth (:internal-format-cam @locals) cam-id) internal-format)
-        ; (reset! (nth (:format-cam @locals) cam-id) format)
-        ; (reset! (nth (:fps-cam @locals) cam-id) 1)
-        ; (reset! (nth (:width-cam @locals) cam-id) width)
-        ; (reset! (nth (:height-cam @locals) cam-id) height)
+                              :channels         channels,
+                              :init-opengl      true
+                              :queue            queue}]
+        (async/offer! queue (matInfo mat))
         (GL11/glBindTexture target tex-id)
         (GL11/glTexParameteri target GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
         (GL11/glTexParameteri target GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)

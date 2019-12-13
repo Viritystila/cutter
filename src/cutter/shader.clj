@@ -31,8 +31,8 @@
                i-uniforms))
 
 (defn uniforms-to-string [locals]
-  (let [{:keys [i-uniforms]} @locals]
-  (clojure.string/join (mapv (fn [x](str "uniform " (str (:type (x i-uniforms)) (:extra (x i-uniforms))) " " (name x) "; \n" ) ) (keys i-uniforms)  ))))
+  (let [{:keys [i-uniforms]} @locals] :layout
+  (clojure.string/join (mapv (fn [x](str (str (:layout (x i-uniforms))) " " "uniform " (str (:type (x i-uniforms)) (:extra (x i-uniforms))) " " (name x) "; \n" ) ) (keys i-uniforms)  ))))
 
 (defn slurp-fs
   [locals filename]

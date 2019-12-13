@@ -2,8 +2,8 @@ out vec4 op;
 void main(void) {
   vec2 uv = (gl_FragCoord.xy / iResolution.xy);
   uv.y=1.0-uv.y;
-  uv.x = uv.x + 5.5*sin(0.15*iGlobalTime);
-  uv.y = uv.y + 2.5*cos(1.03*iGlobalTime);
+  uv.x = uv.x + 5.5*sin(0.015*iGlobalTime);
+  uv.y = uv.y + 2.5*cos(0.03*iGlobalTime);
   float data1_0=iDataArray1[0];
   float data1_1=iDataArray1[1];
   float data2_0=iDataArray2[0];
@@ -27,6 +27,7 @@ void main(void) {
   //vec4 v5= texture2D(iVideo4, uv4);
 
   vec4 pf1=texture2D(iPreviousFrame, uv);
+  vec4 text=texture2D(iText, uv);
 
   //vec4 c = mix(v1, v2,c2.r);  // alpha blend between two textures
   //vec4 cf = mix(c1,c2,sin(c3.r));  // alpha blend between two textures
@@ -37,6 +38,6 @@ void main(void) {
   //vec4 cf5 = mix(cf3,c2,sin(cf4.r));
   //vec4 cf6 = mix(c,c2, 0.5); //iDataArray[0]);
 
-  op = mix(pf1, vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1), 1);
+  op =  mix(text, vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1), 0.5);
   //out = op;
 }
