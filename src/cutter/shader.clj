@@ -32,7 +32,7 @@
 
 (defn uniforms-to-string [locals]
   (let [{:keys [i-uniforms]} @locals]
-  (clojure.string/join (mapv (fn [x](str "uniform " (:type (x i-uniforms)) " " (name x) "; \n" ) ) (keys i-uniforms)  ))))
+  (clojure.string/join (mapv (fn [x](str "uniform " (str (:type (x i-uniforms)) (:extra (x i-uniforms))) " " (name x) "; \n" ) ) (keys i-uniforms)  ))))
 
 (defn slurp-fs
   [locals filename]
@@ -43,6 +43,7 @@
                       (uniforms-to-string locals)
                       "\n"
                       (slurp filename))]
+    ;(println file-str)
     file-str))
 
 ;; ======================================================================

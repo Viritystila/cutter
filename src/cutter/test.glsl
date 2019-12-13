@@ -4,6 +4,9 @@ void main(void) {
   uv.y=1.0-uv.y;
   uv.x = uv.x + 5.5*sin(0.15*iGlobalTime);
   uv.y = uv.y + 2.5*cos(1.03*iGlobalTime);
+  float data1_0=iDataArray1[0];
+  float data1_1=iDataArray1[1];
+  float data2_0=iDataArray2[0];
   //vec4 c1 = texture2D(iChannel0, uv);
   //vec4 c1b =texture2D(iChannel1, uv);
   //vec4 c1c =texture2D(iChannel2, uv);
@@ -34,6 +37,6 @@ void main(void) {
   //vec4 cf5 = mix(cf3,c2,sin(cf4.r));
   //vec4 cf6 = mix(c,c2, 0.5); //iDataArray[0]);
 
-  op = vec4(cos(iGlobalTime*1.41), 0.1, sin(iGlobalTime*3.14), 1);
+  op = vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1);
   //out = op;
 }

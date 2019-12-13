@@ -37,56 +37,164 @@
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
 
 (defonce default-state-values
-  { :active                  :no  ;; :yes/:stopping/:no
-    :width                   0
-    :height                  0
-    :title                   ""
-    :display-sync-hz         30
-    :start-time              0
-    :last-time               0
-    :window                  nil
-    :keyCallback             nil
+  { :active                     :no  ;; :yes/:stopping/:no
+    :width                      0
+    :height                     0
+    :title                      ""
+    :display-sync-hz            30
+    :start-time                 0
+    :last-time                  0
+    :window                     nil
+    :keyCallback                nil
     ;; geom ids
-    :vbo-id                  0
-    :vertices-count          0
-    :vao-id                  0
-    :vboc-id                 0
-    :vboi-id                 0
-    :indices-count           0
+    :vbo-id                     0
+    :vertices-count             0
+    :vao-id                     0
+    :vboc-id                    0
+    :vboi-id                    0
+    :indices-count              0
     ;; shader program
-    :shader-ver              "#version 460 core"
-    :shader-good             true ;; false in error condition
-    :shader-filename         nil
-    :shader-str-atom         (atom nil)
-    :shader-str              ""
-    :vs-id                   0
-    :fs-id                   0
-    :pgm-id                  0
+    :shader-ver                 "#version 460 core"
+    :shader-good                true ;; false in error condition
+    :shader-filename            nil
+    :shader-str-atom            (atom nil)
+    :shader-str                 ""
+    :vs-id                      0
+    :fs-id                      0
+    :pgm-id                     0
     ;; Textures, cameras and video paths
-    :maximum-textures        1000
-    :maximum-texture-folders 1000
-    :maximum-cameras         1000
-    :maximum-videos          1000
-    :maximum-running-cameras 10
-    :maximum-running-videos  10
-    :maximum-running-buffer  10
-    :maximum-buffer-length   250  ;Frames
-    :texture-filenames       []
-    :texture-folders         []
-    :camera-devices          []
-    :video-filenames         []
-    :textures                {} ;{:filename, :tex-id, :height, :width, :matn :internal-format, :format}
-    :texture-arrays          {}
-    :cameras                 {}
-    :videos                  {}
+    :maximum-textures           1000
+    :maximum-texture-folders    1000
+    :maximum-cameras            1000
+    :maximum-videos             1000
+    :maximum-running-cameras    10
+    :maximum-running-videos     10
+    :maximum-running-buffer     10
+    :maximum-buffer-length      250  ;Frames
+    ;:maximum-live-uniforms      10
+    ;:maximum-buffered-uniforms  10
+    ;:maximum-texture-uniforms   50
+    :texture-filenames          []
+    :texture-folders            []
+    :camera-devices             []
+    :video-filenames            []
+    :textures                   {} ;{:filename, :tex-id, :height, :width, :matn :internal-format, :format}
+    :texture-arrays             {}
+    :cameras                    {}
+    :videos                     {}
+    ;Data Arrays
+    :dataArray1                  (vec (make-array Float/TYPE 256))
+    :dataArray1Buffer            (-> (BufferUtils/createFloatBuffer 256)
+                                      (.put (float-array
+                                      (vec (make-array Float/TYPE 256))))
+                                      (.flip))
+    :dataArray2                (vec (make-array Float/TYPE 256))
+    :dataArray2Buffer            (-> (BufferUtils/createFloatBuffer 256)
+                                  (.put (float-array
+                                  (vec (make-array Float/TYPE 256))))
+                                  (.flip))
+    :dataArray3                  (vec (make-array Float/TYPE 256))
+    :dataArray3Buffer            (-> (BufferUtils/createFloatBuffer 256)
+                                  (.put (float-array
+                                  (vec (make-array Float/TYPE 256))))
+                                  (.flip))
+    :dataArray4                  (vec (make-array Float/TYPE 256))
+    :dataArray4Buffer            (-> (BufferUtils/createFloatBuffer 256)
+                                  (.put (float-array
+                                  (vec (make-array Float/TYPE 256))))
+                                  (.flip))
+    ;v4l2
+    :save-frames             (atom false)
+    :deviceName             (atom "/dev/video3")
+    :deviceId               (atom 0)
+    :minsize                (atom 0)
+    :bff                    (atom 0)
+    :isInitialized          (atom false)
     ;; shader uniforms
-    :i-resolution-loc        0 ;deprecate
-    :i-global-time-loc       0 ;deprecate
-    :i-uniforms              {:iResolution {:type "vec3", :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z))},
-                              :iGlobalTime {:type "float", :loc 0 :gltype (fn [id x] (GL20/glUniform1f id x))}}
+    :i-resolution-loc           0 ;deprecate
+    :i-global-time-loc          0 ;deprecate
+    :i-uniforms                 {:iResolution {:type "vec3", :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)), :extra ""},
+                                :iGlobalTime {:type "float", :loc 0 :gltype (fn [id x] (GL20/glUniform1f id x)), :extra ""},
+                                :iPreviousFrame {:type "sampler2D", :loc 0 :gltype (fn [id x] (GL20/glUniform1f id x)), :extra ""},
+                                :iDataArray1 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"},
+                                :iDataArray2 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"},
+                                :iDataArray3 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"},
+                                :iDataArray4 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"}}
                    })
-;; GLOBAL STATE ATOMS
+;; GLOBAL STATE ATOMS iPreviousFrame
 (defonce the-window-state (atom default-state-values))
+
+;;Data array
+
+(defn set-dataArray1-item [idx val]
+    (let [  oa  (:dataArray1  @the-window-state)
+            na  (assoc oa idx val)]
+        (swap! the-window-state assoc :dataArray1 na)
+        nil))
+
+(defn set-dataArray2-item [idx val]
+    (let [  oa  (:dataArray2  @the-window-state)
+            na  (assoc oa idx val)]
+        (swap! the-window-state assoc :dataArray2 na)
+        nil))
+
+(defn set-dataArray3-item [idx val]
+    (let [  oa  (:dataArray3  @the-window-state)
+            na  (assoc oa idx val)]
+        (swap! the-window-state assoc :dataArray3 na)
+        nil))
+
+(defn set-dataArray4-item [idx val]
+    (let [  oa  (:dataArray4  @the-window-state)
+            na  (assoc oa idx val)]
+        (swap! the-window-state assoc :dataArray4 na)
+        nil))
+
+
+;v4l2
+
+(defn openV4L2output [device] (let [h        (:height @the-window-state)
+                                   w        (:width @the-window-state)
+                                   in_fd           (org.bytedeco.javacpp.v4l2/v4l2_open device 02)
+                                   cap             (new org.bytedeco.javacpp.v4l2$v4l2_capability)
+                                   flag            (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_QUERYCAP) cap)
+                                   _               (println "VIDIOC_QUERYCAP: " flag)
+                                   v4l2_format     (new org.bytedeco.javacpp.v4l2$v4l2_format)
+                                    _               (.type v4l2_format (long org.bytedeco.javacpp.v4l2/V4L2_BUF_TYPE_VIDEO_OUTPUT))
+                                    v4l2_pix_format (new org.bytedeco.javacpp.v4l2$v4l2_pix_format)
+                                    _               (.pixelformat v4l2_pix_format (long org.bytedeco.javacpp.v4l2/V4L2_PIX_FMT_RGB24))
+                                    _               (.width v4l2_pix_format w)
+                                    _               (.height v4l2_pix_format h)
+                                    minsize         (* 3 (.width v4l2_pix_format))
+                                    _               (if (< (.bytesperline v4l2_pix_format) minsize) (.bytesperline v4l2_pix_format minsize))
+                                    minsize         (* (.height v4l2_pix_format) (.bytesperline v4l2_pix_format))
+                                    _               (if (< (.sizeimage v4l2_pix_format) minsize) (.sizeimage v4l2_pix_format minsize))
+                                    _               (.fmt_pix v4l2_format v4l2_pix_format)
+                                    flag            (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_S_FMT) v4l2_format)
+                                    _               (println "VIDIOC_S_FMT: " flag)
+                                    bff             (new org.bytedeco.javacpp.BytePointer minsize)]
+                                    (reset! (:deviceName @the-window-state) device)
+                                    (reset! (:deviceId @the-window-state) in_fd)
+                                    (reset! (:minsize @the-window-state) minsize)
+                                    (reset! (:bff @the-window-state) bff)
+                                    (reset! (:isInitialized @the-window-state) true)))
+
+(defn closeV4L2output [] (org.bytedeco.javacpp.v4l2/v4l2_close @(:deviceId @the-window-state))
+                              (reset! (:isInitialized @the-window-state) false))
+
+(defn toggle-recording [device] (let [    save    (:save-frames @the-window-state)]
+                            (if (= false @save)
+                                (do
+                                    (openV4L2output device)
+                                    (println "Start recording")
+                                    (reset! (:save-frames @the-window-state) true ))
+                                (do (println "Stop recording")
+
+                                    (reset! (:save-frames @the-window-state) false )
+                                    (closeV4L2output)
+                                    (Thread/sleep 100)
+                                    ))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
@@ -263,6 +371,8 @@
                 ;i-channel-loc i-fftwave-loc i-cam-loc i-video-loc
                 i-channel-res-loc
                 i-uniforms
+                dataArray1 dataArray2 dataArray3 dataArray4
+                dataArray1Buffer dataArray2Buffer dataArray3Buffer dataArray4Buffer
                 ;i-dataArray-loc i-previous-frame-loc i-text-loc
                 ;channel-res-buffer bytebuffer-frame  buffer-channel dataArrayBuffer dataArray
                 old-pgm-id old-fs-id
@@ -307,7 +417,10 @@
     ;(println (:gltype (:iResolution i-uniforms)))
     ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
-
+    ((:gltype (:iDataArray1 i-uniforms)) (:loc (:iDataArray1 i-uniforms)) dataArray1 dataArray1Buffer)
+    ((:gltype (:iDataArray2 i-uniforms)) (:loc (:iDataArray2 i-uniforms)) dataArray2 dataArray2Buffer)
+    ((:gltype (:iDataArray3 i-uniforms)) (:loc (:iDataArray3 i-uniforms)) dataArray4 dataArray3Buffer)
+    ((:gltype (:iDataArray4 i-uniforms)) (:loc (:iDataArray4 i-uniforms)) dataArray1 dataArray4Buffer)
 ;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
 ;     (GL20/glUniform1i (nth i-channel-loc 1) 2)
 ;     (GL20/glUniform1i (nth i-channel-loc 2) 3)
@@ -392,7 +505,19 @@
     ; (GL11/glBindTexture GL11/GL_TEXTURE_2D tex-id-previous-frame)
     ; (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
     ; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-    ;
+    ;Copying the previous image to its own texture
+    (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:loc (:iPreviousFrame i-uniforms))))
+    (GL11/glBindTexture GL11/GL_TEXTURE_2D (:loc (:iPreviousFrame i-uniforms)))
+    (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
+    (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+    ; (if @save-frames
+    ;   (do ; download it and copy the previous image to its own texture
+    ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-previous-frame))
+    ;     (GL11/glBindTexture GL11/GL_TEXTURE_2D tex-id-previous-frame)
+    ;     (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer @bytebuffer-frame)
+    ;     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+    ;     (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) (new org.bytedeco.javacpp.BytePointer @bytebuffer-frame) (long  @(:minsize @the-window-state))))
+    ;     nil)
     ;(except-gl-errors "@ draw after copy")
 
 
