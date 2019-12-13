@@ -37,23 +37,23 @@
 
 ;Single texture OpenGL initialize
 (defn init-texture
-   [locals filename input_type]
+   [width height]
    (let [target             (GL11/GL_TEXTURE_2D)
         tex-id              (GL11/glGenTextures)
-        height              1
-        width               1
         mat                 (org.opencv.core.Mat/zeros height width org.opencv.core.CvType/CV_8UC3)
         internal-format     (oc-tex-internal-format mat)
         format              (oc-tex-format mat)
-        texture             {:filename filename,
-                              :tex-id tex-id,
-                              :height height,
-                              :width, width
-                              :mat mat
-                              :internal-format internal-format,
-                              :format format}
-        texture-container   (input_type locals)]
-        (swap! locals assoc input_type (assoc texture-container (key tex-id) texture))
+        buffer              (oc-mat-to-bytebuffer mat)
+        channels            (.channels mat)
+        texture             { :tex-id         tex-id,
+                              :height          height,
+                              :width            width
+                              :mat              mat,
+                              :buffer           buffer,
+                              :internal-format  internal-format,
+                              :format           format
+                              :channels         channels} ]
+        ;(swap! locals assoc input_type (assoc texture-container (key tex-id) texture))
         ; (reset! (nth (:target-cam @locals) cam-id) target)
         ; (reset! (nth (:text-id-cam @locals) cam-id) tex-id)
         ; (reset! (nth (:internal-format-cam @locals) cam-id) internal-format)
@@ -65,4 +65,13 @@
         (GL11/glTexParameteri target GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
         (GL11/glTexParameteri target GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
         (GL11/glTexParameteri target GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
-        (GL11/glTexParameteri target GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)))
+        (GL11/glTexParameteri target GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
+        texture))
+
+
+(defn initialize-texture [locals uniform-key width height]
+  (let [{:keys [i-textures]} @locals
+    _ (println i-textures)
+        i-textures (assoc i-textures uniform-key (init-texture width height))
+        ]
+               i-textures))

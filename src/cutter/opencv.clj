@@ -59,3 +59,13 @@
                     (= image-type org.opencv.core.CvType/CV_8UC4)       GL11/GL_RGBA
                     :else GL12/GL_BGR)]
     format))
+
+(defn oc-mat-to-bytebuffer [mat] (let [height      (.height mat)
+                                       width       (.width mat)
+                                       channels    (.channels mat)
+                                       size        (* height width channels)
+                                       data        (byte-array size)
+                                       _           (.get mat 0 0 data)]
+                                       ^ByteBuffer (-> (BufferUtils/createByteBuffer size)
+                                              (.put data)
+                                              (.flip))))

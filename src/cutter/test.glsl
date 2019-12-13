@@ -26,7 +26,7 @@ void main(void) {
   //vec4 v4= texture2D(iVideo3, uv4);
   //vec4 v5= texture2D(iVideo4, uv4);
 
-  //vec4 bf1=texture2D(iPreviousFrame, uv5);
+  vec4 pf1=texture2D(iPreviousFrame, uv);
 
   //vec4 c = mix(v1, v2,c2.r);  // alpha blend between two textures
   //vec4 cf = mix(c1,c2,sin(c3.r));  // alpha blend between two textures
@@ -37,6 +37,6 @@ void main(void) {
   //vec4 cf5 = mix(cf3,c2,sin(cf4.r));
   //vec4 cf6 = mix(c,c2, 0.5); //iDataArray[0]);
 
-  op = vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1);
+  op = mix(pf1, vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1), 1);
   //out = op;
 }

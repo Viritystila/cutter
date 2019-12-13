@@ -8,6 +8,7 @@
             [cutter.shader :refer :all]
             [cutter.general :refer :all]
             [cutter.gl_init :refer :all]
+            [cutter.opencv :refer :all]
             [clojure.core.async
              :as async
              :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
@@ -104,15 +105,13 @@
                                   (vec (make-array Float/TYPE 256))))
                                   (.flip))
     ;v4l2
-    :save-frames             (atom false)
-    :deviceName             (atom "/dev/video3")
-    :deviceId               (atom 0)
-    :minsize                (atom 0)
-    :bff                    (atom 0)
-    :isInitialized          (atom false)
+    :save-frames                (atom false)
+    :deviceName                 (atom "/dev/video3")
+    :deviceId                   (atom 0)
+    :minsize                    (atom 0)
+    :bff                        (atom 0)
+    :isInitialized              (atom false)
     ;; shader uniforms
-    :i-resolution-loc           0 ;deprecate
-    :i-global-time-loc          0 ;deprecate
     :i-uniforms                 {:iResolution {:type "vec3", :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)), :extra ""},
                                 :iGlobalTime {:type "float", :loc 0 :gltype (fn [id x] (GL20/glUniform1f id x)), :extra ""},
                                 :iPreviousFrame {:type "sampler2D", :loc 0 :gltype (fn [id x] (GL20/glUniform1f id x)), :extra ""},
@@ -120,12 +119,23 @@
                                 :iDataArray2 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"},
                                 :iDataArray3 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"},
                                 :iDataArray4 {:type "float", :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]"}}
-                   })
+     ;textures
+     :i-textures     {:iPreviousFrame {:tex-id 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3},
+                      :iText {:tex-id 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3}}
+     })
 ;; GLOBAL STATE ATOMS iPreviousFrame
 (defonce the-window-state (atom default-state-values))
-
+;Opencv Java related
+(org.bytedeco.javacpp.Loader/load org.bytedeco.javacpp.opencv_java)
+(def matConverter (new org.viritystila.opencvMatConvert))
+(defn matInfo [mat] [(.dataAddr mat)
+                     (.rows mat)
+                     (.step1 mat)
+                     (.elemSize1 mat)
+                     (.height mat)
+                     (.width mat)
+                     (.channels mat)])
 ;;Data array
-
 (defn set-dataArray1-item [idx val]
     (let [  oa  (:dataArray1  @the-window-state)
             na  (assoc oa idx val)]
@@ -150,16 +160,34 @@
         (swap! the-window-state assoc :dataArray4 na)
         nil))
 
-
+;Text
+(defn write-text
+    [text x y size r g b thickness linetype clear]
+        (let [  i-textures          (:i-textures @the-window-state)
+                texture             (:iText i-textures)
+                width               (:width texture)
+                height              (:height texture)
+                oldmat              (:mat texture)
+                mat                 (if clear (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3) oldmat)
+                corner              (new org.opencv.core.Point x y)
+                style               (org.opencv.imgproc.Imgproc/FONT_HERSHEY_TRIPLEX)
+                colScal             (new org.opencv.core.Scalar (float r) (float g) (float b))
+                _                   (org.opencv.imgproc.Imgproc/putText mat text corner style size colScal thickness linetype)
+                buffer              (oc-mat-to-bytebuffer mat)
+                texture             (assoc texture :mat mat)
+                texture             (assoc texture :buffer buffer)
+                i-textures          (assoc i-textures :iText texture)]
+                (swap! the-window-state assoc :i-textures i-textures))
+                nil)
 ;v4l2
 
-(defn openV4L2output [device] (let [h        (:height @the-window-state)
-                                   w        (:width @the-window-state)
-                                   in_fd           (org.bytedeco.javacpp.v4l2/v4l2_open device 02)
-                                   cap             (new org.bytedeco.javacpp.v4l2$v4l2_capability)
-                                   flag            (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_QUERYCAP) cap)
-                                   _               (println "VIDIOC_QUERYCAP: " flag)
-                                   v4l2_format     (new org.bytedeco.javacpp.v4l2$v4l2_format)
+(defn openV4L2output [device] (let [h               (:height @the-window-state)
+                                   w                (:width @the-window-state)
+                                   in_fd            (org.bytedeco.javacpp.v4l2/v4l2_open device 02)
+                                   cap              (new org.bytedeco.javacpp.v4l2$v4l2_capability)
+                                   flag             (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_QUERYCAP) cap)
+                                   _                (println "VIDIOC_QUERYCAP: " flag)
+                                   v4l2_format      (new org.bytedeco.javacpp.v4l2$v4l2_format)
                                     _               (.type v4l2_format (long org.bytedeco.javacpp.v4l2/V4L2_BUF_TYPE_VIDEO_OUTPUT))
                                     v4l2_pix_format (new org.bytedeco.javacpp.v4l2$v4l2_pix_format)
                                     _               (.pixelformat v4l2_pix_format (long org.bytedeco.javacpp.v4l2/V4L2_PIX_FMT_RGB24))
@@ -350,6 +378,9 @@
       (GL11/glClearColor 0.0 0.0 0.0 0.0)
       (GL11/glViewport 0 0 width height)
       (init-buffers locals)
+      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
+      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
+      ;(println :i-textures @locals)
       ;(init-textures locals)
       ;(init-cams locals)
       ;(init-videos locals)
@@ -363,18 +394,19 @@
 
 (defn- draw
   [locals]
-  (let [{:keys [width height i-resolution-loc
+  (let [{:keys [width height ;i-resolution-loc
                 start-time last-time i-global-time-loc
                 i-date-loc
                 pgm-id vbo-id vao-id vboi-id vboc-id
                 vertices-count
                 ;i-channel-loc i-fftwave-loc i-cam-loc i-video-loc
-                i-channel-res-loc
+                ;i-channel-res-loc
                 i-uniforms
+                i-textures
                 dataArray1 dataArray2 dataArray3 dataArray4
                 dataArray1Buffer dataArray2Buffer dataArray3Buffer dataArray4Buffer
                 ;i-dataArray-loc i-previous-frame-loc i-text-loc
-                ;channel-res-buffer bytebuffer-frame  buffer-channel dataArrayBuffer dataArray
+                save-frames ;channel-res-buffer   buffer-channel dataArrayBuffer dataArray
                 old-pgm-id old-fs-id
                 ;tex-ids cams text-id-cam videos text-id-video tex-types tex-id-previous-frame tex-id-text-texture
                 ;user-fn
@@ -467,6 +499,22 @@
 
      ;(except-gl-errors "@ draw after DrawArrays")
      ;; Put everything back to default (deselect)
+     ;Copying the previous image to its own texture
+
+     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:tex-id (:iPreviousFrame i-textures))))
+     (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
+     (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
+     ;(GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+     (if @save-frames
+       (do ; download it and copy the previous image to its own texture
+         ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:tex-id (:iPreviousFrame i-textures))))
+         ;(GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
+         (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer (:buffer (:iPreviousFrame i-textures)))
+         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+         (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) (new org.bytedeco.javacpp.BytePointer (:buffer (:iPreviousFrame i-textures))) (long  @(:minsize @the-window-state))))
+         nil)
+     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
      (GL20/glDisableVertexAttribArray 0)
      ;(GL20/glDisableVertexAttribArray 1)
@@ -501,15 +549,11 @@
     ; (GL20/glUseProgram 0)
     ; (except-gl-errors "@ draw after post-draw")
     ;             ;Copying the previous image to its own texture
-    ; (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-previous-frame))
+    ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-previous-frame))
     ; (GL11/glBindTexture GL11/GL_TEXTURE_2D tex-id-previous-frame)
     ; (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
     ; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-    ;Copying the previous image to its own texture
-    (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:loc (:iPreviousFrame i-uniforms))))
-    (GL11/glBindTexture GL11/GL_TEXTURE_2D (:loc (:iPreviousFrame i-uniforms)))
-    (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
-    (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+
     ; (if @save-frames
     ;   (do ; download it and copy the previous image to its own texture
     ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-previous-frame))
