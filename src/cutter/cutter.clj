@@ -181,48 +181,47 @@
                 nil)
 ;v4l2
 
-(defn openV4L2output [device] (let [h               (:height @the-window-state)
-                                   w                (:width @the-window-state)
-                                   in_fd            (org.bytedeco.javacpp.v4l2/v4l2_open device 02)
-                                   cap              (new org.bytedeco.javacpp.v4l2$v4l2_capability)
-                                   flag             (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_QUERYCAP) cap)
-                                   _                (println "VIDIOC_QUERYCAP: " flag)
-                                   v4l2_format      (new org.bytedeco.javacpp.v4l2$v4l2_format)
-                                    _               (.type v4l2_format (long org.bytedeco.javacpp.v4l2/V4L2_BUF_TYPE_VIDEO_OUTPUT))
-                                    v4l2_pix_format (new org.bytedeco.javacpp.v4l2$v4l2_pix_format)
-                                    _               (.pixelformat v4l2_pix_format (long org.bytedeco.javacpp.v4l2/V4L2_PIX_FMT_RGB24))
-                                    _               (.width v4l2_pix_format w)
-                                    _               (.height v4l2_pix_format h)
-                                    minsize         (* 3 (.width v4l2_pix_format))
-                                    _               (if (< (.bytesperline v4l2_pix_format) minsize) (.bytesperline v4l2_pix_format minsize))
-                                    minsize         (* (.height v4l2_pix_format) (.bytesperline v4l2_pix_format))
-                                    _               (if (< (.sizeimage v4l2_pix_format) minsize) (.sizeimage v4l2_pix_format minsize))
-                                    _               (.fmt_pix v4l2_format v4l2_pix_format)
-                                    flag            (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_S_FMT) v4l2_format)
-                                    _               (println "VIDIOC_S_FMT: " flag)
-                                    bff             (new org.bytedeco.javacpp.BytePointer minsize)]
-                                    (reset! (:deviceName @the-window-state) device)
-                                    (reset! (:deviceId @the-window-state) in_fd)
-                                    (reset! (:minsize @the-window-state) minsize)
-                                    (reset! (:bff @the-window-state) bff)
-                                    (reset! (:isInitialized @the-window-state) true)))
+(defn openV4L2output [device]
+  (let [h (:height @the-window-state)
+          w                (:width @the-window-state)
+          in_fd            (org.bytedeco.javacpp.v4l2/v4l2_open device 02)
+          cap              (new org.bytedeco.javacpp.v4l2$v4l2_capability)
+          flag             (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_QUERYCAP) cap)
+          _                (println "VIDIOC_QUERYCAP: " flag)
+          v4l2_format      (new org.bytedeco.javacpp.v4l2$v4l2_format)
+          _               (.type v4l2_format (long org.bytedeco.javacpp.v4l2/V4L2_BUF_TYPE_VIDEO_OUTPUT))
+          v4l2_pix_format (new org.bytedeco.javacpp.v4l2$v4l2_pix_format)
+          _               (.pixelformat v4l2_pix_format (long org.bytedeco.javacpp.v4l2/V4L2_PIX_FMT_RGB24))
+          _               (.width v4l2_pix_format w)
+          _               (.height v4l2_pix_format h)
+          minsize         (* 3 (.width v4l2_pix_format))
+          _               (if (< (.bytesperline v4l2_pix_format) minsize) (.bytesperline v4l2_pix_format minsize))
+          minsize         (* (.height v4l2_pix_format) (.bytesperline v4l2_pix_format))
+          _               (if (< (.sizeimage v4l2_pix_format) minsize) (.sizeimage v4l2_pix_format minsize))
+          _               (.fmt_pix v4l2_format v4l2_pix_format)
+          flag            (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_S_FMT) v4l2_format)
+          _               (println "VIDIOC_S_FMT: " flag)
+          bff             (new org.bytedeco.javacpp.BytePointer minsize)]
+          (reset! (:deviceName @the-window-state) device)
+          (reset! (:deviceId @the-window-state) in_fd)
+          (reset! (:minsize @the-window-state) minsize)
+          (reset! (:bff @the-window-state) bff)
+          (reset! (:isInitialized @the-window-state) true)))
 
 (defn closeV4L2output [] (org.bytedeco.javacpp.v4l2/v4l2_close @(:deviceId @the-window-state))
                               (reset! (:isInitialized @the-window-state) false))
 
-(defn toggle-recording [device] (let [    save    (:save-frames @the-window-state)]
-                            (if (= false @save)
-                                (do
-                                    (openV4L2output device)
-                                    (println "Start recording")
-                                    (reset! (:save-frames @the-window-state) true ))
-                                (do (println "Stop recording")
-
-                                    (reset! (:save-frames @the-window-state) false )
-                                    (closeV4L2output)
-                                    (Thread/sleep 100)
-                                    ))))
-
+(defn toggle-recording [device]
+  (let [  save    (:save-frames @the-window-state)]
+          (if (= false @save)
+            (do
+              (openV4L2output device)
+              (println "Start recording")
+              (reset! (:save-frames @the-window-state) true ))
+            (do (println "Stop recording")
+              (reset! (:save-frames @the-window-state) false )
+              (closeV4L2output)
+              (Thread/sleep 100)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
