@@ -36,10 +36,11 @@
 
 
 ;Single texture OpenGL initialize
+
 (defn init-texture
-   [width height]
+   [width height tex-id]
    (let [target             (GL11/GL_TEXTURE_2D)
-        tex-id              (GL11/glGenTextures)
+        tex-id              tex-id
         mat                 (org.opencv.core.Mat/zeros height width org.opencv.core.CvType/CV_8UC3)
         internal-format     (oc-tex-internal-format mat)
         format              (oc-tex-format mat)
@@ -69,6 +70,6 @@
 (defn initialize-texture [locals uniform-key width height]
   (let [{:keys [i-textures]} @locals
     _ (println i-textures)
-        i-textures (assoc i-textures uniform-key (init-texture width height))
+        i-textures (assoc i-textures uniform-key (init-texture width height (GL11/glGenTextures)))
         ]
                i-textures))

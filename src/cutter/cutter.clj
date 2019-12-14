@@ -114,8 +114,8 @@
     ;; shader uniforms
     :i-uniforms                 {:iResolution   {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout ""},
                                 :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout ""},
-                                :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout(binding=0) "},
-                                :iText          {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout(binding=1) "},
+                                :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout (binding=0) "},
+                                :iText          {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout (binding=1) "},
                                 :iDataArray1    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
                                 :iDataArray2    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
                                 :iDataArray3    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
@@ -126,6 +126,7 @@
      })
 ;; GLOBAL STATE ATOMS iPreviousFrame
 (defonce the-window-state (atom default-state-values))
+
 ;Opencv Java related
 (org.bytedeco.javacpp.Loader/load org.bytedeco.javacpp.opencv_java)
 
@@ -175,6 +176,7 @@
                 i-textures          (assoc i-textures :iText texture)]
                 (async/offer! queue (matInfo mat))
                 (swap! the-window-state assoc :i-textures i-textures))
+
                 nil)
 ;v4l2
 (defn openV4L2output [device]
@@ -420,7 +422,8 @@
                 ^Integer format
                 GL11/GL_UNSIGNED_BYTE
                 buffer))
-                (let [texture     (assoc texture :width width :height height :channels image-bytes :init-opengl false)
+                (let [texture     (init-texture width height tex-id)
+                      texture     (assoc texture :init-opengl false) ;(init-texture width height);
                       i-textures  (assoc i-textures texture-key texture)]
                       (swap! locals assoc :i-textures i-textures)))
             (do
