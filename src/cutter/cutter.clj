@@ -79,7 +79,7 @@
     :texture-folders            []
     :camera-devices             []
     :video-filenames            []
-    :textures                   {} ;{:filename, :tex-id, :height, :width, :matn :internal-format, :format}
+    :textures                   {} ;{:filename, }
     :texture-arrays             {}
     :cameras                    {}
     :videos                     {}
@@ -116,13 +116,15 @@
                                 :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout ""},
                                 :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout (binding=0) "},
                                 :iText          {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout (binding=1) "},
+                                :iChannel1      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "layout (binding=2) "},
                                 :iDataArray1    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
                                 :iDataArray2    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
                                 :iDataArray3    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""},
                                 :iDataArray4    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout ""}}
      ;textures
      :i-textures     {:iPreviousFrame {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0}}
+                      :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0}
+                      :iChannel1      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0}}
      })
 ;; GLOBAL STATE ATOMS iPreviousFrame
 (defonce the-window-state (atom default-state-values))
@@ -251,7 +253,18 @@
   "Initialise a shader-powered window with the specified
    display-mode. If true-fullscreen? is true, fullscreen mode is
    attempted."
-  [locals display-mode title shader-filename shader-str-atom texture-filenames texture-folders camera-devices video-filenames true-fullscreen? display-sync-hz window-idx]
+  [locals
+   display-mode
+   title
+   shader-filename
+   shader-str-atom
+   texture-filenames
+   texture-folders
+   camera-devices
+   video-filenames
+   true-fullscreen?
+   display-sync-hz
+   window-idx]
     (when-not (org.lwjgl.glfw.GLFW/glfwInit)
     (throw (IllegalStateException. "Unable to initialize GLFW")))
     (let [
@@ -261,10 +274,10 @@
         current-time-millis (System/currentTimeMillis)
         width               (nth display-mode 0)
         height              (nth display-mode 1)
-        texture-filenames   (cutter.general/remove-inexistent texture-filenames)
-        texture-folders     (cutter.general/remove-inexistent texture-folders)
-        camera-devices      (cutter.general/remove-inexistent camera-devices)
-        video-filenames     (cutter.general/remove-inexistent video-filenames)
+        texture-filenames   (cutter.general/remove-inexistent texture-filenames (:maximum-textures @locals))
+        texture-folders     (cutter.general/remove-inexistent texture-folders (:maximum-texture-folders @locals))
+        camera-devices      (cutter.general/remove-inexistent camera-devices (:maximum-cameras @locals))
+        video-filenames     (cutter.general/remove-inexistent video-filenames (::maximum-videos @locals))
         ]
         (swap! locals
            assoc
@@ -407,8 +420,6 @@
           height              (nth image 4)
           width               (nth image 5)
           image-bytes         (nth image 6)
-          ;_ (println "aAAAAA " wset hset bset)
-          ;_ (println "asdasd" image)
           setnbytes           (* wset hset bset)
           tex-image-target    ^Integer (+ 0 target)
           nbytes              (* width height image-bytes)

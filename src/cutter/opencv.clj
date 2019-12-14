@@ -78,3 +78,8 @@
                                        ^ByteBuffer (-> (BufferUtils/createByteBuffer size)
                                               (.put data)
                                               (.flip))))
+
+
+(defn oc_load_image [filename]
+  (let [mat   (org.opencv.imgcodecs.Imgcodecs/imread filename org.opencv.imgcodecs.Imgcodecs/IMREAD_COLOR)]
+  mat))

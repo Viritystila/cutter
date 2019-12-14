@@ -34,4 +34,18 @@
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
 
 
-(defn list-camera-devices [] (println @the-window-state))
+(defn list-cameras [] (println (:cameras @the-window-state)))
+
+(defn list-videos [] (println (:videos @the-window-state)))
+
+(defn list-textures [] (println (:textures @the-window-state)))
+
+(defn list-texture-arrays [] (println (:texture-arrays @the-window-state)))
+
+(defn list-camera-devices [] (println (:camera-devices @the-window-state)))
+
+(defn list-video-filenames [] (println (:video-filenames @the-window-state)))
+
+(defn list-texture-filenames [] (println (:texture-filenames @the-window-state)))
+
+(defn list-texture-folders [] (println (:texture-folders @the-window-state)))
