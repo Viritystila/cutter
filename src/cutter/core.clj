@@ -10,6 +10,7 @@
   (:use [clojure.data])
   (:require
    [cutter.cutter :refer :all]
+   [cutter.cutter_helper :refer :all]
    [clojure.tools.namespace.repl :refer [refresh]]))
 
   (defn main
