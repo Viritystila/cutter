@@ -126,30 +126,6 @@
           val           (if haskey (nth data idx) nil)]
           val))
 
-(defn set-dataArray1-item [idx val]
-    (let [  oa  (:dataArray1  @the-window-state)
-            na  (assoc oa idx val)]
-        (swap! the-window-state assoc :dataArray1 na)
-        nil))
-
-(defn set-dataArray2-item [idx val]
-    (let [  oa  (:dataArray2  @the-window-state)
-            na  (assoc oa idx val)]
-        (swap! the-window-state assoc :dataArray2 na)
-        nil))
-
-(defn set-dataArray3-item [idx val]
-    (let [  oa  (:dataArray3  @the-window-state)
-            na  (assoc oa idx val)]
-        (swap! the-window-state assoc :dataArray3 na)
-        nil))
-
-(defn set-dataArray4-item [idx val]
-    (let [  oa  (:dataArray4  @the-window-state)
-            na  (assoc oa idx val)]
-        (swap! the-window-state assoc :dataArray4 na)
-        nil))
-
 (defn list-cameras [] (println (:cameras @the-window-state)))
 
 (defn list-videos [] (println (:videos @the-window-state)))

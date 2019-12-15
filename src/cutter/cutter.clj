@@ -86,31 +86,7 @@
     ;Data Arrays
     :maxDataArrays              16
     :maxDataArraysLength        256
-    :dataArrays                 (mapv (fn [x] (vec (make-array Float/TYPE 256)) ) (range 16))
-    :dataArrayBuffers           (mapv (fn [x](-> (BufferUtils/createFloatBuffer 256)
-                                  (.put (float-array
-                                      (vec (make-array Float/TYPE 256))))
-                                        (.flip)) ) (range 16))
-    :dataArray1                  (vec (make-array Float/TYPE 256))
-    :dataArray1Buffer            (-> (BufferUtils/createFloatBuffer 256)
-                                  (.put (float-array
-                                      (vec (make-array Float/TYPE 256))))
-                                        (.flip))
-    :dataArray2                (vec (make-array Float/TYPE 256))
-    :dataArray2Buffer            (-> (BufferUtils/createFloatBuffer 256)
-                                  (.put (float-array
-                                    (vec (make-array Float/TYPE 256))))
-                                      (.flip))
-    :dataArray3                  (vec (make-array Float/TYPE 256))
-    :dataArray3Buffer            (-> (BufferUtils/createFloatBuffer 256)
-                                  (.put (float-array
-                                    (vec (make-array Float/TYPE 256))))
-                                      (.flip))
-    :dataArray4                  (vec (make-array Float/TYPE 256))
-    :dataArray4Buffer            (-> (BufferUtils/createFloatBuffer 256)
-                                  (.put (float-array
-                                    (vec (make-array Float/TYPE 256))))
-                                      (.flip))
+
     ;v4l2
     :save-frames                (atom false)
     :deviceName                 (atom "/dev/video3")
@@ -122,7 +98,7 @@
     :i-channels                 (mapv (fn [x] (keyword (str "iChannel" x))) (range 1 16 1))
     :i-dataArrays               (into {} (mapv (fn [x] {(keyword (str "iDataArray" x)) {:datavec (vec (make-array Float/TYPE 256)), :buffer (-> (BufferUtils/createFloatBuffer 256)
                                   (.put (float-array
-                                      (vec (make-array Float/TYPE 8))))
+                                      (vec (make-array Float/TYPE 256))))
                                         (.flip))} } ) (range 1 16 1)))
     :i-uniforms                 {:iResolution   {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
                                 :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
@@ -147,6 +123,7 @@
                                 :iDataArray1    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray2    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray3    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+                                :iDataArray4    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray5    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray6    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray7    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
@@ -511,12 +488,13 @@
     ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
 
-    ;(doseq [x i-dataArrays])
+    (doseq [x (keys i-dataArrays)]
+    ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:datavec (x i-dataArrays)) (:buffer (x i-dataArrays))))
 
-    ((:gltype (:iDataArray1 i-uniforms)) (:loc (:iDataArray1 i-uniforms)) dataArray1 dataArray1Buffer)
-    ((:gltype (:iDataArray2 i-uniforms)) (:loc (:iDataArray2 i-uniforms)) dataArray2 dataArray2Buffer)
-    ((:gltype (:iDataArray3 i-uniforms)) (:loc (:iDataArray3 i-uniforms)) dataArray4 dataArray3Buffer)
-    ((:gltype (:iDataArray4 i-uniforms)) (:loc (:iDataArray4 i-uniforms)) dataArray1 dataArray4Buffer)
+    ; ((:gltype (:iDataArray1 i-uniforms)) (:loc (:iDataArray1 i-uniforms)) dataArray1 dataArray1Buffer)
+    ; ((:gltype (:iDataArray2 i-uniforms)) (:loc (:iDataArray2 i-uniforms)) dataArray2 dataArray2Buffer)
+    ; ((:gltype (:iDataArray3 i-uniforms)) (:loc (:iDataArray3 i-uniforms)) dataArray4 dataArray3Buffer)
+    ; ((:gltype (:iDataArray4 i-uniforms)) (:loc (:iDataArray4 i-uniforms)) dataArray1 dataArray4Buffer)
 
     ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) (:unit (:iText i-uniforms)))
     (get-textures locals :iText i-uniforms)
