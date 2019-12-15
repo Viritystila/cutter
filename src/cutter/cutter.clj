@@ -79,10 +79,10 @@
     :texture-folders            []
     :camera-devices             []
     :video-filenames            []
-    :textures                   {} ;{:filename, {:destination}}
-    :texture-arrays             {}
-    :cameras                    {}
-    :videos                     {}
+    :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
+    :texture-arrays             {} ;{:dir, {:idx :destination :source "mat array" :running false}}
+    :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false}}
+    :videos                     {} ;{:filename, {:idx :destination :source "capture" :running false}}
     ;Data Arrays
     :maxDataArrays              16
     :maxDataArraysLength        256

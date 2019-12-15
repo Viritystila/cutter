@@ -127,10 +127,13 @@
           val))
 
 (defn list-cameras [] (println (:cameras @the-window-state)))
+(defn get-camera-keys [] (keys (:cameras @the-window-state)))
 
 (defn list-videos [] (println (:videos @the-window-state)))
+(defn get-video-keys [] (keys (:videos @the-window-state)))
 
 (defn list-textures [] (println (:textures @the-window-state)))
+(defn get-texture-keys [] (keys (:textures @the-window-state)))
 
 (defn list-texture-arrays [] (println (:texture-arrays @the-window-state)))
 
@@ -150,9 +153,12 @@
            assoc :texture-filenames filenames))
            nil)
 
-(defn set-texture_by_idx [idx destination-texture-key]
+(defn set-texture_by_filename [filename destination-texture-key]
+  "Set texture by filename and adds the filename to the list"
   (let [  filenames           (:texture-filenames @cutter.cutter/the-window-state)
-          filename            (nth filenames (mod idx (count filenames)))
+          textures            (:textures @cutter.cutter/the-window-state)
+          idx                 (count filenames)
+          _                   (add-texture-filename filename)
           i-textures          (:i-textures @cutter.cutter/the-window-state)
           texture             (destination-texture-key i-textures)
           mat                 (cutter.opencv/oc_load_image filename)
@@ -164,10 +170,23 @@
           queue               (:queue texture)
           texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
           i-textures          (assoc i-textures destination-texture-key texture)
+          textures            (assoc textures (keyword filename) {:idx idx,
+                                                                  :destination destination-texture-key,
+                                                                  :source mat,
+                                                                  :running true})
           ]
           (async/offer! queue (matInfo mat))
+          (swap! cutter.cutter/the-window-state assoc :textures textures)
           (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
           )
+          nil)
+
+(defn set-texture_by_idx [idx destination-texture-key]
+  "Set the texture from he list of texture filenames"
+  (let [  filenames           (:texture-filenames @cutter.cutter/the-window-state)
+          textures            (:textures @cutter.cutter/the-window-state)
+          filename            (nth filenames (mod idx (count filenames)))]
+          (set-texture_by_filename filename destination-texture-key))
           nil)
 
 
@@ -194,3 +213,40 @@
                 (async/offer! queue (matInfo mat))
                 (swap! the-window-state assoc :i-textures i-textures))
                 nil)
+
+;
+(defn set-live-camera-texture [device destination-texture-key]
+  "Set texture by filename and adds the filename to the list"
+  (let [devices-id                (read-string (str (last device)))
+        capture                   (new org.opencv.videoio.VideoCapture)
+        capture-flag              (.open capture devices-id)
+        opened?                   (.isOpened capture)
+        ;filenames           (:texture-filenames @cutter.cutter/the-window-state)
+          ; textures            (:textures @cutter.cutter/the-window-state)
+          ; idx                 (count filenames)
+          ; _                   (add-texture-filename filename)
+        i-textures                (:i-textures @cutter.cutter/the-window-state)
+        texture                   (destination-texture-key i-textures)
+        queue                     (:queue texture)
+        tmpMat                    (oc-new-mat)
+        flag                      (oc-query-frame capture tmpMat)
+        _ (.release capture)
+          ; mat                 (cutter.opencv/oc_load_image filename)
+          ; height              (.height mat)
+          ; width               (.width mat)
+          ; channels            (.channels mat)
+          ; internal-format     (cutter.opencv/oc-tex-internal-format mat)
+          ; format              (cutter.opencv/oc-tex-format mat)
+          ; queue               (:queue texture)
+          ; texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
+          ; i-textures          (assoc i-textures destination-texture-key texture)
+          ; textures            (assoc textures (keyword filename) {:idx idx,
+          ;                                                         :destination destination-texture-key,
+          ;                                                         :source mat,
+          ;                                                         :running true})
+          ]
+          (async/offer! queue (matInfo tmpMat))
+          ;(swap! cutter.cutter/the-window-state assoc :textures textures)
+          ;(swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
+          )
+          nil)
