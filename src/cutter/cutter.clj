@@ -112,6 +112,7 @@
     :bff                        (atom 0)
     :isInitialized              (atom false)
     ;; shader uniforms
+    :i-channels                 (mapv (fn [x] (keyword (str "iChannel" x))) (range 1 16 1))
     :i-uniforms                 {:iResolution   {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
                                 :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
                                 :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 0},
@@ -131,6 +132,7 @@
                                 :iChannel13      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 14},
                                 :iChannel14      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 15},
                                 :iChannel15      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 16},
+                                :iChannel16      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 17},
                                 :iDataArray1    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray2    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray3    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
@@ -152,7 +154,8 @@
                       :iChannel12      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
                       :iChannel13      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
                       :iChannel14      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iChannel15      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0}
+                      :iChannel15      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
+                      :iChannel16      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0}
                     }
      })
 ;; GLOBAL STATE ATOMS iPreviousFrame
@@ -343,6 +346,8 @@
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel13 width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel14 width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel15 width height))
+      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel16 width height))
+
       ;(println (:i-textures @locals))
 
       ;(println (:i-textures @locals))
@@ -432,6 +437,7 @@
                 ;i-channel-res-loc
                 i-uniforms
                 i-textures
+                i-channels
                 dataArray1 dataArray2 dataArray3 dataArray4
                 dataArray1Buffer dataArray2Buffer dataArray3Buffer dataArray4Buffer
                 ;i-dataArray-loc i-previous-frame-loc i-text-loc
@@ -489,36 +495,42 @@
     ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) (:unit (:iText i-uniforms)))
     (get-textures locals :iText i-uniforms)
 
-    ((:gltype (:iChannel1 i-uniforms)) (:loc (:iChannel1 i-uniforms)) (:unit (:iChannel1 i-uniforms)))
-    (get-textures locals :iChannel1 i-uniforms)
-    ((:gltype (:iChannel2 i-uniforms)) (:loc (:iChannel2 i-uniforms)) (:unit (:iChannel2 i-uniforms)))
-    (get-textures locals :iChannel2 i-uniforms)
-    ((:gltype (:iChannel3 i-uniforms)) (:loc (:iChannel3 i-uniforms)) (:unit (:iChannel3 i-uniforms)))
-    (get-textures locals :iChannel3 i-uniforms)
-    ((:gltype (:iChannel4 i-uniforms)) (:loc (:iChannel4 i-uniforms)) (:unit (:iChannel4 i-uniforms)))
-    (get-textures locals :iChannel4 i-uniforms)
-    ((:gltype (:iChannel5 i-uniforms)) (:loc (:iChannel5 i-uniforms)) (:unit (:iChannel5 i-uniforms)))
-    (get-textures locals :iChannel5 i-uniforms)
-    ((:gltype (:iChannel6 i-uniforms)) (:loc (:iChannel6 i-uniforms)) (:unit (:iChannel6 i-uniforms)))
-    (get-textures locals :iChannel6 i-uniforms)
-    ((:gltype (:iChannel7 i-uniforms)) (:loc (:iChannel7 i-uniforms)) (:unit (:iChannel7 i-uniforms)))
-    (get-textures locals :iChannel7 i-uniforms)
-    ((:gltype (:iChannel8 i-uniforms)) (:loc (:iChannel8 i-uniforms)) (:unit (:iChannel8 i-uniforms)))
-    (get-textures locals :iChannel8 i-uniforms)
-    ((:gltype (:iChannel9 i-uniforms)) (:loc (:iChannel9 i-uniforms)) (:unit (:iChannel9 i-uniforms)))
-    (get-textures locals :iChannel9 i-uniforms)
-    ((:gltype (:iChannel10 i-uniforms)) (:loc (:iChannel10 i-uniforms)) (:unit (:iChannel10 i-uniforms)))
-    (get-textures locals :iChannel10 i-uniforms)
-    ((:gltype (:iChannel11 i-uniforms)) (:loc (:iChannel11 i-uniforms)) (:unit (:iChannel11 i-uniforms)))
-    (get-textures locals :iChannel11 i-uniforms)
-    ((:gltype (:iChannel12 i-uniforms)) (:loc (:iChannel12 i-uniforms)) (:unit (:iChannel12 i-uniforms)))
-    (get-textures locals :iChannel12 i-uniforms)
-    ((:gltype (:iChannel13 i-uniforms)) (:loc (:iChannel13 i-uniforms)) (:unit (:iChannel13 i-uniforms)))
-    (get-textures locals :iChannel13 i-uniforms)
-    ((:gltype (:iChannel14 i-uniforms)) (:loc (:iChannel14 i-uniforms)) (:unit (:iChannel14 i-uniforms)))
-    (get-textures locals :iChannel14 i-uniforms)
-    ((:gltype (:iChannel15 i-uniforms)) (:loc (:iChannel15 i-uniforms)) (:unit (:iChannel15 i-uniforms)))
-    (get-textures locals :iChannel15 i-uniforms)
+    (doseq [x i-channels]
+      ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:unit (x i-uniforms)))
+      (get-textures locals x i-uniforms))
+    ; 
+    ; ((:gltype (:iChannel1 i-uniforms)) (:loc (:iChannel1 i-uniforms)) (:unit (:iChannel1 i-uniforms)))
+    ; (get-textures locals :iChannel1 i-uniforms)
+    ; ((:gltype (:iChannel2 i-uniforms)) (:loc (:iChannel2 i-uniforms)) (:unit (:iChannel2 i-uniforms)))
+    ; (get-textures locals :iChannel2 i-uniforms)
+    ; ((:gltype (:iChannel3 i-uniforms)) (:loc (:iChannel3 i-uniforms)) (:unit (:iChannel3 i-uniforms)))
+    ; (get-textures locals :iChannel3 i-uniforms)
+    ; ((:gltype (:iChannel4 i-uniforms)) (:loc (:iChannel4 i-uniforms)) (:unit (:iChannel4 i-uniforms)))
+    ; (get-textures locals :iChannel4 i-uniforms)
+    ; ((:gltype (:iChannel5 i-uniforms)) (:loc (:iChannel5 i-uniforms)) (:unit (:iChannel5 i-uniforms)))
+    ; (get-textures locals :iChannel5 i-uniforms)
+    ; ((:gltype (:iChannel6 i-uniforms)) (:loc (:iChannel6 i-uniforms)) (:unit (:iChannel6 i-uniforms)))
+    ; (get-textures locals :iChannel6 i-uniforms)
+    ; ((:gltype (:iChannel7 i-uniforms)) (:loc (:iChannel7 i-uniforms)) (:unit (:iChannel7 i-uniforms)))
+    ; (get-textures locals :iChannel7 i-uniforms)
+    ; ((:gltype (:iChannel8 i-uniforms)) (:loc (:iChannel8 i-uniforms)) (:unit (:iChannel8 i-uniforms)))
+    ; (get-textures locals :iChannel8 i-uniforms)
+    ; ((:gltype (:iChannel9 i-uniforms)) (:loc (:iChannel9 i-uniforms)) (:unit (:iChannel9 i-uniforms)))
+    ; (get-textures locals :iChannel9 i-uniforms)
+    ; ((:gltype (:iChannel10 i-uniforms)) (:loc (:iChannel10 i-uniforms)) (:unit (:iChannel10 i-uniforms)))
+    ; (get-textures locals :iChannel10 i-uniforms)
+    ; ((:gltype (:iChannel11 i-uniforms)) (:loc (:iChannel11 i-uniforms)) (:unit (:iChannel11 i-uniforms)))
+    ; (get-textures locals :iChannel11 i-uniforms)
+    ; ((:gltype (:iChannel12 i-uniforms)) (:loc (:iChannel12 i-uniforms)) (:unit (:iChannel12 i-uniforms)))
+    ; (get-textures locals :iChannel12 i-uniforms)
+    ; ((:gltype (:iChannel13 i-uniforms)) (:loc (:iChannel13 i-uniforms)) (:unit (:iChannel13 i-uniforms)))
+    ; (get-textures locals :iChannel13 i-uniforms)
+    ; ((:gltype (:iChannel14 i-uniforms)) (:loc (:iChannel14 i-uniforms)) (:unit (:iChannel14 i-uniforms)))
+    ; (get-textures locals :iChannel14 i-uniforms)
+    ; ((:gltype (:iChannel15 i-uniforms)) (:loc (:iChannel15 i-uniforms)) (:unit (:iChannel15 i-uniforms)))
+    ; (get-textures locals :iChannel15 i-uniforms)
+    ; ((:gltype (:iChannel16 i-uniforms)) (:loc (:iChannel16 i-uniforms)) (:unit (:iChannel16 i-uniforms)))
+    ; (get-textures locals :iChannel16 i-uniforms)
 
 ;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
 ;     (GL20/glUniform1i (nth i-channel-loc 1) 2)
