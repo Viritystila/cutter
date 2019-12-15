@@ -158,7 +158,7 @@
           internal-format     (cutter.opencv/oc-tex-internal-format mat)
           format              (cutter.opencv/oc-tex-format mat)
           queue               (:queue texture)
-          texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format)
+          texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
           i-textures          (assoc i-textures destination-texture-key texture)
           ]
           (async/offer! queue (matInfo mat))
@@ -186,6 +186,7 @@
                 buffer              (oc-mat-to-bytebuffer mat)
                 texture             (assoc texture :mat mat)
                 texture             (assoc texture :buffer buffer)
+                texture             (assoc texture :init-opengl true)
                 i-textures          (assoc i-textures :iText texture)]
                 (async/offer! queue (matInfo mat))
                 (swap! the-window-state assoc :i-textures i-textures))
