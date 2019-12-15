@@ -40,6 +40,6 @@
   (and (files-exist (flatten [shader-filename]))
        (not (and (nil? shader-filename) (nil? shader-str)))))
 
-(defn limit-max [input max] (vec (subvec input 0 (min max (count input)))))
+(defn limit-max [input max] (into [] (subvec input 0 (min max (count input)))))
 
 (defn remove-inexistent [filenames max] (limit-max (vec (remove nil? (map (fn [x] (files-exist [x])) filenames))) max))

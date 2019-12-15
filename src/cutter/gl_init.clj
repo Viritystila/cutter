@@ -38,7 +38,7 @@
 ;Single texture OpenGL initialize
 
 (defn init-texture
-   [width height tex-id]
+   [width height tex-id queue]
    (let [target             (GL11/GL_TEXTURE_2D)
         tex-id              tex-id
         mat                 (org.opencv.core.Mat/zeros height width org.opencv.core.CvType/CV_8UC3)
@@ -46,7 +46,7 @@
         format              (oc-tex-format mat)
         buffer              (oc-mat-to-bytebuffer mat)
         channels            (.channels mat)
-        queue               (async/chan (async/buffer 1))
+        queue               queue
         texture             { :tex-id           tex-id,
                               :target           target,
                               :height           height,
@@ -69,7 +69,6 @@
 
 (defn initialize-texture [locals uniform-key width height]
   (let [{:keys [i-textures]} @locals
-    _ (println i-textures)
-        i-textures (assoc i-textures uniform-key (init-texture width height (GL11/glGenTextures)))
+        i-textures (assoc i-textures uniform-key (init-texture width height (GL11/glGenTextures) (async/chan (async/buffer 1))))
         ]
                i-textures))
