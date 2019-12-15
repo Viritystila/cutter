@@ -7,8 +7,25 @@ void main(void) {
   float data1_0=iDataArray1[0];
   float data1_1=iDataArray1[1];
   float data2_0=iDataArray2[0];
+  uv=floor(uv * (1 + data1_0)) / ( 1 + data1_0);
+
+
   vec4 iChannel1_texture=texture2D(iChannel1, uv);
   vec4 iChannel2_texture=texture2D(iChannel2, uv);
+  vec4 iChannel3_texture=texture2D(iChannel3, uv);
+  vec4 iChannel4_texture=texture2D(iChannel4, uv);
+  vec4 iChannel5_texture=texture2D(iChannel5, uv);
+  vec4 iChannel6_texture=texture2D(iChannel6, uv);
+
+  vec4 ich[6];
+  ich[0]=iChannel1_texture;
+  ich[1]=iChannel2_texture;
+  ich[2]=iChannel3_texture;
+  ich[3]=iChannel4_texture;
+  ich[4]=iChannel5_texture;
+  ich[5]=iChannel6_texture;
+
+  int timefloor=min(int(floor( 6* (1+(sin(iGlobalTime*10.41))))), 5);
   //vec4 c1 = texture2D(iChannel0, uv);
   //vec4 c1b =texture2D(iChannel1, uv);
   //vec4 c1c =texture2D(iChannel2, uv);
@@ -44,7 +61,10 @@ void main(void) {
   vec4 ppp=mix(iChannel2_texture, ccc, 0.5);
   //vec4 ooo=mix(iChannel1_texture, text, 0.5);
   //vec4 aaa=mix(vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1), ooo, 0.5);
-  op = mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
+  float fade_size=2;
+  float p1= mix(fade_size, 0.0-fade_size, uv.x-0.125);
+  vec4 mixxx =mix(iChannel1_texture, ich[timefloor], smoothstep(1.0, 0.0, p1));
+  op = ich[timefloor];//mixxx;//mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
   //op =mix(o, iChannel1_texture, 0.25);
   //out = op;
 }
