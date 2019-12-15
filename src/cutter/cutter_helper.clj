@@ -142,7 +142,13 @@
 
 (defn list-texture-folders [] (println (:texture-folders @the-window-state)))
 
-(defn set-texture_by_filename [filename destination] (oc_load_image filename))
+(defn add-texture-filename [filename]
+  (let [filenames           (:texture-filenames @cutter.cutter/the-window-state)
+        filenames           (conj filenames filename)
+        filenames   (cutter.general/remove-inexistent filenames (:maximum-textures @cutter.cutter/the-window-state))]
+        (swap! cutter.cutter/the-window-state
+           assoc :texture-filenames filenames))
+           nil)
 
 (defn set-texture_by_idx [idx destination-texture-key]
   (let [  filenames           (:texture-filenames @cutter.cutter/the-window-state)
@@ -163,7 +169,6 @@
           (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
           )
           nil)
-
 
 
 ;Text

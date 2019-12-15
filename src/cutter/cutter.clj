@@ -129,13 +129,13 @@
                                 :iDataArray7    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray8    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray9    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray10    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray11    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray12    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray13    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray14    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray15    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray16    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1}}
+                                :iDataArray10   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+                                :iDataArray11   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+                                :iDataArray12   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+                                :iDataArray13   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+                                :iDataArray14   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+                                :iDataArray15   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+                                :iDataArray16   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1}}
      ;textures
      :i-textures     {:iPreviousFrame {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
                       :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
@@ -148,13 +148,13 @@
                       :iChannel7      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
                       :iChannel8      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
                       :iChannel9      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iChannel10      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iChannel11      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iChannel12      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iChannel13      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iChannel14      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iChannel15      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
-                      :iChannel16      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0}
+                      :iChannel10     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
+                      :iChannel11     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
+                      :iChannel12     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
+                      :iChannel13     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
+                      :iChannel14     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
+                      :iChannel15     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0},
+                      :iChannel16     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0}
                     }
      })
 ;; GLOBAL STATE ATOMS iPreviousFrame
@@ -355,11 +355,6 @@
       ;(init-cams locals)
       ;(init-videos locals)
       (init-shaders locals)
-      ;(swap! locals assoc :tex-id-fftwave (GL11/glGenTextures))
-      ;(init-text-tex locals)
-      ;(init-frame-tex locals)
-      ;(when (and (not (nil? user-fn)) (:shader-good @locals))
-      ;        (user-fn :init (:pgm-id @locals) (:tex-id-fftwave @locals)))
               ))
               ;
 
@@ -383,10 +378,6 @@
           tex-image-target    ^Integer (+ 0 target)
           nbytes              (* width height image-bytes)
           buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))]
-          ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id))
-          ;(GL11/glBindTexture target tex-id)
-          ;(println "init" init?)
-          ;(println "AAAAAAAAA" width height)
           (if (or init? (not= setnbytes nbytes))
             (do (try (GL11/glTexImage2D ^Integer tex-image-target 0 ^Integer internal-format
               ^Integer width  ^Integer height 0
@@ -394,7 +385,7 @@
               GL11/GL_UNSIGNED_BYTE
               buffer))
                 (let [texture     (init-texture width height target tex-id queue)
-                      texture     (assoc texture :init-opengl false) ;(init-texture width height);
+                      texture     (assoc texture :init-opengl false)
                       i-textures  (assoc i-textures texture-key texture)]
                       (swap! locals assoc :i-textures i-textures)))
             (do
@@ -404,7 +395,6 @@
                     ^Integer format
                     GL11/GL_UNSIGNED_BYTE
                     buffer)))))
-          ;(GL11/glBindTexture target 0)
           (except-gl-errors "@ end of load-texture if-stmt")))
 ;
 (defn- get-textures
@@ -413,7 +403,6 @@
           texture             (texture-key i-textures)
           queue               (:queue texture)
           unit                (:unit (texture-key i-uniforms))
-          ;_ (println "texture-key" texture-key "queue" queue)
           tex-id              (:tex-id texture)
           target              (:target texture)
           image               (if (= nil queue) nil (async/poll! queue))]
@@ -422,68 +411,30 @@
           (if  (not (nil? image))
                 (do (println "texture-key image tex-id" texture-key image tex-id) (set-opengl-texture locals texture-key image)
                 )
-                nil)
-          ;(GL11/glBindTexture target 0)
-          ))
+                nil)))
 (defn- draw
   [locals]
-  (let [{:keys [width height ;i-resolution-loc
+  (let [{:keys [width height
                 start-time last-time i-global-time-loc
                 i-date-loc
                 pgm-id vbo-id vao-id vboi-id vboc-id
                 vertices-count
-                ;i-channel-loc i-fftwave-loc i-cam-loc i-video-loc
-                ;i-channel-res-loc
                 i-uniforms
                 i-textures
                 i-channels
                 i-dataArrays
                 dataArray1 dataArray2 dataArray3 dataArray4
                 dataArray1Buffer dataArray2Buffer dataArray3Buffer dataArray4Buffer
-                ;i-dataArray-loc i-previous-frame-loc i-text-loc
-                save-frames ;channel-res-buffer   buffer-channel dataArrayBuffer dataArray
+                save-frames
                 old-pgm-id old-fs-id
-                ;tex-ids cams text-id-cam videos text-id-video tex-types tex-id-previous-frame tex-id-text-texture
-                ;user-fn
-                ;pixel-read-enable
-                ;pixel-read-pos-x pixel-read-pos-y
-                ;pixel-read-data
-                ;save-frames
                 ]} @locals
-        cur-time    (/ (- last-time start-time) 1000.0)
-        ;_           (.flip (.put ^FloatBuffer dataArrayBuffer  (float-array dataArray)))
-        ]
+        cur-time    (/ (- last-time start-time) 1000.0)]
 
     (except-gl-errors "@ draw before clear")
 
-    ;(reset! (:frameCount @locals) (+ @(:frameCount @locals) 1))
 
     (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
-
-    ; ;; activate textures
-    ; (dotimes [i (count tex-ids)]
-    ;   (when (nth tex-ids i)
-    ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (nth tex-ids i)))
-    ;     (cond
-    ;      (= :cubemap (nth tex-types i))
-    ;      (GL11/glBindTexture GL13/GL_TEXTURE_CUBE_MAP (nth tex-ids i))
-    ;      :default
-    ;      (GL11/glBindTexture GL11/GL_TEXTURE_2D (nth tex-ids i)))))
-
     (except-gl-errors "@ draw after activate textures")
-     ;(loop-get-cam-textures locals cams)
-     ;(loop-get-video-textures locals videos)
-     ;(set-text-opengl-texture locals)
-;;
-
-    ;(get-textures locals :iChannel1 i-uniforms)
-;;     ;; setup our uniform
-    ;(:loc (:iResolution i-uniforms))
-    ;(:loc (:iGlobalTime i-uniforms))
-    ;:gltype
-    ;(@(resolve (symbol "squared")) 2)
-    ;(println (:gltype (:iResolution i-uniforms)))
-
 
     ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
@@ -491,78 +442,17 @@
     (doseq [x (keys i-dataArrays)]
     ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:datavec (x i-dataArrays)) (:buffer (x i-dataArrays))))
 
-    ; ((:gltype (:iDataArray1 i-uniforms)) (:loc (:iDataArray1 i-uniforms)) dataArray1 dataArray1Buffer)
-    ; ((:gltype (:iDataArray2 i-uniforms)) (:loc (:iDataArray2 i-uniforms)) dataArray2 dataArray2Buffer)
-    ; ((:gltype (:iDataArray3 i-uniforms)) (:loc (:iDataArray3 i-uniforms)) dataArray4 dataArray3Buffer)
-    ; ((:gltype (:iDataArray4 i-uniforms)) (:loc (:iDataArray4 i-uniforms)) dataArray1 dataArray4Buffer)
-
     ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) (:unit (:iText i-uniforms)))
     (get-textures locals :iText i-uniforms)
 
     (doseq [x i-channels]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:unit (x i-uniforms)))
       (get-textures locals x i-uniforms))
-    ;
-    ; ((:gltype (:iChannel1 i-uniforms)) (:loc (:iChannel1 i-uniforms)) (:unit (:iChannel1 i-uniforms)))
-    ; (get-textures locals :iChannel1 i-uniforms)
-    ; ((:gltype (:iChannel2 i-uniforms)) (:loc (:iChannel2 i-uniforms)) (:unit (:iChannel2 i-uniforms)))
-    ; (get-textures locals :iChannel2 i-uniforms)
-    ; ((:gltype (:iChannel3 i-uniforms)) (:loc (:iChannel3 i-uniforms)) (:unit (:iChannel3 i-uniforms)))
-    ; (get-textures locals :iChannel3 i-uniforms)
-    ; ((:gltype (:iChannel4 i-uniforms)) (:loc (:iChannel4 i-uniforms)) (:unit (:iChannel4 i-uniforms)))
-    ; (get-textures locals :iChannel4 i-uniforms)
-    ; ((:gltype (:iChannel5 i-uniforms)) (:loc (:iChannel5 i-uniforms)) (:unit (:iChannel5 i-uniforms)))
-    ; (get-textures locals :iChannel5 i-uniforms)
-    ; ((:gltype (:iChannel6 i-uniforms)) (:loc (:iChannel6 i-uniforms)) (:unit (:iChannel6 i-uniforms)))
-    ; (get-textures locals :iChannel6 i-uniforms)
-    ; ((:gltype (:iChannel7 i-uniforms)) (:loc (:iChannel7 i-uniforms)) (:unit (:iChannel7 i-uniforms)))
-    ; (get-textures locals :iChannel7 i-uniforms)
-    ; ((:gltype (:iChannel8 i-uniforms)) (:loc (:iChannel8 i-uniforms)) (:unit (:iChannel8 i-uniforms)))
-    ; (get-textures locals :iChannel8 i-uniforms)
-    ; ((:gltype (:iChannel9 i-uniforms)) (:loc (:iChannel9 i-uniforms)) (:unit (:iChannel9 i-uniforms)))
-    ; (get-textures locals :iChannel9 i-uniforms)
-    ; ((:gltype (:iChannel10 i-uniforms)) (:loc (:iChannel10 i-uniforms)) (:unit (:iChannel10 i-uniforms)))
-    ; (get-textures locals :iChannel10 i-uniforms)
-    ; ((:gltype (:iChannel11 i-uniforms)) (:loc (:iChannel11 i-uniforms)) (:unit (:iChannel11 i-uniforms)))
-    ; (get-textures locals :iChannel11 i-uniforms)
-    ; ((:gltype (:iChannel12 i-uniforms)) (:loc (:iChannel12 i-uniforms)) (:unit (:iChannel12 i-uniforms)))
-    ; (get-textures locals :iChannel12 i-uniforms)
-    ; ((:gltype (:iChannel13 i-uniforms)) (:loc (:iChannel13 i-uniforms)) (:unit (:iChannel13 i-uniforms)))
-    ; (get-textures locals :iChannel13 i-uniforms)
-    ; ((:gltype (:iChannel14 i-uniforms)) (:loc (:iChannel14 i-uniforms)) (:unit (:iChannel14 i-uniforms)))
-    ; (get-textures locals :iChannel14 i-uniforms)
-    ; ((:gltype (:iChannel15 i-uniforms)) (:loc (:iChannel15 i-uniforms)) (:unit (:iChannel15 i-uniforms)))
-    ; (get-textures locals :iChannel15 i-uniforms)
-    ; ((:gltype (:iChannel16 i-uniforms)) (:loc (:iChannel16 i-uniforms)) (:unit (:iChannel16 i-uniforms)))
-    ; (get-textures locals :iChannel16 i-uniforms)
-
-;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
-;     (GL20/glUniform1i (nth i-channel-loc 1) 2)
-;     (GL20/glUniform1i (nth i-channel-loc 2) 3)
-;     (GL20/glUniform1i (nth i-channel-loc 3) 4)
-;     (GL20/glUniform1i (nth i-cam-loc 0) 5)
-;     (GL20/glUniform1i (nth i-cam-loc 1) 6)
-;     (GL20/glUniform1i (nth i-cam-loc 2) 7)
-;     (GL20/glUniform1i (nth i-cam-loc 3) 8)
-;     (GL20/glUniform1i (nth i-cam-loc 4) 9)
-;     (GL20/glUniform1i (nth i-video-loc 0) 10)
-;     (GL20/glUniform1i (nth i-video-loc 1) 11)
-;     (GL20/glUniform1i (nth i-video-loc 2) 12)
-;     (GL20/glUniform1i (nth i-video-loc 3) 13)
-;     (GL20/glUniform1i (nth i-video-loc 4) 14)
-;     (GL20/glUniform1i (nth i-fftwave-loc 0) 15)
-;     (GL20/glUniform1i (nth i-text-loc 0) 16)
-     ;
-     ; (GL20/glUniform3fv  ^Integer i-channel-res-loc ^FloatBuffer channel-res-buffer)
-     ; (GL20/glUniform4f i-date-loc cur-year cur-month cur-day cur-seconds)
-     ; (GL20/glUniform1fv  ^Integer i-dataArray-loc ^FloatBuffer dataArrayBuffer)
 
     ;; get vertex array ready
      (GL30/glBindVertexArray vao-id)
      (GL20/glEnableVertexAttribArray 0)
-     ;(GL20/glEnableVertexAttribArray 1)
 
-     ;(GL11/glEnableClientState GL11/GL_VERTEX_ARRAY)
      ;Inidices
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
      (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0);
@@ -590,8 +480,6 @@
      ;(GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
      (if @save-frames
        (do ; download it and copy the previous image to its own texture
-         ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:tex-id (:iPreviousFrame i-textures))))
-         ;(GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
          (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer (:buffer (:iPreviousFrame i-textures)))
          (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
          (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) (new org.bytedeco.javacpp.BytePointer (:buffer (:iPreviousFrame i-textures))) (long  @(:minsize @the-window-state))))
@@ -599,56 +487,7 @@
      (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
 
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-     (GL20/glDisableVertexAttribArray 0)
-     ;(GL20/glDisableVertexAttribArray 1)
-     ;(GL30/glBindVertexArray 0)
-     ;(GL11/glDisableClientState GL11/GL_VERTEX_ARRAY)
-    ; ;; unbind textures
-    ; (doseq [i (remove nil? tex-ids)]
-    ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 i))
-    ;     (GL11/glBindTexture GL13/GL_TEXTURE_CUBE_MAP 0)
-    ;     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
-    ;
-    ; ;cams
-    ; (dotimes [i (count text-id-cam)]
-    ;     (when (nth text-id-cam i)
-    ;     (if (= nil @(nth (:frame-set-cam @locals) i))
-    ;         (do (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 i))
-    ;         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
-    ;         nil )))
-    ; ;videos
-    ; (dotimes [i (count text-id-video)]
-    ;     (when (nth text-id-video i)
-    ;         (if (= nil @(nth (:frame-set-video @locals) i))
-    ;             (do (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 @(nth text-id-video i)))
-    ;                 (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
-    ;             nil)))
-    ; (do
-    ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-text-texture))
-    ;     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
-    ;
-    ; (except-gl-errors "@ draw prior to post-draw")
-    ;
-    ; (GL20/glUseProgram 0)
-    ; (except-gl-errors "@ draw after post-draw")
-    ;             ;Copying the previous image to its own texture
-    ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-previous-frame))
-    ; (GL11/glBindTexture GL11/GL_TEXTURE_2D tex-id-previous-frame)
-    ; (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
-    ; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-
-    ; (if @save-frames
-    ;   (do ; download it and copy the previous image to its own texture
-    ;     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id-previous-frame))
-    ;     (GL11/glBindTexture GL11/GL_TEXTURE_2D tex-id-previous-frame)
-    ;     (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer @bytebuffer-frame)
-    ;     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-    ;     (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) (new org.bytedeco.javacpp.BytePointer @bytebuffer-frame) (long  @(:minsize @the-window-state))))
-    ;     nil)
-    ;(except-gl-errors "@ draw after copy")
-
-
-      ))
+     (GL20/glDisableVertexAttribArray 0)))
 
 
 (defn- update-and-draw
@@ -676,20 +515,6 @@
 (defn- destroy-gl
   [locals]
   (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn cams]} @locals]
-     ;;Stop and release cams
-    ;(println " Cams tbd" (:cams @the-window-state))
-    ;(doseq [i (remove nil? (:cams @the-window-state))](println "release cam " i)(release-cam-textures i))
-    ;(swap! locals assoc :cams (vec (replicate no-cams nil)))
-    ;Stop and release video release-cam-textures
-    ;(println " Videos tbd" (:videos @the-window-state))
-    ;(doseq [i (:video-no-id @the-window-state)]
-  ;      (if (= @i nil) (println "no video")  (do (release-video-textures @i))))
-  ;  (swap! locals assoc :videos (vec (replicate no-videos nil)))
-    ;stop recording
-    ;(closeV4L2output)
-    ;; Delete any user state
-    ;(when user-fn
-  ;    (user-fn :destroy pgm-id (:tex-id-fftwave @locals)))
     ;; Delete the shaders
     (GL20/glUseProgram 0)
     (GL20/glDetachShader pgm-id vs-id)
