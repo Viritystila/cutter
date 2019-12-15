@@ -40,6 +40,9 @@ void main(void) {
   //vec4 cf5 = mix(cf3,c2,sin(cf4.r));
   //vec4 cf6 = mix(c,c2, 0.5); //iDataArray[0]);
 
-  op =mix(text, vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1), 0.5);
+  vec4 ppp=mix(text, vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1), 0.5);
+  vec4 ooo=mix(iChannel1_texture, text, 0.5);
+  op = ooo;
+  //op =mix(o, iChannel1_texture, 0.25);
   //out = op;
 }

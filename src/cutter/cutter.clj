@@ -302,7 +302,7 @@
       (init-buffers locals)
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
-      ;(swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel1 width height))
+      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel1 width height))
       ;(println (:i-textures @locals))
 
       ;(println (:i-textures @locals))
@@ -377,7 +377,7 @@
                 (do (println "texture-key image tex-id" texture-key image tex-id) (set-opengl-texture locals texture-key image)
                 )
                 nil)
-          (GL11/glBindTexture target 0)
+          ;(GL11/glBindTexture target 0)
           ))
 (defn- draw
   [locals]
@@ -445,10 +445,10 @@
     ((:gltype (:iDataArray3 i-uniforms)) (:loc (:iDataArray3 i-uniforms)) dataArray4 dataArray3Buffer)
     ((:gltype (:iDataArray4 i-uniforms)) (:loc (:iDataArray4 i-uniforms)) dataArray1 dataArray4Buffer)
 
-    ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) 0)
+    ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) 2)
     (get-textures locals :iText i-uniforms)
-    ;((:gltype (:iChannel1 i-uniforms)) (:loc (:iChannel1 i-uniforms)) 1)
-
+    ((:gltype (:iChannel1 i-uniforms)) (:loc (:iChannel1 i-uniforms)) 3)
+    (get-textures locals :iChannel1 i-uniforms)
 
 ;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
 ;     (GL20/glUniform1i (nth i-channel-loc 1) 2)
