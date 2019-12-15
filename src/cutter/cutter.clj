@@ -134,70 +134,6 @@
 (org.bytedeco.javacpp.Loader/load org.bytedeco.javacpp.opencv_java)
 
 
-;Text
-(defn write-text
-  "(cutter.cutter/write-text \"cutter\" 0 220 10 100 0.2 0.4 20 10 true)"
-    [text x y size r g b thickness linetype clear]
-        (let [  i-textures          (:i-textures @the-window-state)
-                texture             (:iText i-textures)
-                width               (:width texture)
-                height              (:height texture)
-                oldmat              (:mat texture)
-                queue               (:queue texture)
-                mat                 (if clear (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3) oldmat)
-                corner              (new org.opencv.core.Point x y)
-                style               (org.opencv.imgproc.Imgproc/FONT_HERSHEY_TRIPLEX)
-                colScal             (new org.opencv.core.Scalar (float r) (float g) (float b))
-                _                   (org.opencv.imgproc.Imgproc/putText mat text corner style size colScal thickness linetype)
-                buffer              (oc-mat-to-bytebuffer mat)
-                texture             (assoc texture :mat mat)
-                texture             (assoc texture :buffer buffer)
-                i-textures          (assoc i-textures :iText texture)]
-                (async/offer! queue (matInfo mat))
-                (swap! the-window-state assoc :i-textures i-textures))
-                nil)
-;v4l2
-(defn openV4L2output [device]
-  (let [h (:height @the-window-state)
-          w                (:width @the-window-state)
-          in_fd            (org.bytedeco.javacpp.v4l2/v4l2_open device 02)
-          cap              (new org.bytedeco.javacpp.v4l2$v4l2_capability)
-          flag             (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_QUERYCAP) cap)
-          _                (println "VIDIOC_QUERYCAP: " flag)
-          v4l2_format      (new org.bytedeco.javacpp.v4l2$v4l2_format)
-          _               (.type v4l2_format (long org.bytedeco.javacpp.v4l2/V4L2_BUF_TYPE_VIDEO_OUTPUT))
-          v4l2_pix_format (new org.bytedeco.javacpp.v4l2$v4l2_pix_format)
-          _               (.pixelformat v4l2_pix_format (long org.bytedeco.javacpp.v4l2/V4L2_PIX_FMT_RGB24))
-          _               (.width v4l2_pix_format w)
-          _               (.height v4l2_pix_format h)
-          minsize         (* 3 (.width v4l2_pix_format))
-          _               (if (< (.bytesperline v4l2_pix_format) minsize) (.bytesperline v4l2_pix_format minsize))
-          minsize         (* (.height v4l2_pix_format) (.bytesperline v4l2_pix_format))
-          _               (if (< (.sizeimage v4l2_pix_format) minsize) (.sizeimage v4l2_pix_format minsize))
-          _               (.fmt_pix v4l2_format v4l2_pix_format)
-          flag            (org.bytedeco.javacpp.v4l2/v4l2_ioctl in_fd (long org.bytedeco.javacpp.v4l2/VIDIOC_S_FMT) v4l2_format)
-          _               (println "VIDIOC_S_FMT: " flag)
-          bff             (new org.bytedeco.javacpp.BytePointer minsize)]
-          (reset! (:deviceName @the-window-state) device)
-          (reset! (:deviceId @the-window-state) in_fd)
-          (reset! (:minsize @the-window-state) minsize)
-          (reset! (:bff @the-window-state) bff)
-          (reset! (:isInitialized @the-window-state) true)))
-
-(defn closeV4L2output [] (org.bytedeco.javacpp.v4l2/v4l2_close @(:deviceId @the-window-state))
-                              (reset! (:isInitialized @the-window-state) false))
-
-(defn toggle-recording [device]
-  (let [  save    (:save-frames @the-window-state)]
-          (if (= false @save)
-            (do
-              (openV4L2output device)
-              (println "Start recording")
-              (reset! (:save-frames @the-window-state) true ))
-            (do (println "Stop recording")
-              (reset! (:save-frames @the-window-state) false )
-              (closeV4L2output)
-              (Thread/sleep 100)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
@@ -403,8 +339,8 @@
           tex-image-target    ^Integer (+ 0 target)
           nbytes              (* width height image-bytes)
           buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))]
-          (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id))
-          (GL11/glBindTexture target tex-id)
+          ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id))
+          ;(GL11/glBindTexture target tex-id)
           (if (or init? (not= setnbytes nbytes))
             (do
               (try (GL11/glTexImage2D ^Integer tex-image-target 0 ^Integer internal-format
@@ -435,13 +371,13 @@
           tex-id              (:tex-id texture)
           target              (:target texture)
           image               (if (= nil queue) nil (async/poll! queue))]
-          ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id))
-          ;(GL11/glBindTexture target tex-id)
+          (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 tex-id))
+          (GL11/glBindTexture target tex-id)
           (if  (not (nil? image))
-                (do (println "texture-key image tex-id queue" texture-key image tex-id queue) (set-opengl-texture locals texture-key image)
+                (do (println "texture-key image tex-id" texture-key image tex-id) (set-opengl-texture locals texture-key image)
                 )
                 nil)
-          ;(GL11/glBindTexture target 0)
+          (GL11/glBindTexture target 0)
           ))
 (defn- draw
   [locals]
@@ -491,7 +427,7 @@
      ;(loop-get-video-textures locals videos)
      ;(set-text-opengl-texture locals)
 ;;
-    (get-textures locals :iText i-uniforms)
+
     ;(get-textures locals :iChannel1 i-uniforms)
 ;;     ;; setup our uniform
     ;(:loc (:iResolution i-uniforms))
@@ -510,7 +446,8 @@
     ((:gltype (:iDataArray4 i-uniforms)) (:loc (:iDataArray4 i-uniforms)) dataArray1 dataArray4Buffer)
 
     ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) 0)
-    ;((:gltype (:iChannel1 i-uniforms)) (:loc (:iChannel1 i-uniforms)) 0)
+    (get-textures locals :iText i-uniforms)
+    ;((:gltype (:iChannel1 i-uniforms)) (:loc (:iChannel1 i-uniforms)) 1)
 
 
 ;     (GL20/glUniform1i (nth i-channel-loc 0) 1)
