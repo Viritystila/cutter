@@ -8,6 +8,7 @@ void main(void) {
   float data1_1=iDataArray1[1];
   float data2_0=iDataArray2[0];
   vec4 iChannel1_texture=texture2D(iChannel1, uv);
+  vec4 iChannel2_texture=texture2D(iChannel2, uv);
   //vec4 c1 = texture2D(iChannel0, uv);
   //vec4 c1b =texture2D(iChannel1, uv);
   //vec4 c1c =texture2D(iChannel2, uv);
@@ -39,11 +40,11 @@ void main(void) {
   //vec4 cf4 = mix(v1,cf3,iOvertoneVolume);  // alpha blend between two textures
   //vec4 cf5 = mix(cf3,c2,sin(cf4.r));
   //vec4 cf6 = mix(c,c2, 0.5); //iDataArray[0]);
-  vec4 ccc=vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1);
-  vec4 ppp=mix(text, vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1), 0.5);
+  vec4 ccc=vec4(cos(iGlobalTime*10.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1);
+  vec4 ppp=mix(iChannel2_texture, ccc, 0.5);
   //vec4 ooo=mix(iChannel1_texture, text, 0.5);
   //vec4 aaa=mix(vec4(cos(iGlobalTime*1.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1), ooo, 0.5);
-  op = mix(text, iChannel1_texture, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
+  op = mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
   //op =mix(o, iChannel1_texture, 0.25);
   //out = op;
 }
