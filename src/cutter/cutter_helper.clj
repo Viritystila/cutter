@@ -104,6 +104,28 @@
               (Thread/sleep 100)))))
 
 ;Data array
+(defn set-dataArray-item [arraykey idx val]
+    (let [{:keys [maxDataArrays maxDataArraysLength i-dataArrays]} @cutter.cutter/the-window-state
+          haskey        (contains? i-dataArrays arraykey)
+          idx           (mod idx (- maxDataArraysLength 1))
+          dataArray     (arraykey i-dataArrays)
+          data          (if haskey (:datavec dataArray) nil )
+          data          (if haskey (assoc data idx val) nil)
+          dataArray     (if haskey (assoc dataArray :datavec data))
+          i-dataArrays  (if haskey (assoc i-dataArrays arraykey dataArray))]
+        (swap! the-window-state assoc :i-dataArrays i-dataArrays)
+        nil))
+
+;
+(defn get-dataArray-item [arraykey idx]
+    (let [{:keys [maxDataArrays maxDataArraysLength i-dataArrays]} @cutter.cutter/the-window-state
+          haskey        (contains? i-dataArrays arraykey)
+          idx           (mod idx (- maxDataArraysLength 1))
+          dataArray     (arraykey i-dataArrays)
+          data          (if haskey (:datavec dataArray) nil)
+          val           (if haskey (nth data idx) nil)]
+          val))
+
 (defn set-dataArray1-item [idx val]
     (let [  oa  (:dataArray1  @the-window-state)
             na  (assoc oa idx val)]
