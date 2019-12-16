@@ -409,7 +409,8 @@
           (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 unit))
           (GL11/glBindTexture target tex-id)
           (if  (not (nil? image))
-                (do (println "texture-key image tex-id" texture-key image tex-id) (set-opengl-texture locals texture-key image)
+                (do ;(println "texture-key image tex-id" texture-key image tex-id) 
+                (set-opengl-texture locals texture-key image)
                 )
                 nil)))
 (defn- draw

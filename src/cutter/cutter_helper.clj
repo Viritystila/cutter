@@ -175,9 +175,9 @@
                                                                   :source mat,
                                                                   :running true})
           ]
-          (async/offer! queue (matInfo mat))
           (swap! cutter.cutter/the-window-state assoc :textures textures)
           (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
+          (async/offer! queue (matInfo mat))
           )
           nil)
 
@@ -217,20 +217,32 @@
 ;
 (defn set-live-camera-texture [device destination-texture-key]
   "Set texture by filename and adds the filename to the list"
-  (let [devices-id                (read-string (str (last device)))
+  (let [device-id                (read-string (str (last device)))
         capture                   (new org.opencv.videoio.VideoCapture)
-        capture-flag              (.open capture devices-id)
+        capture-flag              (.open capture device-id)
         opened?                   (.isOpened capture)
-        ;filenames           (:texture-filenames @cutter.cutter/the-window-state)
-          ; textures            (:textures @cutter.cutter/the-window-state)
-          ; idx                 (count filenames)
-          ; _                   (add-texture-filename filename)
+        maximum-buffer-length     (:maximum-buffer-length @cutter.cutter/the-window-state)
         i-textures                (:i-textures @cutter.cutter/the-window-state)
         texture                   (destination-texture-key i-textures)
         queue                     (:queue texture)
-        tmpMat                    (oc-new-mat)
-        flag                      (oc-query-frame capture tmpMat)
-        _ (.release capture)
+        cameras                   (:cameras @cutter.cutter/the-window-state)
+        mat                       (oc-new-mat)
+        flag                      (if opened? (oc-query-frame capture mat) nil)
+        height                    (.height mat)
+        width                     (.width mat)
+        channels                  (.channels mat)
+        internal-format           (cutter.opencv/oc-tex-internal-format mat)
+        format                    (cutter.opencv/oc-tex-format mat)
+        vector_buffer             (mapv (fn [x] (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3)) (range maximum-buffer-length))
+        camera                    {:idx device-id,
+                                   :destination destination-texture-key,
+                                   :source capture
+                                   :running true}
+        camera-key                (keyword device)
+        cameras                   (assoc cameras camera-key camera)
+        texture                   (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
+        i-textures                (assoc i-textures destination-texture-key texture)
+        ;_ (.release capture)
           ; mat                 (cutter.opencv/oc_load_image filename)
           ; height              (.height mat)
           ; width               (.width mat)
@@ -245,8 +257,27 @@
           ;                                                         :source mat,
           ;                                                         :running true})
           ]
-          (async/offer! queue (matInfo tmpMat))
+          (swap! cutter.cutter/the-window-state assoc :cameras cameras)
+          (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
+          (async/thread
+              (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
+              (oc-query-frame capture mat)
+              (async/offer! queue (matInfo mat)))
+              (.release capture)
+            )
+
+          ;(async/offer! queue (matInfo mat))
           ;(swap! cutter.cutter/the-window-state assoc :textures textures)
           ;(swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
           )
           nil)
+
+(defn stop-camera [device]
+  (let [device-id                (read-string (str (last device)))
+        cameras                  (:cameras @cutter.cutter/the-window-state)
+        camera-key               (keyword device)
+        camera                   (camera-key cameras)
+        camera                  (assoc camera :running false)
+        cameras                  (assoc cameras camera-key camera)]
+        (swap! cutter.cutter/the-window-state assoc :cameras cameras))
+  nil)
