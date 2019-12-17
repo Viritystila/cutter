@@ -34,7 +34,7 @@ void main(void) {
   vec4 ppp=mix(iChannel2_texture, ccc, 0.5);
   float fade_size=2;
   float p1= mix(fade_size, 0.0-fade_size, uv.x-0.125);
-  vec4 mixxx =mix(iChannel1_texture, ich[timefloor], smoothstep(1.0, 0.0, p1));
-  op =iChannel7_texture;// ich[timefloor];//mixxx;//mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
+  vec4 mixxx =mix(iChannel7_texture, iChannel6_texture, smoothstep(1.0, 0.0, p1));
+  op =mixxx;// ich[timefloor];//mixxx;//mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
 
 }

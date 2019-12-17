@@ -409,7 +409,7 @@
           (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 unit))
           (GL11/glBindTexture target tex-id)
           (if  (not (nil? image))
-                (do ;(println "texture-key image tex-id" texture-key image tex-id) 
+                (do ;(println "texture-key image tex-id" texture-key image tex-id)
                 (set-opengl-texture locals texture-key image)
                 )
                 nil)))
@@ -535,6 +535,20 @@
     (GL30/glBindVertexArray 0)
     (GL30/glDeleteVertexArrays vao-id)))
 
+;
+
+(defn stop-camera [device]
+  (let [device-id                (read-string (str (last device)))
+        cameras                  (:cameras @the-window-state)
+        camera-key               (keyword device)
+        camera                   (camera-key cameras)
+        camera                   (assoc camera :running false)
+        cameras                  (assoc cameras camera-key camera)]
+        (swap! cutter.cutter/the-window-state assoc :cameras cameras))
+  nil)
+
+(defn stop-all-cameras [] (println "cameras" (vec (keys (:cameras @the-window-state)))) (map (fn [x] (stop-camera (str "/" (name x)))) (vec (keys (:cameras @the-window-state)))))
+
 (defn- run-thread
   [locals mode shader-filename shader-str-atom tex-filenames texture-folders cams videos title true-fullscreen? display-sync-hz window-idx]
   (println "init-window")
@@ -551,6 +565,8 @@
         (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
         (org.lwjgl.glfw.GLFW/glfwPollEvents)
       (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz)))
+     (println "Stop cameras")
+     (stop-all-cameras)
      (destroy-gl locals)
      (.free (:keyCallback @locals))
      (org.lwjgl.glfw.GLFW/glfwPollEvents)

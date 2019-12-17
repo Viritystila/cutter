@@ -218,14 +218,18 @@
 (defn set-live-camera-texture [device destination-texture-key]
   "Set texture by filename and adds the filename to the list"
   (let [device-id                (read-string (str (last device)))
-        capture                   (new org.opencv.videoio.VideoCapture)
+        camera-key                (keyword device)
+        cameras                   (:cameras @cutter.cutter/the-window-state)
+        camera                    (camera-key cameras)
+        capture                   (:source camera)
+        running?                  (:running camera)
+        capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
         capture-flag              (.open capture device-id)
         opened?                   (.isOpened capture)
         maximum-buffer-length     (:maximum-buffer-length @cutter.cutter/the-window-state)
         i-textures                (:i-textures @cutter.cutter/the-window-state)
         texture                   (destination-texture-key i-textures)
         queue                     (:queue texture)
-        cameras                   (:cameras @cutter.cutter/the-window-state)
         mat                       (oc-new-mat)
         flag                      (if opened? (oc-query-frame capture mat) nil)
         height                    (.height mat)
@@ -238,7 +242,6 @@
                                    :destination destination-texture-key,
                                    :source capture
                                    :running true}
-        camera-key                (keyword device)
         cameras                   (assoc cameras camera-key camera)
         texture                   (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
         i-textures                (assoc i-textures destination-texture-key texture)
@@ -259,25 +262,16 @@
           ]
           (swap! cutter.cutter/the-window-state assoc :cameras cameras)
           (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
+          (if (not running?)
           (async/thread
               (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
               (oc-query-frame capture mat)
-              (async/offer! queue (matInfo mat)))
+              (async/offer! (:queue (destination-texture-key (:i-textures @cutter.cutter/the-window-state))) (matInfo mat)))
               (.release capture)
             )
-
+            )
           ;(async/offer! queue (matInfo mat))
           ;(swap! cutter.cutter/the-window-state assoc :textures textures)
           ;(swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
           )
           nil)
-
-(defn stop-camera [device]
-  (let [device-id                (read-string (str (last device)))
-        cameras                  (:cameras @cutter.cutter/the-window-state)
-        camera-key               (keyword device)
-        camera                   (camera-key cameras)
-        camera                  (assoc camera :running false)
-        cameras                  (assoc cameras camera-key camera)]
-        (swap! cutter.cutter/the-window-state assoc :cameras cameras))
-  nil)
