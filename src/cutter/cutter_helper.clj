@@ -257,12 +257,13 @@
             (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
               (reset! startTime (System/nanoTime))
               (oc-query-frame capture mat)
-              (async/offer! (:queue (destination-texture-key (:i-textures @cutter.cutter/the-window-state))) (matInfo mat))
+              (async/offer! (:queue ((:destination (camera-key (:cameras @cutter.cutter/the-window-state))) (:i-textures @cutter.cutter/the-window-state))) (matInfo mat))
               (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) (:fps (camera-key (:cameras @cutter.cutter/the-window-state))))))
               (.release capture))
             (do
-              (.release capture)
-              (swap! cutter.cutter/the-window-state assoc :cameras (assoc cameras camera-key (assoc camera :running false))))))
+              ;(.release capture)
+              ;(swap! cutter.cutter/the-window-state assoc :cameras (assoc cameras camera-key (assoc camera :running false)))
+              )))
         nil)
 ;
 (defn stop-camera [device]
@@ -270,9 +271,11 @@
         cameras                  (:cameras @the-window-state)
         camera-key               (keyword device)
         camera                   (camera-key cameras)
+        capture                  (:source camera)
         camera                   (assoc camera :running false)
         cameras                  (assoc cameras camera-key camera)]
-        (swap! cutter.cutter/the-window-state assoc :cameras cameras))
+        (swap! cutter.cutter/the-window-state assoc :cameras cameras)
+        (.release capture))
   nil)
 
 (defn set-camera-property [device property val]
