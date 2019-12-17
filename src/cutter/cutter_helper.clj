@@ -276,13 +276,16 @@
         camera-key               (keyword device)
         camera                   (camera-key cameras)
         destination              (:destination camera)
+        fps                      (:fps camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        texture-array            {:idx buffername, :destination destination :source [] :running false, :fps fps, :width 0, :height 0, :image-bytes 0}
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
         queue                    (:queue texture)
         mlt                      (:mult texture)
-        ;width                    (:width texture)
-        ;height                   (:height texture)
+        width                    (atom 0)
+        height                   (atom 0)
+        image-bytes              (atom 0)
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         ;vector-buffer           (mapv (fn [x] (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3)) (range maximum-buffer-length))
         image-buffer             (atom [])
@@ -291,20 +294,26 @@
         ;image                    (async/poll! out)
         ]
         (println "Recording from: " device " to " "buffername")
+        (async/thread
         (while (< (count @image-buffer) maximum-buffer-length)
-        (do
-          (let [image               (async/<!! out)
-                height              (nth image 4)
-                width               (nth image 5)
-                image-bytes         (nth image 6)
-                buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
-                ]
-                (swap! image-buffer concat [buffer])
-                )
-                )
-                )
-        (clojure.core.async/untap mlt out)
-        ))
+          (do
+            (let [image               (async/<!! out)
+                  h                   (reset! height (nth image 4))
+                  w                   (reset! width (nth image 5))
+                  ib                  (reset! image-bytes (nth image 6))
+                  buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))]
+                  (swap! image-buffer concat [buffer]))))
+          (swap! cutter.cutter/the-window-state assoc :texture-arrays
+            (assoc texture-array (keyword buffername) (assoc texture-array :idx buffername
+              :destination destination
+              :source @image-buffer
+              :running false
+              :fps fps
+              :width @width
+              :height @height
+              :image-bytes @image-bytes)))
+              (clojure.core.async/untap mlt out)
+              (println "Finished recording from: " device " to " "buffername"))))
 
 (defn set-camera-property [device property val]
   (let [device-id                (read-string (str (last device)))
