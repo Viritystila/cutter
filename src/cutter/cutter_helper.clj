@@ -270,25 +270,41 @@
         (.release capture))
   nil)
 
-(defn rec [device]
+(defn rec [device buffername]
   (let [device-id                (read-string (str (last device)))
         cameras                  (:cameras @the-window-state)
         camera-key               (keyword device)
         camera                   (camera-key cameras)
-        ;capture                  (:source camera)
         destination              (:destination camera)
+        texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
         queue                    (:queue texture)
         mlt                      (:mult texture)
-        _ (println mlt)
+        ;width                    (:width texture)
+        ;height                   (:height texture)
+        maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        ;vector-buffer           (mapv (fn [x] (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3)) (range maximum-buffer-length))
+        image-buffer             (atom [])
         out                      (clojure.core.async/chan (async/buffer 1))
-        _ (println out)
         _                        (clojure.core.async/tap mlt out)
-        image                    (async/poll! out)]
-
+        ;image                    (async/poll! out)
+        ]
+        (println "Recording from: " device " to " "buffername")
+        (while (< (count @image-buffer) maximum-buffer-length)
+        (do
+          (let [image               (async/<!! out)
+                height              (nth image 4)
+                width               (nth image 5)
+                image-bytes         (nth image 6)
+                buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                ]
+                (swap! image-buffer concat [buffer])
+                )
+                )
+                )
         (clojure.core.async/untap mlt out)
-        image))
+        ))
 
 (defn set-camera-property [device property val]
   (let [device-id                (read-string (str (last device)))

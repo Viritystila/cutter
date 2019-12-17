@@ -68,9 +68,6 @@
     :maximum-texture-folders    1000
     :maximum-cameras            1000
     :maximum-videos             1000
-    :maximum-running-cameras    10
-    :maximum-running-videos     10
-    :maximum-running-buffer     10
     :maximum-buffer-length      250  ;Frames
     ;:maximum-live-uniforms      10
     ;:maximum-buffered-uniforms  10
@@ -80,7 +77,7 @@
     :camera-devices             []
     :video-filenames            []
     :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
-    :texture-arrays             {} ;{:dir, {:idx :destination :source "mat array" :running false}}
+    :texture-arrays             {} ;{:name, {:idx :destination :source "mat array" :running false}}
     :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30}}
     :videos                     {} ;{:filename, {:idx :destination :source "capture" :running false, :fps 30}}
     ;Data Arrays
