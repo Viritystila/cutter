@@ -262,16 +262,27 @@
           ]
           (swap! cutter.cutter/the-window-state assoc :cameras cameras)
           (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
-          (if (not running?)
-          (async/thread
+          (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)) )
+            (async/thread
               (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
               (oc-query-frame capture mat)
               (async/offer! (:queue (destination-texture-key (:i-textures @cutter.cutter/the-window-state))) (matInfo mat)))
               (.release capture)
             )
+            (.release capture)
             )
           ;(async/offer! queue (matInfo mat))
           ;(swap! cutter.cutter/the-window-state assoc :textures textures)
           ;(swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
           )
           nil)
+;
+(defn stop-camera [device]
+  (let [device-id                (read-string (str (last device)))
+        cameras                  (:cameras @the-window-state)
+        camera-key               (keyword device)
+        camera                   (camera-key cameras)
+        camera                   (assoc camera :running false)
+        cameras                  (assoc cameras camera-key camera)]
+        (swap! cutter.cutter/the-window-state assoc :cameras cameras))
+  nil)

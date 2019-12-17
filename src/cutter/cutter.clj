@@ -536,18 +536,19 @@
     (GL30/glDeleteVertexArrays vao-id)))
 
 ;
-
-(defn stop-camera [device]
+(defn stop-cam [device locals]
   (let [device-id                (read-string (str (last device)))
-        cameras                  (:cameras @the-window-state)
+        cameras                  (:cameras @locals)
         camera-key               (keyword device)
         camera                   (camera-key cameras)
         camera                   (assoc camera :running false)
         cameras                  (assoc cameras camera-key camera)]
-        (swap! cutter.cutter/the-window-state assoc :cameras cameras))
+        (swap! locals assoc :cameras cameras))
   nil)
 
-(defn stop-all-cameras [] (println "cameras" (vec (keys (:cameras @the-window-state)))) (map (fn [x] (stop-camera (str "/" (name x)))) (vec (keys (:cameras @the-window-state)))))
+
+(defn stop-all-cameras [locals]
+   (mapv (fn [x] (stop-cam (str "/" (name x)) locals)) (vec (keys (:cameras @locals)))))
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom tex-filenames texture-folders cams videos title true-fullscreen? display-sync-hz window-idx]
@@ -566,7 +567,7 @@
         (org.lwjgl.glfw.GLFW/glfwPollEvents)
       (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz)))
      (println "Stop cameras")
-     (stop-all-cameras)
+     (stop-all-cameras locals)
      (destroy-gl locals)
      (.free (:keyCallback @locals))
      (org.lwjgl.glfw.GLFW/glfwPollEvents)
