@@ -226,40 +226,47 @@
         capture                   (:source camera)
         running?                  (:running camera)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
-        capture-flag              (.open capture device-id)
-        opened?                   (.isOpened capture)
+        ;capture-flag              (.open capture device-id)
+        ;opened?                   (.isOpened capture)
         ;maximum-buffer-length     (:maximum-buffer-length @cutter.cutter/the-window-state)
-        i-textures                (:i-textures @cutter.cutter/the-window-state)
-        texture                   (destination-texture-key i-textures)
-        queue                     (:queue texture)
+        ; i-textures                (:i-textures @cutter.cutter/the-window-state)
+        ; texture                   (destination-texture-key i-textures)
+        ; queue                     (:queue texture)
         mat                       (oc-new-mat)
-        flag                      (if opened? (oc-query-frame capture mat) nil)
-        height                    (.height mat)
-        width                     (.width mat)
-        channels                  (.channels mat)
-        internal-format           (cutter.opencv/oc-tex-internal-format mat)
-        format                    (cutter.opencv/oc-tex-format mat)
+        ; flag                      (if opened? (oc-query-frame capture mat) nil)
+        ; height                    (.height mat)
+        ; width                     (.width mat)
+        ; channels                  (.channels mat)
+        ; internal-format           (cutter.opencv/oc-tex-internal-format mat)
+        ; format                    (cutter.opencv/oc-tex-format mat)
         fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
+        ;_ (println fps)
         ;vector_buffer             (mapv (fn [x] (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3)) (range maximum-buffer-length))
         camera                    {:idx device-id,
                                    :destination destination-texture-key,
-                                   :source capture
-                                   :running true
+                                   :source capture,
+                                   :running running?,
                                    :fps fps}
         cameras                   (assoc cameras camera-key camera)
-        texture                   (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
-        i-textures                (assoc i-textures destination-texture-key texture)
+        ;texture                   (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
+        ;i-textures                (assoc i-textures destination-texture-key texture)
         startTime                 (atom (System/nanoTime))]
         (swap! cutter.cutter/the-window-state assoc :cameras cameras)
-        (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
-        (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)) )
+        ;(swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
+        (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
+        (do
+          (.open capture device-id)
+          (swap! cutter.cutter/the-window-state assoc :cameras
+            (assoc cameras
+              camera-key (assoc camera :running true,
+                :fps (cutter.opencv/oc-get-capture-property :fps capture))))
           (async/thread
             (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
               (reset! startTime (System/nanoTime))
               (oc-query-frame capture mat)
               (async/offer! (:queue ((:destination (camera-key (:cameras @cutter.cutter/the-window-state))) (:i-textures @cutter.cutter/the-window-state))) (matInfo mat))
               (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) (:fps (camera-key (:cameras @cutter.cutter/the-window-state))))))
-              (.release capture))
+              (.release capture)))
             (do
               ;(.release capture)
               ;(swap! cutter.cutter/the-window-state assoc :cameras (assoc cameras camera-key (assoc camera :running false)))
