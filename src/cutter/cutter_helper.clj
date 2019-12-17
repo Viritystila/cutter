@@ -215,6 +215,8 @@
                 nil)
 
 ;
+;
+;sleepTime [startTime endTime fps]
 (defn set-live-camera-texture [device destination-texture-key]
   "Set texture by filename and adds the filename to the list"
   (let [device-id                (read-string (str (last device)))
@@ -226,7 +228,7 @@
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
         capture-flag              (.open capture device-id)
         opened?                   (.isOpened capture)
-        maximum-buffer-length     (:maximum-buffer-length @cutter.cutter/the-window-state)
+        ;maximum-buffer-length     (:maximum-buffer-length @cutter.cutter/the-window-state)
         i-textures                (:i-textures @cutter.cutter/the-window-state)
         texture                   (destination-texture-key i-textures)
         queue                     (:queue texture)
@@ -237,45 +239,31 @@
         channels                  (.channels mat)
         internal-format           (cutter.opencv/oc-tex-internal-format mat)
         format                    (cutter.opencv/oc-tex-format mat)
-        vector_buffer             (mapv (fn [x] (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3)) (range maximum-buffer-length))
+        fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
+        ;vector_buffer             (mapv (fn [x] (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3)) (range maximum-buffer-length))
         camera                    {:idx device-id,
                                    :destination destination-texture-key,
                                    :source capture
-                                   :running true}
+                                   :running true
+                                   :fps fps}
         cameras                   (assoc cameras camera-key camera)
         texture                   (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
         i-textures                (assoc i-textures destination-texture-key texture)
-        ;_ (.release capture)
-          ; mat                 (cutter.opencv/oc_load_image filename)
-          ; height              (.height mat)
-          ; width               (.width mat)
-          ; channels            (.channels mat)
-          ; internal-format     (cutter.opencv/oc-tex-internal-format mat)
-          ; format              (cutter.opencv/oc-tex-format mat)
-          ; queue               (:queue texture)
-          ; texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
-          ; i-textures          (assoc i-textures destination-texture-key texture)
-          ; textures            (assoc textures (keyword filename) {:idx idx,
-          ;                                                         :destination destination-texture-key,
-          ;                                                         :source mat,
-          ;                                                         :running true})
-          ]
-          (swap! cutter.cutter/the-window-state assoc :cameras cameras)
-          (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
-          (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)) )
-            (async/thread
-              (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
+        startTime                 (atom (System/nanoTime))]
+        (swap! cutter.cutter/the-window-state assoc :cameras cameras)
+        (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
+        (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)) )
+          (async/thread
+            (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
+              (reset! startTime (System/nanoTime))
               (oc-query-frame capture mat)
-              (async/offer! (:queue (destination-texture-key (:i-textures @cutter.cutter/the-window-state))) (matInfo mat)))
+              (async/offer! (:queue (destination-texture-key (:i-textures @cutter.cutter/the-window-state))) (matInfo mat))
+              (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) (:fps (camera-key (:cameras @cutter.cutter/the-window-state))))))
+              (.release capture))
+            (do
               (.release capture)
-            )
-            (.release capture)
-            )
-          ;(async/offer! queue (matInfo mat))
-          ;(swap! cutter.cutter/the-window-state assoc :textures textures)
-          ;(swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
-          )
-          nil)
+              (swap! cutter.cutter/the-window-state assoc :cameras (assoc cameras camera-key (assoc camera :running false))))))
+        nil)
 ;
 (defn stop-camera [device]
   (let [device-id                (read-string (str (last device)))
@@ -286,3 +274,25 @@
         cameras                  (assoc cameras camera-key camera)]
         (swap! cutter.cutter/the-window-state assoc :cameras cameras))
   nil)
+
+(defn set-camera-property [device property val]
+  (let [device-id                (read-string (str (last device)))
+        cameras                  (:cameras @cutter.cutter/the-window-state)
+        camera-key               (keyword device)
+        camera                   (camera-key cameras)
+        source                   (:source camera)]
+        (if (= property :fps)
+          (swap! cutter.cutter/the-window-state assoc :cameras (assoc cameras camera-key (assoc camera :fps val)))
+          (cutter.opencv/oc-set-capture-property property source val)))
+          nil)
+
+(defn get-camera-property [device property]
+  (let [device-id                (read-string (str (last device)))
+        cameras                  (:cameras @cutter.cutter/the-window-state)
+        camera-key               (keyword device)
+        camera                   (camera-key cameras)
+        source                   (:source camera)
+        fps                      (:fps camera)]
+        (if (= property :fps)
+          fps
+          (cutter.opencv/oc-get-capture-property property source))))

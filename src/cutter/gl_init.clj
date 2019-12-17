@@ -47,6 +47,9 @@
         buffer              (oc-mat-to-bytebuffer mat)
         channels            (.channels mat)
         queue               queue
+        mlt                 (clojure.core.async/mult queue)
+        out1                (clojure.core.async/chan)
+        _                   (clojure.core.async/tap mlt out1)
         texture             { :tex-id           tex-id,
                               :target           target,
                               :height           height,
@@ -57,7 +60,9 @@
                               :format           format
                               :channels         channels,
                               :init-opengl      true
-                              :queue            queue}]
+                              :queue            queue
+                              :mult             mlt
+                              :out1             out1}]
         ;(async/offer! queue (matInfo mat))
         (GL11/glBindTexture target tex-id)
         (GL11/glTexParameteri target GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)

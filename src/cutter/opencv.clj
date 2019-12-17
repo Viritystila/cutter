@@ -100,89 +100,39 @@
 
 
 ;;camera
-(defn oc-set-capture-property [dispatch capture val](case dispatch
-                                              :pos-msec
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_POS_MSEC  val)
+(defn oc-set-capture-property [dispatch capture val]
+  (let []
+    (case dispatch
+      :pos-msec           (.set capture org.opencv.videoio.Videoio/CAP_PROP_POS_MSEC  val)
+      :pos-frames         (.set capture org.opencv.videoio.Videoio/CAP_PROP_POS_FRAMES   val)
+      :pos-avi-ratio      (.set capture org.opencv.videoio.Videoio/CAP_PROP_POS_AVI_RATIO  val)
+      :frame-width        (.set capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_WIDTH  val)
+      :frame-height       (.set capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_HEIGHT  val)
+      :fps                (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS  val)
+      :fourcc             (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC   val)
+      :frame-count        (.set capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_COUNT  val)
+      :brightness         (.set capture org.opencv.videoio.Videoio/CAP_PROP_BRIGHTNESS   val)
+      :contrast           (.set capture org.opencv.videoio.Videoio/CAP_PROP_CONTRAST   val)
+      :saturation         (.set capture org.opencv.videoio.Videoio/CAP_PROP_SATURATION   val)
+      :hue                (.set capture org.opencv.videoio.Videoio/CAP_PROP_HUE   val)
+      :default            (throw (Exception. "Unknown Property.")))))
 
-                                              :pos-frames
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_POS_FRAMES   val)
-
-                                              :pos-avi-ratio
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_POS_AVI_RATIO  val)
-
-                                              :frame-width
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_WIDTH  val)
-
-                                              :frame-height
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_HEIGHT  val)
-
-                                              :fps
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS  val)
-
-                                              :fourcc
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC   val)
-
-                                              :frame-count
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_COUNT  val)
-
-;;                                               :format
-;;                                               (.set capture org.opencv.videoio.Videoio/CV_CAP_PROP_FORMAT)
-
-                                              :brightness
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_BRIGHTNESS   val)
-
-                                              :contrast
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_CONTRAST   val)
-
-                                              :saturation
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_SATURATION   val)
-
-                                              :hue
-                                              (.set capture org.opencv.videoio.Videoio/CAP_PROP_HUE   val)
-
-                                                :default (throw (Exception. "Unknown Property."))))
-
-(defn oc-get-capture-property [dispatch capture](case dispatch
-                                              :pos-msec
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_POS_MSEC)
-
-                                              :pos-frames
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_POS_FRAMES)
-
-                                              :pos-avi-ratio
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_POS_AVI_RATIO)
-
-                                              :frame-width
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_WIDTH)
-
-                                              :frame-height
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_HEIGHT)
-
-                                              :fps
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS)
-
-                                              :fourcc
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC)
-
-                                              :frame-count
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_COUNT)
-
-;;                                               :format
-;;                                               (.get capture org.opencv.videoio.Videoio/CV_CAP_PROP_FORMAT)
-
-                                              :brightness
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_BRIGHTNESS)
-
-                                              :contrast
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_CONTRAST)
-
-                                              :saturation
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_SATURATION)
-
-                                              :hue
-                                              (.get capture org.opencv.videoio.Videoio/CAP_PROP_HUE)
-
-                                            :default (throw (Exception. "Unknown Property."))))
+(defn oc-get-capture-property [dispatch capture]
+  (let []
+    (case dispatch
+      :pos-msec               (.get capture org.opencv.videoio.Videoio/CAP_PROP_POS_MSEC)
+      :pos-frames             (.get capture org.opencv.videoio.Videoio/CAP_PROP_POS_FRAMES)
+      :pos-avi-ratio          (.get capture org.opencv.videoio.Videoio/CAP_PROP_POS_AVI_RATIO)
+      :frame-width            (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_WIDTH)
+      :frame-height           (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_HEIGHT)
+      :fps                    (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS)
+      :fourcc                 (.get capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC)
+      :frame-count            (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_COUNT)
+      :brightness             (.get capture org.opencv.videoio.Videoio/CAP_PROP_BRIGHTNESS)
+      :contrast               (.get capture org.opencv.videoio.Videoio/CAP_PROP_CONTRAST)
+      :saturation             (.get capture org.opencv.videoio.Videoio/CAP_PROP_SATURATION)
+      :hue                    (.get capture org.opencv.videoio.Videoio/CAP_PROP_HUE)
+      :default (throw (Exception. "Unknown Property.")))))
 
 (defn oc-open-camera-device [camera-device]
   (let [vc  (new org.opencv.videoio.VideoCapture)
