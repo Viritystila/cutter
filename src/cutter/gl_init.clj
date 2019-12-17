@@ -48,7 +48,7 @@
         channels            (.channels mat)
         queue               queue
         mlt                 (clojure.core.async/mult queue)
-        out1                (clojure.core.async/chan)
+        out1                (clojure.core.async/chan (async/buffer 1))
         _                   (clojure.core.async/tap mlt out1)
         texture             { :tex-id           tex-id,
                               :target           target,

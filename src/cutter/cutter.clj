@@ -402,11 +402,11 @@
     (let [i-textures          (:i-textures @locals)
           texture             (texture-key i-textures)
           queue               (:queue texture)
-          ;out1                (:out1 texture)
+          out1                (:out1 texture)
           unit                (:unit (texture-key i-uniforms))
           tex-id              (:tex-id texture)
           target              (:target texture)
-          image               (if (= nil queue) nil (async/poll! queue))]
+          image               (if (= nil queue) nil (async/poll! out1))]
           (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 unit))
           (GL11/glBindTexture target tex-id)
           (if  (not (nil? image))
@@ -536,7 +536,6 @@
     (GL30/glBindVertexArray 0)
     (GL30/glDeleteVertexArrays vao-id)))
 
-;
 (defn- stop-cam [device locals]
   (let [device-id                (read-string (str (last device)))
         cameras                  (:cameras @locals)
@@ -545,9 +544,9 @@
         capture                  (:source camera)
         camera                   (assoc camera :running false)
         cameras                  (assoc cameras camera-key camera)]
-        (swap! locals assoc :cameras cameras))
+        (swap! locals assoc :cameras cameras)
+        (.release capture))
   nil)
-
 
 (defn- stop-all-cameras [locals]
    (mapv (fn [x] (stop-cam (str (name x)) locals)) (vec (keys (:cameras @locals)))))
