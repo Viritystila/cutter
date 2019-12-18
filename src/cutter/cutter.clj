@@ -596,8 +596,8 @@
         (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
         (org.lwjgl.glfw.GLFW/glfwPollEvents)
       (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz)))
-     (println "Stop cameras")
-     (stop-all-cameras locals)
+     ;(println "Stop cameras")
+     ;(stop-all-cameras locals)
      (destroy-gl locals)
      (.free (:keyCallback @locals))
      (org.lwjgl.glfw.GLFW/glfwPollEvents)
@@ -655,7 +655,9 @@
         (add-watch shader-str-atom :shader-str-watch watch-shader-str-atom))
 
       ;; set a global window-state instead of creating a new one
-      (reset! the-window-state default-state-values)
+
+      ;(reset! the-window-state default-state-values)
+
       ;; start the requested shader
       (.start (Thread.
                (fn [] (run-thread the-window-state
