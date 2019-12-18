@@ -134,24 +134,24 @@
                                 :iDataArray15   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray16   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1}}
      ;textures
-     :i-textures     {:iPreviousFrame {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0}, ;
-                      :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel1      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel2      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel3      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel4      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel5      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel6      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel7      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel8      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel9      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel10     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel11     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel12     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel13     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel14     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel15     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0},
-                      :iChannel16     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0, :inputtype 0}
+     :i-textures     {:iPreviousFrame {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}, ;
+                      :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel1      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel2      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel3      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel4      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel5      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel6      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel7      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel8      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel9      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel10     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel11     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel12     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel13     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel14     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel15     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannel16     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}
                     }
      })
 ;; GLOBAL STATE ATOMS iPreviousFrame
@@ -214,8 +214,7 @@
         texture-filenames   (cutter.general/remove-inexistent texture-filenames (:maximum-textures @locals))
         texture-folders     (cutter.general/remove-inexistent texture-folders (:maximum-texture-folders @locals))
         camera-devices      (cutter.general/remove-inexistent camera-devices (:maximum-cameras @locals))
-        video-filenames     (cutter.general/remove-inexistent video-filenames (:maximum-videos @locals))
-        ]
+        video-filenames     (cutter.general/remove-inexistent video-filenames (:maximum-videos @locals))]
         (swap! locals
            assoc
            :active            :yes
@@ -230,8 +229,7 @@
            :texture-filenames texture-filenames
            :texture-folders   texture-folders
            :camera-devices    camera-devices
-           :video-filenames   video-filenames
-           )
+           :video-filenames   video-filenames)
         (println "Begin shader slurping.")
         (let [shader-str (if (nil? shader-filename)
                        @shader-str-atom
@@ -319,30 +317,33 @@
 
   (defn- init-gl
     [locals]
-    (let [{:keys [width height user-fn]} @locals]
+    (let [{:keys [width height i-channels]} @locals]
       (GL/createCapabilities)
       (println "OpenGL version:" (GL11/glGetString GL11/GL_VERSION))
       (GL11/glClearColor 0.0 0.0 0.0 0.0)
       (GL11/glViewport 0 0 width height)
       (init-buffers locals)
+      (doseq [x i-channels]
+        (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals x width height)))
+
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel1 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel2 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel3 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel4 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel5 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel6 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel7 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel8 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel9 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel10 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel11 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel12 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel13 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel14 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel15 width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel16 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel1 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel2 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel3 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel4 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel5 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel6 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel7 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel8 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel9 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel10 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel11 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel12 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel13 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel14 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel15 width height))
+      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel16 width height))
 
       ;(println (:i-textures @locals))
 
@@ -351,12 +352,16 @@
       ;(init-textures locals)
       ;(init-cams locals)
       ;(init-videos locals)
-      (init-shaders locals)
-              ))
-              ;
+      (init-shaders locals)))
 
-; ;
-(defn- set-opengl-texture [locals texture-key image]
+(defn- set-texture [tex-image-target internal-format width height format buffer]
+  (try (GL11/glTexImage2D ^Integer tex-image-target 0 ^Integer internal-format
+    ^Integer width  ^Integer height 0
+    ^Integer format
+    GL11/GL_UNSIGNED_BYTE
+    buffer)))
+
+(defn- set-opengl-texture [locals texture-key buffer width height image-bytes img-addr]
    (let[  i-textures          (:i-textures @locals )
           texture             (texture-key i-textures)
           target              (:target texture)
@@ -368,19 +373,23 @@
           init?               (:init-opengl texture)
           tex-id              (:tex-id texture)
           queue               (:queue texture)
-          height              (nth image 4)
-          width               (nth image 5)
-          image-bytes         (nth image 6)
+          height              height ;(nth image 4)
+          width               width ;(nth image 5)
+          image-bytes         image-bytes; (nth image 6)
           setnbytes           (* wset hset bset)
           tex-image-target    ^Integer (+ 0 target)
           nbytes              (* width height image-bytes)
-          buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))]
+          buffer              buffer] ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))]
+          ;(println (type buffer))
+
           (if (or init? (not= setnbytes nbytes))
-            (do (try (GL11/glTexImage2D ^Integer tex-image-target 0 ^Integer internal-format
-              ^Integer width  ^Integer height 0
-              ^Integer format
-              GL11/GL_UNSIGNED_BYTE
-              buffer))
+            (do
+              ; (try (GL11/glTexImage2D ^Integer tex-image-target 0 ^Integer internal-format
+              ; ^Integer width  ^Integer height 0
+              ; ^Integer format
+              ; GL11/GL_UNSIGNED_BYTE
+              ; buffer))
+              (set-texture tex-image-target internal-format width height format buffer)
                 (let [queue               (:queue texture)
                       out1                (:out1 texture)
                       mlt                 (:mult texture)
@@ -389,13 +398,16 @@
                       i-textures  (assoc i-textures texture-key texture)]
                       (swap! locals assoc :i-textures i-textures)))
             (do
-              (if (< 0 (nth image 0))
-                (try (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
-                    ^Integer width  ^Integer height
-                    ^Integer format
-                    GL11/GL_UNSIGNED_BYTE
-                    buffer)))))
+              (if (< 0 img-addr)
+                ; (try (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
+                ;     ^Integer width  ^Integer height
+                ;     ^Integer format
+                ;     GL11/GL_UNSIGNED_BYTE
+                ;     buffer))
+                (set-texture tex-image-target internal-format width height format buffer))))
           (except-gl-errors "@ end of load-texture if-stmt")))
+
+;(defn- process-texture-input [locals texture-key input-image width height image-bytes])
 ;
 (defn- get-textures
     [locals texture-key i-uniforms]
@@ -411,7 +423,16 @@
           (GL11/glBindTexture target tex-id)
           (if  (not (nil? image))
                 (do ;(println "texture-key image tex-id" texture-key image tex-id)
-                (set-opengl-texture locals texture-key image)
+                (cond
+                  (instance? clojure.lang.PersistentVector image) (set-opengl-texture
+                                                                    locals
+                                                                    texture-key
+                                                                    (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                                                                    (nth image 5)
+                                                                    (nth image 4)
+                                                                    (nth image 6)
+                                                                    (nth image 0))
+                  (instance? java.nio.DirectByteBuffer) nil )
                 )
                 nil)))
 (defn- draw
