@@ -276,6 +276,7 @@
         camera-key               (keyword device)
         camera                   (camera-key cameras)
         destination              (:destination camera)
+        source                   (:source camera)
         fps                      (:fps camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         texture-array            {:idx buffername, :destination destination :source [] :running false, :fps fps, :width 0, :height 0, :image-bytes 0}
@@ -295,7 +296,7 @@
         ]
         (println "Recording from: " device " to " "buffername")
         (async/thread
-        (while (< (count @image-buffer) maximum-buffer-length)
+        (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
           (do
             (let [image               (async/<!! out)
                   h                   (reset! height (nth image 4))

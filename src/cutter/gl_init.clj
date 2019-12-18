@@ -38,7 +38,7 @@
 ;Single texture OpenGL initialize
 
 (defn init-texture
-   [width height target tex-id queue]
+   [width height target tex-id queue out1 mlt]
    (let [target             target
         tex-id              tex-id
         mat                 (org.opencv.core.Mat/zeros height width org.opencv.core.CvType/CV_8UC3)
@@ -47,9 +47,9 @@
         buffer              (oc-mat-to-bytebuffer mat)
         channels            (.channels mat)
         queue               queue
-        mlt                 (clojure.core.async/mult queue)
-        out1                (clojure.core.async/chan (async/buffer 1))
-        _                   (clojure.core.async/tap mlt out1)
+        mlt                 mlt ;(clojure.core.async/mult queue)
+        out1                out1 ;(clojure.core.async/chan (async/buffer 1))
+        ;_                   (clojure.core.async/tap mlt out1)
         texture             { :tex-id           tex-id,
                               :target           target,
                               :height           height,
@@ -74,6 +74,17 @@
 
 (defn initialize-texture [locals uniform-key width height]
   (let [{:keys [i-textures]} @locals
-        i-textures (assoc i-textures uniform-key (init-texture width height (GL11/GL_TEXTURE_2D) (GL11/glGenTextures) (async/chan (async/buffer 1))))
+        target  (GL11/GL_TEXTURE_2D)
+        tex-id  (GL11/glGenTextures)
+        queue   (async/chan (async/buffer 1))
+        out1    (async/chan (async/buffer 1))
+        mlt     (clojure.core.async/mult queue)
+        _       (clojure.core.async/tap mlt out1)
+        i-textures (assoc i-textures uniform-key (init-texture width height
+                                                  target
+                                                  tex-id
+                                                  queue
+                                                  out1
+                                                  mlt))
         ]
                i-textures))

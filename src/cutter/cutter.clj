@@ -381,7 +381,10 @@
               ^Integer format
               GL11/GL_UNSIGNED_BYTE
               buffer))
-                (let [texture     (init-texture width height target tex-id queue)
+                (let [queue               (:queue texture)
+                      out1                (:out1 texture)
+                      mlt                 (:mult texture)
+                      texture     (init-texture width height target tex-id queue out1 mlt)
                       texture     (assoc texture :init-opengl false)
                       i-textures  (assoc i-textures texture-key texture)]
                       (swap! locals assoc :i-textures i-textures)))
