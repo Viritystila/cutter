@@ -45,6 +45,17 @@
                      (.channels mat)])
 
 ;
+; 
+; (defn oc-mat-to-bytebuffer [mat] (let [height      (.height mat)
+;                                        width       (.width mat)
+;                                        channels    (.channels mat)
+;                                        size        (* height width channels)
+;                                        data        (byte-array size)
+;                                        _           (.get mat 0 0 data)]
+;                                        ^ByteBuffer (-> (BufferUtils/createByteBuffer size)
+;                                               (.put data)
+;                                               (.flip))))
+
 (defn oc-new-mat
 ([int_0 int_1 int_2 org_opencv_core_scalar_3 ]
   (new org.opencv.core.Mat int_0 int_1 int_2 org_opencv_core_scalar_3 ))

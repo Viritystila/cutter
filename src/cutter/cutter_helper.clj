@@ -246,11 +246,11 @@
             (async/thread
               (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
                 (reset! startTime (System/nanoTime))
-                ;(oc-query-frame capture mat)
+                (oc-query-frame capture mat)
                 (async/offer!
                   (:queue ((:destination (camera-key (:cameras @cutter.cutter/the-window-state)))
                     (:i-textures @cutter.cutter/the-window-state)))
-                    (matInfo (oc-query-frame capture (oc-new-mat))))
+                    (matInfo mat))
                 (Thread/sleep
                   (cutter.general/sleepTime @startTime
                     (System/nanoTime)
@@ -302,18 +302,13 @@
                   h                   (nth image 4)
                   w                   (nth image 5)
                   ib                  (nth image 6)
-                  buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
-                  buffer-capacity     (.capacity buffer)
-                  ;_ (println buffer-capacity)
-                  buffer-copy         (ByteBuffer/allocateDirect buffer-capacity)
-                  readOnlyCopy        (.asReadOnlyBuffer buffer)
-                  ;_                   (.flip readOnlyCopy)
-                  ;_ (.rewind buffer)
-                  _                   (.put buffer-copy readOnlyCopy)
-                  ;_                   (.flip buffer-copy)
-                  ;_ (println buffer-copy)
-                  ]
-                  (swap! image-buffer conj [buffer-copy -1 -1 -1 h w ib]))))
+
+                  buffer_i              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                  buffer-capacity     (.capacity buffer_i)
+                  buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity)
+                                        (.put buffer_i)
+                                        (.flip))]
+                  (swap! image-buffer conj [buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]))))
           (swap! cutter.cutter/the-window-state assoc :texture-arrays
             (assoc texture-arrays (keyword buffername) (assoc texture-array :idx buffername
               :destination destination
@@ -372,7 +367,7 @@
         startTime                 (atom (System/nanoTime))
         index                     (atom 0)
         ]
-        ;(swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays)
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays)
         (doseq [x source] (Thread/sleep 30) (async/offer!  queue x))
         ))
 
