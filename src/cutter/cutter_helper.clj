@@ -246,11 +246,11 @@
             (async/thread
               (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
                 (reset! startTime (System/nanoTime))
-                (oc-query-frame capture mat)
+                ;(oc-query-frame capture mat)
                 (async/offer!
                   (:queue ((:destination (camera-key (:cameras @cutter.cutter/the-window-state)))
                     (:i-textures @cutter.cutter/the-window-state)))
-                    (matInfo mat))
+                    (matInfo (oc-query-frame capture (oc-new-mat))))
                 (Thread/sleep
                   (cutter.general/sleepTime @startTime
                     (System/nanoTime)
@@ -279,14 +279,14 @@
         source                   (:source camera)
         fps                      (:fps camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
-        texture-array            {:idx buffername, :destination destination :source [] :running false, :fps fps, :width 0, :height 0, :image-bytes 0}
+        texture-array            {:idx buffername, :destination destination :source [] :running false, :fps fps}
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
         queue                    (:queue texture)
         mlt                      (:mult texture)
-        width                    (atom 0)
-        height                   (atom 0)
-        image-bytes              (atom 0)
+        ;width                    (atom 0)
+        ;height                   (atom 0)
+        ;image-bytes              (atom 0)
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         ;vector-buffer           (mapv (fn [x] (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3)) (range maximum-buffer-length))
         image-buffer             (atom [])
@@ -299,22 +299,29 @@
         (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
           (do
             (let [image               (async/<!! out)
-                  h                   (reset! height (nth image 4))
-                  w                   (reset! width (nth image 5))
-                  ib                  (reset! image-bytes (nth image 6))
-                  buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))]
-                  (swap! image-buffer concat [buffer]))))
+                  h                   (nth image 4)
+                  w                   (nth image 5)
+                  ib                  (nth image 6)
+                  buffer              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                  buffer-capacity     (.capacity buffer)
+                  ;_ (println buffer-capacity)
+                  buffer-copy         (ByteBuffer/allocateDirect buffer-capacity)
+                  readOnlyCopy        (.asReadOnlyBuffer buffer)
+                  ;_                   (.flip readOnlyCopy)
+                  ;_ (.rewind buffer)
+                  _                   (.put buffer-copy readOnlyCopy)
+                  ;_                   (.flip buffer-copy)
+                  ;_ (println buffer-copy)
+                  ]
+                  (swap! image-buffer conj [buffer-copy -1 -1 -1 h w ib]))))
           (swap! cutter.cutter/the-window-state assoc :texture-arrays
-            (assoc texture-array (keyword buffername) (assoc texture-array :idx buffername
+            (assoc texture-arrays (keyword buffername) (assoc texture-array :idx buffername
               :destination destination
               :source @image-buffer
               :running false
-              :fps fps
-              :width @width
-              :height @height
-              :image-bytes @image-bytes)))
+              :fps fps)))
               (clojure.core.async/untap mlt out)
-              (println "Finished recording from: " device " to " "buffername"))))
+              (println "Finished recording from:" device "to" buffername))))
 
 (defn set-camera-property [device property val]
   (let [device-id                (read-string (str (last device)))
@@ -337,3 +344,37 @@
         (if (= property :fps)
           fps
           (cutter.opencv/oc-get-capture-property property source))))
+
+
+;[140547741813184 480 1920 1 480 640 3]
+(defn set-buffer-texture [buffername destination-texture-key]
+  "Set texture by filename and adds the filename to the list"
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        ;texture-array            {:idx buffername, :destination destination :source [] :running false, :fps fps, :width 0, :height 0, :image-bytes 0}
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+        ;_ (println texture-array)
+
+        source                   (:source texture-array)
+        running?                 (:running texture-array)
+        fps                      (:fps texture-array)
+        idx                      (:idx texture-array)
+        i-textures               (:i-textures @cutter.cutter/the-window-state)
+        texture                  (destination-texture-key i-textures)
+        queue                    (:queue texture)
+        buffer-length            (count source)
+        texture-array            (assoc texture-array :idx idx,
+                                    :destination destination-texture-key,
+                                    :source source,
+                                    :running running?,
+                                    :fps fps)
+        texture-arrays            (assoc texture-arrays  buffername-key texture-array)
+        startTime                 (atom (System/nanoTime))
+        index                     (atom 0)
+        ]
+        ;(swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays)
+        (doseq [x source] (Thread/sleep 30) (async/offer!  queue x))
+        ))
+
+
+;buffername

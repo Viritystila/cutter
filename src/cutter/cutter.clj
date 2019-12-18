@@ -422,9 +422,10 @@
           (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 unit))
           (GL11/glBindTexture target tex-id)
           (if  (not (nil? image))
-                (do ;(println "texture-key image tex-id" texture-key image tex-id)
-                (cond
-                  (instance? clojure.lang.PersistentVector image) (set-opengl-texture
+                (do ;
+
+                (if
+                  (instance? java.lang.Long (nth image 0)) (set-opengl-texture
                                                                     locals
                                                                     texture-key
                                                                     (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
@@ -432,7 +433,14 @@
                                                                     (nth image 4)
                                                                     (nth image 6)
                                                                     (nth image 0))
-                  (instance? java.nio.DirectByteBuffer) nil )
+                  (do (set-opengl-texture
+                        locals
+                        texture-key
+                        (nth image 0)
+                        (nth image 5)
+                        (nth image 4)
+                        (nth image 6)
+                        1)))
                 )
                 nil)))
 (defn- draw

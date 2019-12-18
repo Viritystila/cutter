@@ -144,6 +144,7 @@
 
 (defn oc-query-frame [capture buffer]
   (let [flag (.read capture buffer)]
-    (if (= flag true) nil (Thread/sleep 100))))
+    (if (= flag true) nil (Thread/sleep 100))
+    buffer))
 
 ;(read-string (str (last "/dev/video0")))
