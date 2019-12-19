@@ -284,7 +284,16 @@
         source                   (:source camera)
         fps                      (:fps camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
-        texture-array            {:idx buffername, :destination destination :source [] :running false, :fps fps}
+        texture-array            (camera-key texture-arrays)
+        running?                 false
+        idx                      buffername
+        destination              (:destination texture-array)
+        destination              (if (= nil destination) (:destination camera) destination)
+        running?                 (:running texture-array)
+        running?                 (if (= nil running?) (:running camera) running?)
+        ;fps                      (:fps texture-array)
+        ;fps                      (if (= nil fps) (:fps camera) fps)
+        texture-array            {:idx buffername, :destination destination :source [], :running running?, :fps fps}
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
         queue                    (:queue texture)
@@ -301,7 +310,6 @@
                   h                   (nth image 4)
                   w                   (nth image 5)
                   ib                  (nth image 6)
-
                   buffer_i              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
                   buffer-capacity     (.capacity buffer_i)
                   buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity)
@@ -312,7 +320,7 @@
             (assoc texture-arrays (keyword buffername) (assoc texture-array :idx buffername
               :destination destination
               :source @image-buffer
-              :running false
+              :running running?
               :fps fps)))
               (clojure.core.async/untap mlt out)
               (println "Finished recording from:" device "to" buffername))))
