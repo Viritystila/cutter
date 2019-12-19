@@ -270,6 +270,11 @@
         (.release capture))
   nil)
 
+
+(defn stop-all-cameras2 []
+   (mapv (fn [x] (stop-camera (str (name x)))) (vec (keys (:cameras @cutter.cutter/the-window-state)))))
+
+
 (defn rec [device buffername]
   (let [device-id                (read-string (str (last device)))
         cameras                  (:cameras @the-window-state)
@@ -377,14 +382,17 @@
                     (Thread/sleep
                       (cutter.general/sleepTime @startTime
                         (System/nanoTime)
-                        (:fps (buffername-key (:texture-arrays @cutter.cutter/the-window-state))))))
-                   )
+                        (:fps (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))))))))))
 
-          )
-        )
+(defn stop-buffer [buffername]
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+        texture-array            (assoc texture-array :running false)
+        texture-arrays           (assoc texture-arrays buffername-key texture-array)]
+        (swap! cutter.cutter/the-window-state assoc :texture-array texture-arrays))
+  nil)
 
-        ;(doseq [x source] (Thread/sleep 30) (async/offer!  queue x))
-        ))
-
-
-;buffername
+;
+; (defn stop-all-cameras2 []
+;    (mapv (fn [x] (stop-camera (str (name x)))) (vec (keys (:cameras @cutter.cutter/the-window-state)))))

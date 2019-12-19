@@ -564,21 +564,22 @@
         ;; Delete the VAO
     (GL30/glBindVertexArray 0)
     (GL30/glDeleteVertexArrays vao-id)))
-
-(defn- stop-cam [device locals]
-  (let [device-id                (read-string (str (last device)))
-        cameras                  (:cameras @locals)
-        camera-key               (keyword device)
-        camera                   (camera-key cameras)
-        capture                  (:source camera)
-        camera                   (assoc camera :running false)
-        cameras                  (assoc cameras camera-key camera)]
-        (swap! locals assoc :cameras cameras)
-        (.release capture))
-  nil)
-
-(defn- stop-all-cameras [locals]
-   (mapv (fn [x] (stop-cam (str (name x)) locals)) (vec (keys (:cameras @locals)))))
+; 
+; (defn- stop-cam [device locals]
+;   (let [device-id                (read-string (str (last device)))
+;         cameras                  (:cameras @locals)
+;         camera-key               (keyword device)
+;         camera                   (camera-key cameras)
+;         capture                  (:source camera)
+;         camera                   (assoc camera :running false)
+;         cameras                  (assoc cameras camera-key camera)]
+;         (swap! locals assoc :cameras cameras)
+;         (.release capture))
+;   nil)
+;
+; (defn- stop-all-cameras [locals]
+;    (mapv (fn [x] (stop-cam (str (name x)) locals)) (vec (keys (:cameras @locals)))))
+;
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom tex-filenames texture-folders cams videos title true-fullscreen? display-sync-hz window-idx]
