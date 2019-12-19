@@ -282,24 +282,30 @@
         camera                   (camera-key cameras)
         destination              (:destination camera)
         source                   (:source camera)
-        fps                      (:fps camera)
+        ;fps                      (:fps camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
-        texture-array            (camera-key texture-arrays)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
         running?                 false
         idx                      buffername
-        destination              (:destination texture-array)
-        destination              (if (= nil destination) (:destination camera) destination)
+        ;_ (println running?)
+
+        bufdestination           (:destination texture-array)
+        bufdestination           (if (= nil bufdestination) (:destination camera) bufdestination)
         running?                 (:running texture-array)
-        running?                 (if (= nil running?) (:running camera) running?)
-        ;fps                      (:fps texture-array)
-        ;fps                      (if (= nil fps) (:fps camera) fps)
-        texture-array            {:idx buffername, :destination destination :source [], :running running?, :fps fps}
+        ;_ (println running?)
+        running?                 (if (= nil running?) false running?)
+        ;_ (println running?)
+
+        fps                      (:fps texture-array)
+        fps                      (if (= nil fps) (:fps camera) fps)
+        texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
         queue                    (:queue texture)
         mlt                      (:mult texture)
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
-         image-buffer             (atom [])
+        image-buffer             (atom [])
         out                      (clojure.core.async/chan (async/buffer 1))
         _                        (clojure.core.async/tap mlt out)]
         (println "Recording from: " device " to " "buffername")
@@ -317,8 +323,8 @@
                                         (.flip))]
                   (swap! image-buffer conj [buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]))))
           (swap! cutter.cutter/the-window-state assoc :texture-arrays
-            (assoc texture-arrays (keyword buffername) (assoc texture-array :idx buffername
-              :destination destination
+            (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+              :destination bufdestination
               :source @image-buffer
               :running running?
               :fps fps)))
@@ -378,14 +384,13 @@
             (assoc texture-arrays
               buffername-key (assoc texture-array :running true,
                 :fps fps)))
-
                 (async/thread
                   (while-let/while-let [running (:running (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))]
                     (reset! startTime (System/nanoTime))
                     (async/offer!
                       (:queue ((:destination (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         (:i-textures @cutter.cutter/the-window-state)))
-                        (nth source (mod @index buffer-length)))
+                        (nth (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state))) (mod @index buffer-length)))
                     (swap! index inc)
                     (Thread/sleep
                       (cutter.general/sleepTime @startTime
@@ -398,7 +403,7 @@
         texture-array            (buffername-key texture-arrays)
         texture-array            (assoc texture-array :running false)
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
-        (swap! cutter.cutter/the-window-state assoc :texture-array texture-arrays))
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays))
   nil)
 
 ;
