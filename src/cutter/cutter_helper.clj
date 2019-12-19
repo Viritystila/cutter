@@ -271,7 +271,7 @@
   nil)
 
 
-(defn stop-all-cameras2 []
+(defn stop-all-cameras []
    (mapv (fn [x] (stop-camera (str (name x)))) (vec (keys (:cameras @cutter.cutter/the-window-state)))))
 
 
@@ -282,21 +282,15 @@
         camera                   (camera-key cameras)
         destination              (:destination camera)
         source                   (:source camera)
-        ;fps                      (:fps camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
         texture-array            (buffername-key texture-arrays)
         running?                 false
         idx                      buffername
-        ;_ (println running?)
-
         bufdestination           (:destination texture-array)
         bufdestination           (if (= nil bufdestination) (:destination camera) bufdestination)
         running?                 (:running texture-array)
-        ;_ (println running?)
         running?                 (if (= nil running?) false running?)
-        ;_ (println running?)
-
         fps                      (:fps texture-array)
         fps                      (if (= nil fps) (:fps camera) fps)
         texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
@@ -407,5 +401,21 @@
   nil)
 
 ;
-; (defn stop-all-cameras2 []
-;    (mapv (fn [x] (stop-camera (str (name x)))) (vec (keys (:cameras @cutter.cutter/the-window-state)))))
+
+(defn set-buffer-fps [buffername val]
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+        texture-array            (assoc texture-array :fps val)
+        texture-arrays           (assoc texture-arrays buffername-key texture-array)]
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
+
+(defn stop-all-buffers []
+  (mapv (fn [x] (stop-buffer (str (name x)))) (vec (keys (:texture-arrays @cutter.cutter/the-window-state)))))
+
+
+(defn rfs []  (stop)
+              (stop-all-buffers)
+              (stop-all-cameras)
+              ;(reset! cutter.cutter/the-window-state cutter.cutter/default-state-values)
+              (refresh))
