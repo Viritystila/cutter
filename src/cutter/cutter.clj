@@ -77,7 +77,7 @@
     :camera-devices             []
     :video-filenames            []
     :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
-    :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false}}
+    :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false}, :fps 30, index: 0, :mode :fw}
     :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30}}
     :videos                     {} ;{:filename, {:idx :destination :source "capture" :running false, :fps 30}}
     ;Data Arrays
@@ -136,6 +136,7 @@
      ;textures
      :i-textures     {:iPreviousFrame {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}, ;
                       :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+                      :iChannelNull   {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
                       :iChannel1      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
                       :iChannel2      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
                       :iChannel3      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
@@ -325,7 +326,7 @@
       (init-buffers locals)
       (doseq [x i-channels]
         (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals x width height)))
-
+      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannelNull width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
       ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel1 width height))
@@ -564,7 +565,7 @@
         ;; Delete the VAO
     (GL30/glBindVertexArray 0)
     (GL30/glDeleteVertexArrays vao-id)))
-; 
+;
 ; (defn- stop-cam [device locals]
 ;   (let [device-id                (read-string (str (last device)))
 ;         cameras                  (:cameras @locals)

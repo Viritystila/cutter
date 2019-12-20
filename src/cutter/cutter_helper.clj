@@ -280,6 +280,9 @@
         cameras                  (:cameras @the-window-state)
         camera-key               (keyword device)
         camera                   (camera-key cameras)
+        start-camera?            (or (nil? camera) (not (:running camera)))
+        _                        (if start-camera? (cutter.cutter_helper/set-live-camera-texture (str device-id) :iChannelNull)  )
+        camera                   (camera-key cameras)
         destination              (:destination camera)
         source                   (:source camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
@@ -288,11 +291,11 @@
         running?                 false
         idx                      buffername
         bufdestination           (:destination texture-array)
-        bufdestination           (if (= nil bufdestination) (:destination camera) bufdestination)
+        bufdestination           (if (nil? bufdestination) (:destination camera) bufdestination)
         running?                 (:running texture-array)
-        running?                 (if (= nil running?) false running?)
+        running?                 (if (nil? running?) false running?)
         fps                      (:fps texture-array)
-        fps                      (if (= nil fps) (:fps camera) fps)
+        fps                      (if (nil? fps) (:fps camera) fps)
         texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
@@ -300,30 +303,31 @@
         mlt                      (:mult texture)
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         image-buffer             (atom [])
-        out                      (clojure.core.async/chan (async/buffer 1))
-        _                        (clojure.core.async/tap mlt out)]
+        out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
+        _                        (if start-camera? nil (clojure.core.async/tap mlt out) )]
         (println "Recording from: " device " to " "buffername")
         (async/thread
-        (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
-          (do
-            (let [image               (async/<!! out)
-                  h                   (nth image 4)
-                  w                   (nth image 5)
-                  ib                  (nth image 6)
-                  buffer_i              (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
-                  buffer-capacity     (.capacity buffer_i)
-                  buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity)
-                                        (.put buffer_i)
+          (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
+            (do
+              (let [image               (async/<!! out)
+                    h                   (nth image 4)
+                    w                   (nth image 5)
+                    ib                  (nth image 6)
+                    buffer_i            (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                    buffer-capacity     (.capacity buffer_i)
+                    buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity)
+                                          (.put buffer_i)
                                         (.flip))]
-                  (swap! image-buffer conj [buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]))))
-          (swap! cutter.cutter/the-window-state assoc :texture-arrays
-            (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
-              :destination bufdestination
-              :source @image-buffer
-              :running running?
-              :fps fps)))
+                    (swap! image-buffer conj [buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]))))
+                (swap! cutter.cutter/the-window-state assoc :texture-arrays
+                (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+                                                                          :destination bufdestination
+                                                                          :source @image-buffer
+                                                                          :running running?
+                                                                          :fps fps)))
               (clojure.core.async/untap mlt out)
-              (println "Finished recording from:" device "to" buffername))))
+              (println "Finished recording from:" device "to" buffername)
+              (if start-camera? (stop-camera (str device-id))))))
 
 (defn set-camera-property [device property val]
   (let [device-id                (read-string (str (last device)))
@@ -369,8 +373,7 @@
                                     :fps fps)
         texture-arrays            (assoc texture-arrays  buffername-key texture-array)
         startTime                 (atom (System/nanoTime))
-        index                     (atom 0)
-        ]
+        index                     (atom 0)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays)
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
         (do
@@ -384,7 +387,7 @@
                     (async/offer!
                       (:queue ((:destination (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         (:i-textures @cutter.cutter/the-window-state)))
-                        (nth (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state))) (mod @index buffer-length)))
+                      (nth (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state))) (mod @index buffer-length)))
                     (swap! index inc)
                     (Thread/sleep
                       (cutter.general/sleepTime @startTime
