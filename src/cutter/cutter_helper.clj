@@ -320,11 +320,13 @@
                                         (.flip))]
                     (swap! image-buffer conj [buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]))))
                 (swap! cutter.cutter/the-window-state assoc :texture-arrays
-                (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+                  (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
                                                                           :destination bufdestination
                                                                           :source @image-buffer
                                                                           :running running?
-                                                                          :fps fps)))
+                                                                          :fps fps
+                                                                          :index 0
+                                                                          :mode :fw)))
               (clojure.core.async/untap mlt out)
               (println "Finished recording from:" device "to" buffername)
               (if start-camera? (stop-camera (str device-id))))))
@@ -388,7 +390,13 @@
                       (:queue ((:destination (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         (:i-textures @cutter.cutter/the-window-state)))
                       (nth (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state))) (mod @index buffer-length)))
+                    (case (:mode (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
+                    :fw  (swap! index inc)
+                    :bw  (swap! index dec)
+                    :idx (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state))))
                     (swap! index inc)
+                    (swap! cutter.cutter/the-window-state assoc :texture-arrays
+                      (assoc texture-arrays buffername-key (assoc texture-array  :index @index))))
                     (Thread/sleep
                       (cutter.general/sleepTime @startTime
                         (System/nanoTime)
@@ -412,6 +420,35 @@
         texture-array            (assoc texture-array :fps val)
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
+
+;
+(defn set-buffer-fw [buffername]
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+        texture-array            (assoc texture-array :mode :fw)
+        texture-arrays           (assoc texture-arrays buffername-key texture-array)]
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
+;
+
+(defn set-buffer-bw [buffername]
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+        texture-array            (assoc texture-array :mode :bw)
+        texture-arrays           (assoc texture-arrays buffername-key texture-array)]
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
+;
+
+(defn set-buffer-index [buffername val]
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+        texture-array            (assoc texture-array :mode :idx)
+        texture-array            (assoc texture-array :index (int val))
+        texture-arrays           (assoc texture-arrays buffername-key texture-array)]
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
+
 
 (defn stop-all-buffers []
   (mapv (fn [x] (stop-buffer (str (name x)))) (vec (keys (:texture-arrays @cutter.cutter/the-window-state)))))
