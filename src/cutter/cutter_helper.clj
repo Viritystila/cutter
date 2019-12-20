@@ -399,11 +399,11 @@
                             :idx (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))))
                           (swap! cutter.cutter/the-window-state assoc :texture-arrays
                             (assoc texture-arrays
-                              buffername-key (assoc texture-array :fps fps :mode mode :index @index))))
+                              buffername-key (assoc texture-array :fps fps :mode mode :index @index)))
                     (Thread/sleep
                       (cutter.general/sleepTime @startTime
                         (System/nanoTime)
-                        (:fps (buffername-key (:texture-arrays @cutter.cutter/the-window-state))))))))))))
+                        fps ))))))))))
 
 (defn stop-buffer [buffername]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
