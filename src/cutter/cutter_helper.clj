@@ -289,6 +289,7 @@
         texture-array            (buffername-key texture-arrays)
         running?                 false
         idx                      buffername
+        maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         bufdestination           (:destination texture-array)
         bufdestination           (if (nil? bufdestination) (:destination camera) bufdestination)
         running?                 (:running texture-array)
@@ -297,12 +298,15 @@
         mode                     (if (nil? mode) :fw mode)
         fps                      (:fps texture-array)
         fps                      (if (nil? fps) (:fps camera) fps)
+        start-index              (:start-index texture-array)
+        start-index              (if (nil? start-index) 0 start-index)
+        stop-index               (:stop-index texture-array)
+        stop-index               (if (nil? stop-index) maximum-buffer-length stop-index)
         texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
         queue                    (:queue texture)
         mlt                      (:mult texture)
-        maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         image-buffer             (atom [])
         out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
         _                        (if start-camera? nil (clojure.core.async/tap mlt out) )]
@@ -327,7 +331,9 @@
                                                                             :running running?
                                                                             :fps fps
                                                                             :index 0
-                                                                            :mode :fw)))
+                                                                            :mode :fw
+                                                                            :start-index start-index
+                                                                            :stop-index stop-index)))
               (clojure.core.async/untap mlt out)
               (println "Finished recording from:" device "to" buffername)
               (if start-camera? (stop-camera (str device-id))))))
@@ -364,6 +370,8 @@
         running?                 (:running texture-array)
         fps                      (:fps texture-array)
         idx                      (:idx texture-array)
+        start-index              (:start-index texture-array)
+        stop-index               (:stop-index texture-array)
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination-texture-key i-textures)
         queue                    (:queue texture)
@@ -373,7 +381,9 @@
                                     :destination destination-texture-key,
                                     :source source,
                                     :running running?,
-                                    :fps fps)
+                                    :fps fps
+                                    :start-index start-index
+                                    :stop-index stop-index)
         texture-arrays            (assoc texture-arrays  buffername-key texture-array)
         startTime                 (atom (System/nanoTime))
         index                     (atom 0)]
@@ -389,18 +399,29 @@
                   (let [mode                (:mode (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         fps                 (:fps (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         buffer-destination  (:destination (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
-                        queue               (:queue ( buffer-destination (:i-textures @cutter.cutter/the-window-state)))]
+                        queue               (:queue ( buffer-destination (:i-textures @cutter.cutter/the-window-state)))
+                        start-index         (:start-index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
+                        stop-index          (:stop-index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
+                        source              (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))]
                       (reset! startTime (System/nanoTime))
                       (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state))))
                       (async/offer!
                         queue
-                        (nth (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state))) (mod @index buffer-length)))
+                        (nth source (mod (max @index start-index) (min stop-index buffer-length))))
                       (case mode
                         :fw  (do (swap! index inc))
                         :bw  (do (swap! index dec))
                         :idx (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))))
                       (swap! cutter.cutter/the-window-state assoc :texture-arrays
-                        (assoc texture-arrays buffername-key (assoc texture-array :fps fps :mode mode :index @index)))
+                        (assoc texture-arrays buffername-key (assoc texture-array
+                                                              :fps fps
+                                                              :mode mode
+                                                              :index @index
+                                                              :destination buffer-destination
+                                                              :queue queue
+                                                              :start-index start-index
+                                                              :stop-index stop-index
+                                                              :source source)))
                       (Thread/sleep (cutter.general/sleepTime @startTime (System/nanoTime) fps))))))))))
 
 (defn stop-buffer [buffername]
@@ -409,8 +430,7 @@
         texture-array            (buffername-key texture-arrays)
         texture-array            (assoc texture-array :running false)
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
-        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays))
-  nil)
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays)) nil)
 
 (defn set-buffer-fps [buffername val]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
@@ -420,7 +440,6 @@
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
 
-;
 (defn set-buffer-fw [buffername]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
@@ -428,7 +447,6 @@
         texture-array            (assoc texture-array :mode :fw)
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
-;
 
 (defn set-buffer-bw [buffername]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
@@ -437,13 +455,12 @@
         texture-array            (assoc texture-array :mode :bw)
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
-;
+
 (defn set-buffer-paused [buffername]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
         texture-array            (buffername-key texture-arrays)
         texture-array            (assoc texture-array :mode :idx)
-        ;texture-array            (assoc texture-array :index (int val))
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
 
@@ -451,18 +468,24 @@
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
         texture-array            (buffername-key texture-arrays)
-        ;texture-array            (assoc texture-array :mode :idx)
         texture-array            (assoc texture-array :index (int val))
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
 
+(defn set-buffer-limits [buffername start-index stop-index]
+  (let [maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+        texture-array            (assoc texture-array :start-index (max 0 (int start-index)))
+        texture-array            (assoc texture-array :stop-index (min maximum-buffer-length (int stop-index)))
+        texture-arrays           (assoc texture-arrays buffername-key texture-array)]
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
 
 (defn stop-all-buffers []
   (mapv (fn [x] (stop-buffer (str (name x)))) (vec (keys (:texture-arrays @cutter.cutter/the-window-state)))))
 
-
 (defn rfs []  (stop)
               (stop-all-buffers)
               (stop-all-cameras)
-              ;(reset! cutter.cutter/the-window-state cutter.cutter/default-state-values)
               (refresh))

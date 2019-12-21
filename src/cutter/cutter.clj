@@ -69,16 +69,13 @@
     :maximum-cameras            1000
     :maximum-videos             1000
     :maximum-buffer-length      250  ;Frames
-    ;:maximum-live-uniforms      10
-    ;:maximum-buffered-uniforms  10
-    ;:maximum-texture-uniforms   50
     :texture-filenames          []
     :texture-folders            []
     :camera-devices             []
     :video-filenames            []
     :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
-    :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false}, :fps 30, index: 0, :mode :fw}
-    :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30}}
+    :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false}, :fps 30, index: 0, :mode :fw, :start-index 0, :stop-index 0}
+    :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0}}
     :videos                     {} ;{:filename, {:idx :destination :source "capture" :running false, :fps 30}}
     ;Data Arrays
     :maxDataArrays              16
@@ -329,30 +326,6 @@
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannelNull width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel1 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel2 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel3 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel4 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel5 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel6 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel7 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel8 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel9 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel10 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel11 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel12 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel13 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel14 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel15 width height))
-      ; (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannel16 width height))
-
-      ;(println (:i-textures @locals))
-
-      ;(println (:i-textures @locals))
-      ;(println :i-textures @locals)
-      ;(init-textures locals)
-      ;(init-cams locals)
-      ;(init-videos locals)
       (init-shaders locals)))
 
 (defn- set-texture [tex-image-target internal-format width height format buffer]
@@ -380,16 +353,9 @@
           setnbytes           (* wset hset bset)
           tex-image-target    ^Integer (+ 0 target)
           nbytes              (* width height image-bytes)
-          buffer              buffer] ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))]
-          ;(println (type buffer))
-
+          buffer              buffer]
           (if (or init? (not= setnbytes nbytes))
             (do
-              ; (try (GL11/glTexImage2D ^Integer tex-image-target 0 ^Integer internal-format
-              ; ^Integer width  ^Integer height 0
-              ; ^Integer format
-              ; GL11/GL_UNSIGNED_BYTE
-              ; buffer))
               (set-texture tex-image-target internal-format width height format buffer)
                 (let [queue               (:queue texture)
                       out1                (:out1 texture)
@@ -400,16 +366,10 @@
                       (swap! locals assoc :i-textures i-textures)))
             (do
               (if (< 0 img-addr)
-                ; (try (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
-                ;     ^Integer width  ^Integer height
-                ;     ^Integer format
-                ;     GL11/GL_UNSIGNED_BYTE
-                ;     buffer))
                 (set-texture tex-image-target internal-format width height format buffer))))
           (except-gl-errors "@ end of load-texture if-stmt")))
 
-;(defn- process-texture-input [locals texture-key input-image width height image-bytes])
-;
+ ;
 (defn- get-textures
     [locals texture-key i-uniforms]
     (let [i-textures          (:i-textures @locals)
@@ -565,22 +525,6 @@
         ;; Delete the VAO
     (GL30/glBindVertexArray 0)
     (GL30/glDeleteVertexArrays vao-id)))
-;
-; (defn- stop-cam [device locals]
-;   (let [device-id                (read-string (str (last device)))
-;         cameras                  (:cameras @locals)
-;         camera-key               (keyword device)
-;         camera                   (camera-key cameras)
-;         capture                  (:source camera)
-;         camera                   (assoc camera :running false)
-;         cameras                  (assoc cameras camera-key camera)]
-;         (swap! locals assoc :cameras cameras)
-;         (.release capture))
-;   nil)
-;
-; (defn- stop-all-cameras [locals]
-;    (mapv (fn [x] (stop-cam (str (name x)) locals)) (vec (keys (:cameras @locals)))))
-;
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom tex-filenames texture-folders cams videos title true-fullscreen? display-sync-hz window-idx]
@@ -598,8 +542,6 @@
         (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
         (org.lwjgl.glfw.GLFW/glfwPollEvents)
       (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz)))
-     ;(println "Stop cameras")
-     ;(stop-all-cameras locals)
      (destroy-gl locals)
      (.free (:keyCallback @locals))
      (org.lwjgl.glfw.GLFW/glfwPollEvents)
