@@ -213,9 +213,7 @@
                 (async/offer! queue (matInfo mat))
                 (swap! the-window-state assoc :i-textures i-textures))
                 nil)
-
-;
-;
+;Camera
 (defn set-live-camera-texture [device destination-texture-key]
   "Set texture by filename and adds the filename to the list"
   (let [device-id                (read-string (str (last device)))
@@ -356,8 +354,7 @@
           fps
           (cutter.opencv/oc-get-capture-property property source))))
 
-
-;[140547741813184 480 1920 1 480 640 3]
+;Texture buffers
 (defn set-buffer-texture [buffername destination-texture-key]
   "Set texture by filename and adds the filename to the list"
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
@@ -389,23 +386,22 @@
               buffername-key texture-array))
                 (async/thread
                   (while-let/while-let [running (:running (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))]
-                  (let [mode  (:mode (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
-                        fps   (:fps (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
-                        queue (:queue ((:destination (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
-                          (:i-textures @cutter.cutter/the-window-state)))]
-                        (reset! startTime (System/nanoTime))
-                        (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state))))
-                        (async/offer!
-                          queue
-                          (nth (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state))) (mod @index buffer-length)))
-                        (case mode
-                          :fw  (do (swap! index inc))
-                          :bw  (do (swap! index dec))
-                          :idx (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))))
-                        (swap! cutter.cutter/the-window-state assoc :texture-arrays
-                          (assoc texture-arrays buffername-key (assoc texture-array :fps fps :mode mode :index @index)))
-                        (Thread/sleep
-                          (cutter.general/sleepTime @startTime (System/nanoTime) fps))))))))))
+                  (let [mode                (:mode (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
+                        fps                 (:fps (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
+                        buffer-destination  (:destination (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
+                        queue               (:queue ( buffer-destination (:i-textures @cutter.cutter/the-window-state)))]
+                      (reset! startTime (System/nanoTime))
+                      (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state))))
+                      (async/offer!
+                        queue
+                        (nth (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state))) (mod @index buffer-length)))
+                      (case mode
+                        :fw  (do (swap! index inc))
+                        :bw  (do (swap! index dec))
+                        :idx (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))))
+                      (swap! cutter.cutter/the-window-state assoc :texture-arrays
+                        (assoc texture-arrays buffername-key (assoc texture-array :fps fps :mode mode :index @index)))
+                      (Thread/sleep (cutter.general/sleepTime @startTime (System/nanoTime) fps))))))))))
 
 (defn stop-buffer [buffername]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
@@ -415,8 +411,6 @@
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays))
   nil)
-
-;
 
 (defn set-buffer-fps [buffername val]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
