@@ -189,7 +189,6 @@
           (set-texture_by_filename filename destination-texture-key))
           nil)
 
-
 ;Text
 (defn write-text
   "(cutter.cutter/write-text \"cutter\" 0 220 10 100 0.2 0.4 20 10 true)"
@@ -271,7 +270,7 @@
 
 
 (defn stop-all-cameras []
-   (mapv (fn [x] (stop-camera (str (name x)))) (vec (keys (:cameras @cutter.cutter/the-window-state)))))
+   (mapv (fn [x] (stop-camera (stop-camera (clojure.string/join (rest (str x) )) ) )) (vec (keys (:cameras @cutter.cutter/the-window-state)))))
 
 
 (defn rec [device buffername]
@@ -492,7 +491,6 @@
 
 
 ;Video
-;
 (defn set-live-video-texture [filename destination-texture-key]
   "Set texture by filename and adds the filename to the list"
   (let [filename                  filename
@@ -552,7 +550,8 @@
 ;
 
 (defn stop-video [filename]
-  (let [device-id                filename
+  (let [_ (println filename)
+        device-id                filename
         videos                   (:videos @the-window-state)
         video-key                (keyword filename)
         video                    (video-key videos)
@@ -565,7 +564,7 @@
 
 
 (defn stop-all-videos []
-   (mapv (fn [x] (stop-video (str (name x)))) (vec (keys (:videos @cutter.cutter/the-window-state)))))
+   (mapv (fn [x] (stop-video (clojure.string/join (rest (str x) )) ) ) (vec (keys (:videos @cutter.cutter/the-window-state)))))
 ;
 
 (defn set-video-property [filename property val]
