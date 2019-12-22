@@ -216,7 +216,7 @@
 ;Camera
 (defn set-live-camera-texture [device destination-texture-key]
   "Set texture by filename and adds the filename to the list"
-  (let [device-id                (read-string (str (last device)))
+  (let [device-id                 (read-string (str (last device)))
         camera-key                (keyword device)
         cameras                   (:cameras @cutter.cutter/the-window-state)
         camera                    (camera-key cameras)
@@ -489,3 +489,105 @@
               (stop-all-buffers)
               (stop-all-cameras)
               (refresh))
+
+
+;Video
+;
+(defn set-live-video-texture [filename destination-texture-key]
+  "Set texture by filename and adds the filename to the list"
+  (let [filename                  filename
+        video-key                 (keyword filename)
+        videos                    (:videos @cutter.cutter/the-window-state)
+        video                     (video-key videos)
+        capture                   (:source video)
+        running?                  (:running video)
+        capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
+        index                     (if (nil? (:index video)) 0 (:index video))
+        start-index               (if (nil? (:start-index video)) 0  (:start-index video))
+        ;stop-index                (if (nil? (:stop-index video)) (oc-get-capture-property :frame-count  capture) (:stop-index video))
+        mat                       (oc-new-mat)
+        fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
+        video                     {:idx filename,
+                                   :destination destination-texture-key,
+                                   :source capture,
+                                   :running running?,
+                                   :fps fps
+                                   :index index
+                                   :start-index start-index
+                                   :stop-index start-index}
+        videos                    (assoc videos video-key video)
+        startTime                 (atom (System/nanoTime))]
+        (swap! cutter.cutter/the-window-state assoc :videos videos)
+        (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
+          (do
+            (.open capture filename org.opencv.videoio.Videoio/CAP_FFMPEG)
+            (swap! cutter.cutter/the-window-state assoc :videos
+              (assoc videos
+                video-key (assoc video :running true
+                  :fps (cutter.opencv/oc-get-capture-property :fps capture)
+                  :stop-index (oc-get-capture-property :frame-count  capture) )))
+            (async/thread
+              (while-let/while-let [running (:running (video-key (:videos @cutter.cutter/the-window-state)))]
+                (let [fps                   (:fps (video-key (:videos @cutter.cutter/the-window-state)))
+                      video-destination     (:destination (video-key (:videos @cutter.cutter/the-window-state)))
+                      queue                 (:queue ( video-destination (:i-textures @cutter.cutter/the-window-state)))
+                      frame-index           (oc-get-capture-property :pos-frames capture)
+                      index                 (:index (video-key (:videos @cutter.cutter/the-window-state)))
+                      start-index           (:start-index (video-key (:videos @cutter.cutter/the-window-state)))
+                      stop-index            (:stop-index (video-key (:videos @cutter.cutter/the-window-state)))]
+                    (reset! startTime (System/nanoTime))
+                    (if (< (oc-get-capture-property :pos-frames capture) stop-index )
+                    (oc-query-frame capture mat)
+                    (do (oc-set-capture-property :pos-frames capture start-index))
+                    )
+                    (async/offer!
+                      queue
+                      (matInfo mat))
+                    (Thread/sleep
+                      (cutter.general/sleepTime @startTime
+                        (System/nanoTime)
+                        fps ))))
+              (.release capture)))))
+        nil)
+;
+
+(defn stop-video [filename]
+  (let [device-id                filename
+        videos                   (:videos @the-window-state)
+        video-key                (keyword filename)
+        video                    (video-key videos)
+        capture                  (:source video)
+        video                    (assoc video :running false)
+        videos                   (assoc videos video-key video)]
+        (swap! cutter.cutter/the-window-state assoc :videos videos)
+        (.release capture))
+  nil)
+
+
+(defn stop-all-videos []
+   (mapv (fn [x] (stop-video (str (name x)))) (vec (keys (:videos @cutter.cutter/the-window-state)))))
+;
+
+(defn set-video-property [filename property val]
+  (let [device-id                 filename
+        videos                    (:videos @cutter.cutter/the-window-state)
+        video-key                 (keyword filename)
+        video                     (video-key videos)
+        source                    (:source video)]
+        (if (= property :fps)
+          (swap! cutter.cutter/the-window-state assoc :videos (assoc videos video-key (assoc video :fps val)))
+          (cutter.opencv/oc-set-capture-property property source val)))
+          nil)
+
+;
+
+(defn get-video-property [filename property val]
+  (let [device-id                 filename
+        videos                    (:videos @cutter.cutter/the-window-state)
+        video-key                 (keyword filename)
+        video                     (video-key videos)
+        source                    (:source video)
+        fps                       (:fps video)]
+        (if (= property :fps)
+          fps
+          (cutter.opencv/oc-get-capture-property property source))))
