@@ -484,11 +484,6 @@
 (defn stop-all-buffers []
   (mapv (fn [x] (stop-buffer (str (name x)))) (vec (keys (:texture-arrays @cutter.cutter/the-window-state)))))
 
-(defn rfs []  (stop)
-              (stop-all-buffers)
-              (stop-all-cameras)
-              (refresh))
-
 
 ;Video
 (defn set-live-video-texture [filename destination-texture-key]
@@ -550,8 +545,7 @@
 ;
 
 (defn stop-video [filename]
-  (let [_ (println filename)
-        device-id                filename
+  (let [device-id                filename
         videos                   (:videos @the-window-state)
         video-key                (keyword filename)
         video                    (video-key videos)
@@ -572,7 +566,8 @@
         videos                    (:videos @cutter.cutter/the-window-state)
         video-key                 (keyword filename)
         video                     (video-key videos)
-        source                    (:source video)]
+        source                    (:source video)
+        _ (println source)]
         (if (= property :fps)
           (swap! cutter.cutter/the-window-state assoc :videos (assoc videos video-key (assoc video :fps val)))
           (cutter.opencv/oc-set-capture-property property source val)))
@@ -590,3 +585,76 @@
         (if (= property :fps)
           fps
           (cutter.opencv/oc-get-capture-property property source))))
+;
+;
+; (defn cut [filename buffername start-time]
+;   (let [device-id                (read-string (str (last device)))
+;         cameras                  (:cameras @the-window-state)
+;         camera-key               (keyword device)
+;         camera                   (camera-key cameras)
+;         start-camera?            (or (nil? camera) (not (:running camera)))
+;         _                        (if start-camera? (cutter.cutter_helper/set-live-camera-texture (str device-id) :iChannelNull)  )
+;         camera                   (camera-key cameras)
+;         destination              (:destination camera)
+;         source                   (:source camera)
+;         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+;         buffername-key           (keyword buffername)
+;         texture-array            (buffername-key texture-arrays)
+;         running?                 false
+;         idx                      buffername
+;         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+;         bufdestination           (:destination texture-array)
+;         bufdestination           (if (nil? bufdestination) (:destination camera) bufdestination)
+;         running?                 (:running texture-array)
+;         running?                 (if (nil? running?) false running?)
+;         mode                     (:mode texture-array)
+;         mode                     (if (nil? mode) :fw mode)
+;         fps                      (:fps texture-array)
+;         fps                      (if (nil? fps) (:fps camera) fps)
+;         start-index              (:start-index texture-array)
+;         start-index              (if (nil? start-index) 0 start-index)
+;         stop-index               (:stop-index texture-array)
+;         stop-index               (if (nil? stop-index) maximum-buffer-length stop-index)
+;         texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
+;         i-textures               (:i-textures @cutter.cutter/the-window-state)
+;         texture                  (destination i-textures)
+;         queue                    (:queue texture)
+;         mlt                      (:mult texture)
+;         image-buffer             (atom [])
+;         out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
+;         _                        (if start-camera? nil (clojure.core.async/tap mlt out) )]
+;         (println "Recording from: " device " to " "buffername")
+;         (async/thread
+;           (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
+;             (do
+;               (let [image               (async/<!! out)
+;                     h                   (nth image 4)
+;                     w                   (nth image 5)
+;                     ib                  (nth image 6)
+;                     buffer_i            (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+;                     buffer-capacity     (.capacity buffer_i)
+;                     buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity)
+;                                           (.put buffer_i)
+;                                         (.flip))]
+;                     (swap! image-buffer conj [buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]))))
+;                 (swap! cutter.cutter/the-window-state assoc :texture-arrays
+;                   (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+;                                                                             :destination bufdestination
+;                                                                             :source @image-buffer
+;                                                                             :running running?
+;                                                                             :fps fps
+;                                                                             :index 0
+;                                                                             :mode :fw
+;                                                                             :start-index start-index
+;                                                                             :stop-index stop-index)))
+;               (clojure.core.async/untap mlt out)
+;               (println "Finished recording from:" device "to" buffername)
+;               (if start-camera? (stop-camera (str device-id))))))
+
+
+
+(defn rfs []  (stop)
+              (stop-all-buffers)
+              (stop-all-cameras)
+              (stop-all-videos)
+              (refresh))
