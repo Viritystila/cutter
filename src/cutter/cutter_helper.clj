@@ -401,7 +401,8 @@
                         queue               (:queue ( buffer-destination (:i-textures @cutter.cutter/the-window-state)))
                         start-index         (:start-index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         stop-index          (:stop-index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
-                        source              (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))]
+                        source              (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
+                        texture-arrays      (:texture-arrays @cutter.cutter/the-window-state)]
                       (reset! startTime (System/nanoTime))
                       (reset! index (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state))))
                       (async/offer!
@@ -422,6 +423,16 @@
                                                               :stop-index stop-index
                                                               :source source)))
                       (Thread/sleep (cutter.general/sleepTime @startTime (System/nanoTime) fps))))))))))
+
+(defn copy-buffer [src tgt]
+  (let [texture-arrays            (:texture-arrays @cutter.cutter/the-window-state)
+        source-key                (keyword src)
+        target-key                (keyword tgt)
+        source-array              (source-key texture-arrays)
+        target-array              (assoc source-array :running false :idx tgt)
+        texture-arrays            (assoc texture-arrays target-key target-array)]
+        (println (keys texture-arrays))
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays)) nil)
 
 (defn stop-buffer [buffername]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
