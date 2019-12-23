@@ -36,7 +36,7 @@
 
 ;
 ;Video
-(defn- set-live-video [filename destination-texture-key start-frame]
+(defn- set-live-video [filename destination-texture-key start-frame fps-in]
   "Set texture by filename and adds the filename to the list"
   (let [filename                  filename
         video-key                 (keyword filename)
@@ -68,7 +68,7 @@
             (swap! cutter.cutter/the-window-state assoc :videos
               (assoc videos
                 video-key (assoc video :running true
-                  :fps (cutter.opencv/oc-get-capture-property :fps capture)
+                  :fps (if (= -1 fps-in) (cutter.opencv/oc-get-capture-property :fps capture) fps-in)
                   :stop-index (oc-get-capture-property :frame-count  capture) )))
             (async/thread
               (oc-set-capture-property :pos-frames capture start-frame)
@@ -96,7 +96,7 @@
               (.release capture)))))
         nil)
 ;
-(defn set-live-video-texture [filename destination-texture-key] (set-live-video filename destination-texture-key -1))
+(defn set-live-video-texture [filename destination-texture-key] (set-live-video filename destination-texture-key -1 -1))
 
 
 (defn stop-video [filename]
@@ -157,7 +157,7 @@
         video-key                (keyword filename)
         video                    (video-key videos)
         start-video?             (or (nil? video) (not (:running video)))
-        _                        (if start-video? (set-live-video filename :iChannelNull start-frame)  )
+        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 30000)  )
         videos                   (:videos @the-window-state)
         video                    (video-key videos)
         destination              (:destination video)
@@ -208,7 +208,7 @@
                                                                             :destination bufdestination
                                                                             :source @image-buffer
                                                                             :running running?
-                                                                            :fps fps
+                                                                            :fps (cutter.opencv/oc-get-capture-property :fps source)
                                                                             :index 0
                                                                             :mode :fw
                                                                             :start-index start-index

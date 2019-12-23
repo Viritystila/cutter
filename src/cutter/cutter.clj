@@ -80,7 +80,6 @@
     ;Data Arrays
     :maxDataArrays              16
     :maxDataArraysLength        256
-
     ;v4l2
     :save-frames                (atom false)
     :deviceName                 (atom "/dev/video3")
