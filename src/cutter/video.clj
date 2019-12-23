@@ -216,11 +216,3 @@
               (clojure.core.async/untap mlt out)
               (println "Finished recording from:" filename "to" buffername)
               (if start-video? (stop-video (str device-id))))))
-
-
-
-(defn rfs []  (stop)
-              (cutter.buffer/stop-all-buffers)
-              (cutter.camera/stop-all-cameras)
-              (stop-all-videos)
-              (refresh))

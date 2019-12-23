@@ -70,6 +70,9 @@
 
 (def vs-shader
   (str "#version 460 core\n"
+       "vec3 iResolution;\n"
+       "float iGlobalTime;\n"
+       "float iRandom;\n"
        "layout(location = 0) in vec4 vertexPosition_modelspace;"
        "\n"
        "layout(location = 1) in vec3 colors_modelspace;"
@@ -77,7 +80,7 @@
        "void main(void) {\n"
        "    gl_Position = vertexPosition_modelspace;\n"
        "}\n"))
-
+;* vec4(0.5*iRandom, 0.1, 0.0, 1.0)
 (defn- load-shader
   [^String shader-str ^Integer shader-type]
   (let [shader-id         (GL20/glCreateShader shader-type)
@@ -165,7 +168,7 @@
             (println "ERROR: Linking Shaders: (reloading previous program)")
             (println (GL20/glGetProgramInfoLog new-pgm-id 10000))
             (GL20/glUseProgram pgm-id)
-            (except-gl-errors "@ try-reload-shader useProgram2"))
+            (except-gl-errors "@ try-reload-shader"))
           (let [_ (println "Reloading shader:" shader-filename)
                 i-uniforms                     (generate-uniform-locs locals new-pgm-id ) ]
             (GL20/glUseProgram new-pgm-id)

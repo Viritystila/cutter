@@ -5,6 +5,9 @@
             [clojure.java.io :as io]
             [while-let.core :as while-let]
             [cutter.cutter :refer :all]
+            [cutter.buffer :refer :all]
+            [cutter.camera :refer :all]
+            [cutter.video :refer :all]         
             [cutter.opencv :refer :all]
             [clojure.core.async
              :as async
@@ -306,3 +309,12 @@
        files   (filter #(.isFile %) files)
        files   (mapv str files)]
        (doseq [x files ](add-to-buffer x buffername)   )))
+
+
+;
+
+(defn rfs []  (stop)
+              (cutter.buffer/stop-all-buffers)
+              (cutter.camera/stop-all-cameras)
+              (cutter.video/stop-all-videos)
+              (refresh))
