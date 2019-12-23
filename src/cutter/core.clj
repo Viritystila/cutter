@@ -11,6 +11,9 @@
   (:require
    [cutter.cutter :refer :all]
    [cutter.cutter_helper :refer :all]
+   [cutter.camera :refer :all]
+   [cutter.buffer :refer :all]
+   [cutter.video :refer :all]
    [clojure.tools.namespace.repl :refer [refresh]]))
 
   (defn main
