@@ -34,7 +34,6 @@
            (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
 
-;
 ;;Data array
 (defn set-dataArray1-item [idx val]
     (let [  oa  (:dataArray1  @the-window-state)
@@ -170,7 +169,7 @@
            assoc :texture-filenames filenames))
            nil)
 
-(defn set-texture_by_filename [filename destination-texture-key]
+(defn set-texture-by-filename [filename destination-texture-key]
   "Set texture by filename and adds the filename to the list"
   (let [  filenames           (:texture-filenames @cutter.cutter/the-window-state)
           textures            (:textures @cutter.cutter/the-window-state)
@@ -203,7 +202,7 @@
   (let [  filenames           (:texture-filenames @cutter.cutter/the-window-state)
           textures            (:textures @cutter.cutter/the-window-state)
           filename            (nth filenames (mod idx (count filenames)))]
-          (set-texture_by_filename filename destination-texture-key))
+          (set-texture-by-filename  filename destination-texture-key))
           nil)
 
 ;Text
@@ -229,3 +228,41 @@
                 (async/offer! queue (matInfo mat))
                 (swap! the-window-state assoc :i-textures i-textures))
                 nil)
+
+;Add Texture from file to texture-array
+
+
+(defn add-to-buffer [filename buffername]
+  (let [  texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+          buffername-key           (keyword buffername)
+          texture-array            (buffername-key texture-arrays)
+          running?                 false
+          idx                      buffername
+          maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+          bufdestination           (:destination texture-array)
+          bufdestination           (if (nil? bufdestination) :iChannelNull bufdestination)
+          running?                 (:running texture-array)
+          running?                 (if (nil? running?) false running?)
+          mode                     (:mode texture-array)
+          mode                     (if (nil? mode) :fw mode)
+          fps                      (:fps texture-array)
+          fps                      (if (nil? fps) 30 fps)
+          start-index              (:start-index texture-array)
+          start-index              (if (nil? start-index) 0 start-index)
+          stop-index               (:stop-index texture-array)
+          stop-index               (if (nil? stop-index) maximum-buffer-length stop-index)
+          source                   (:source texture-array)
+          source                   (if (nil? source) [] source)
+          mat                      (cutter.opencv/oc_load_image filename)
+          source                   (if (< (count source) maximum-buffer-length) (conj source (matInfo mat)) source )
+          newcount                 (count source)]
+      (swap! cutter.cutter/the-window-state assoc :texture-arrays
+        (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+                                                                  :destination bufdestination
+                                                                  :source source
+                                                                  :running running?
+                                                                  :fps fps
+                                                                  :index 0
+                                                                  :mode :fw
+                                                                  :start-index start-index
+                                                                  :stop-index (min maximum-buffer-length newcount) )))) nil)

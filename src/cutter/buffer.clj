@@ -83,7 +83,7 @@
                       (reset! index (:index (buffername-key texture-arrays )))
                       (async/offer!
                         queue
-                        (nth source (mod (max @index start-index) (min stop-index buffer-length))))
+                        (nth source (mod (max @index start-index) (min stop-index (count source)))))
                       (case mode
                         :fw  (do (swap! index inc))
                         :bw  (do (swap! index dec))

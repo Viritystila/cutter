@@ -443,14 +443,12 @@
 
     (except-gl-errors "@ draw before clear")
 
-
     (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
     (except-gl-errors "@ draw after activate textures")
 
     ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
     ((:gltype (:iRandom i-uniforms)) (:loc (:iRandom i-uniforms)) (rand))
-
 
     (doseq [x (keys i-dataArrays)]
     ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:datavec (x i-dataArrays)) (:buffer (x i-dataArrays))))
@@ -486,14 +484,13 @@
      ;; Draw the vertices
      (GL11/glDrawArrays GL11/GL_TRIANGLES 0 vertices-count)
 
-     ;(except-gl-errors "@ draw after DrawArrays")
+     (except-gl-errors "@ draw after DrawArrays")
      ;; Put everything back to default (deselect)
      ;Copying the previous image to its own texture
 
      (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:tex-id (:iPreviousFrame i-textures))))
      (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
      (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
-     ;(GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
      (if @save-frames
        (do ; download it and copy the previous image to its own texture
          (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer (:buffer (:iPreviousFrame i-textures)))
@@ -542,7 +539,6 @@
     (GL30/glBindVertexArray vao-id)
     (GL20/glDisableVertexAttribArray 0)
     (GL20/glDisableVertexAttribArray 1)
-
     ;; Delete the vertex VBO
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
     (GL15/glDeleteBuffers ^Integer vbo-id)
@@ -582,7 +578,6 @@
   "Returns true if the shader display is completely done running."
   []
   (= :no (:active @the-window-state)))
-
 
 (defn stop
   "Stop and destroy the shader display. Blocks until completed."

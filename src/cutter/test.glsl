@@ -8,7 +8,7 @@ void main(void) {
   float data1_0=iDataArray1[0];
   float data1_1=iDataArray1[1];
   float data2_0=iDataArray2[0];
-  uv=floor(uv * (100+iRandom + data1_0)) / ( 100+iRandom + data1_0);
+  uv=floor(uv * (100+iRandom*iFloat2 )) / ( 100+iRandom*iFloat2 + data1_0);
 
 
   vec4 iChannel1_texture=texture2D(iChannel1, uv);
