@@ -126,6 +126,23 @@
           val           (if haskey (nth data idx) nil)]
           val))
 
+;Floats
+(defn set-float [floatKey val]
+    (let [{:keys [i-floats]} @cutter.cutter/the-window-state
+          haskey        (contains? i-floats floatKey)
+          floatVal      (floatKey i-floats)
+          floatVal      (if haskey (assoc floatVal :data  val) nil)
+          i-floats      (if haskey (assoc i-floats floatKey floatVal))]
+        (swap! the-window-state assoc :i-floats i-floats)
+        nil))
+
+(defn get-float [floatKey ]
+    (let [{:keys [i-floats]} @cutter.cutter/the-window-state
+          haskey        (contains? i-floats floatKey)
+          floatVal      (floatKey i-floats)
+          val           (if haskey (:data floatVal) nil) ]
+        val))
+
 (defn list-cameras [] (println (:cameras @the-window-state)))
 (defn get-camera-keys [] (keys (:cameras @the-window-state)))
 

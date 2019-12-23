@@ -8,7 +8,7 @@ void main(void) {
   float data1_0=iDataArray1[0];
   float data1_1=iDataArray1[1];
   float data2_0=iDataArray2[0];
-  uv=floor(uv * (100 + data1_0)) / ( 100 + data1_0);
+  uv=floor(uv * (100+iRandom + data1_0)) / ( 100+iRandom + data1_0);
 
 
   vec4 iChannel1_texture=texture2D(iChannel1, uv);
@@ -35,7 +35,7 @@ void main(void) {
   vec4 ppp=mix(iChannel2_texture, ccc, 0.5);
   float fade_size=2;
   float p1= mix(fade_size, 0.0-fade_size, uv.x-0.125);
-  vec4 mixxx =mix(iChannel7_texture, iChannel6_texture, smoothstep(1.0, 0.0+sin(iRandom), p1));
+  vec4 mixxx =mix(iChannel7_texture, iChannel6_texture, smoothstep(1.0, 0.0+iFloat1, p1));
   op =mixxx;// ich[timefloor];//mixxx;//mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
 
 }
