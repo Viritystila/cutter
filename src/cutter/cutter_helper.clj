@@ -578,7 +578,16 @@
           (cutter.opencv/oc-set-capture-property property source val)))
           nil)
 
-;
+(defn set-video-limits [filename start-index stop-index]
+  (let [maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        videos                   (:videos @cutter.cutter/the-window-state)
+        video-key                (keyword filename)
+        video                    (video-key videos)
+        video                    (assoc video :start-index (max 0 (int start-index)))
+        video                    (assoc video :stop-index (min maximum-buffer-length (int stop-index)))
+        videos                   (assoc videos video-key video)]
+        (swap! cutter.cutter/the-window-state assoc :videos videos) nil))
+
 
 (defn- get-video-property [filename property val]
   (let [device-id                 filename
@@ -592,6 +601,7 @@
           (cutter.opencv/oc-get-capture-property property source))))
 ;
 (defn cut-video [filename buffername start-frame]
+  "Cut a segment from a video with a length of :maximum-buffer-length startin from start-frame. If thr video is already running, the recording is from the running video"
   (let [device-id                filename
         videos                   (:videos @the-window-state)
         video-key                (keyword filename)
