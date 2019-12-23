@@ -117,40 +117,8 @@
                                     (println "ERROR: Linking Shaders:")
                                     (println (GL20/glGetProgramInfoLog pgm-id 10000)))
             _                     (except-gl-errors "@ let before GetUniformLocation")
-            i-uniforms                     (generate-uniform-locs locals pgm-id)
-            ;i-resolution-loc      (GL20/glGetUniformLocation pgm-id "iResolution")
-            ;i-global-time-loc     (GL20/glGetUniformLocation pgm-id "iGlobalTime")
-;;             i-mouse-loc             (GL20/glGetUniformLocation pgm-id "iMouse")
-            ;
-            ; i-channel0-loc          (GL20/glGetUniformLocation pgm-id "iChannel0")
-            ; i-channel1-loc          (GL20/glGetUniformLocation pgm-id "iChannel1")
-            ; i-channel2-loc          (GL20/glGetUniformLocation pgm-id "iChannel2")
-            ; i-channel3-loc          (GL20/glGetUniformLocation pgm-id "iChannel3")
-            ;
-            ; i-cam0-loc              (GL20/glGetUniformLocation pgm-id "iCam0")
-            ; i-cam1-loc              (GL20/glGetUniformLocation pgm-id "iCam1")
-            ; i-cam2-loc              (GL20/glGetUniformLocation pgm-id "iCam2")
-            ; i-cam3-loc              (GL20/glGetUniformLocation pgm-id "iCam3")
-            ; i-cam4-loc              (GL20/glGetUniformLocation pgm-id "iCam4")
-            ;
-            ; i-video0-loc            (GL20/glGetUniformLocation pgm-id "iVideo0")
-            ; i-video1-loc            (GL20/glGetUniformLocation pgm-id "iVideo1")
-            ; i-video2-loc            (GL20/glGetUniformLocation pgm-id "iVideo2")
-            ; i-video3-loc            (GL20/glGetUniformLocation pgm-id "iVideo3")
-            ; i-video4-loc            (GL20/glGetUniformLocation pgm-id "iVideo4")
-            ;
-            ; i-channel-res-loc       (GL20/glGetUniformLocation pgm-id "iChannelResolution")
-            ; i-date-loc              (GL20/glGetUniformLocation pgm-id "iDate")
-            ;
-            ; i-fftwave-loc           (GL20/glGetUniformLocation pgm-id "iFftWave")
-            ;
-            ; i-dataArray-loc         (GL20/glGetUniformLocation pgm-id "iDataArray")
-            ;
-            ; i-text-loc              (GL20/glGetUniformLocation pgm-id "iText")
-            ;
-            ; i-previous-frame-loc    (GL20/glGetUniformLocation pgm-id "iPreviousFrame")
-            _ (except-gl-errors "@ end of let init-shaders")
-            ]
+            i-uniforms            (generate-uniform-locs locals pgm-id)
+            _ (except-gl-errors "@ end of let init-shaders")]
 
         (swap! locals
                assoc
@@ -159,18 +127,6 @@
                :fs-id fs-id
                :pgm-id pgm-id
                :i-uniforms i-uniforms
-               ;:i-resolution-loc i-resolution-loc
-               ;:i-global-time-loc i-global-time-loc
-;;                :i-mouse-loc i-mouse-loc
-               ; :i-channel-loc [i-channel0-loc i-channel1-loc i-channel2-loc i-channel3-loc]
-               ; :i-fftwave-loc [i-fftwave-loc]
-               ; :i-dataArray-loc i-dataArray-loc
-               ; :i-previous-frame-loc [i-previous-frame-loc]
-               ; :i-text-loc           [i-text-loc]
-               ; :i-cam-loc [i-cam0-loc i-cam1-loc i-cam2-loc i-cam3-loc i-cam4-loc]
-               ; :i-video-loc [i-video0-loc i-video1-loc i-video2-loc i-video3-loc i-video4-loc]
-               ; :i-channel-res-loc i-channel-res-loc
-               ; :i-date-loc i-date-loc
                ))
       ;; we didn't load the shader, don't be drawing
       (swap! locals assoc :shader-good false))))
@@ -211,36 +167,7 @@
             (GL20/glUseProgram pgm-id)
             (except-gl-errors "@ try-reload-shader useProgram2"))
           (let [_ (println "Reloading shader:" shader-filename)
-                i-uniforms                     (generate-uniform-locs locals new-pgm-id )
-                ;i-resolution-loc    (GL20/glGetUniformLocation new-pgm-id "iResolution")
-                ;i-global-time-loc   (GL20/glGetUniformLocation new-pgm-id "iGlobalTime")
-;;                 i-mouse-loc         (GL20/glGetUniformLocation new-pgm-id "iMouse")
-                ; i-channel0-loc      (GL20/glGetUniformLocation new-pgm-id "iChannel0")
-                ; i-channel1-loc      (GL20/glGetUniformLocation new-pgm-id "iChannel1")
-                ; i-channel2-loc      (GL20/glGetUniformLocation new-pgm-id "iChannel2")
-                ; i-channel3-loc      (GL20/glGetUniformLocation new-pgm-id "iChannel3")
-                ;
-                ; i-cam0-loc          (GL20/glGetUniformLocation new-pgm-id "iCam0")
-                ; i-cam1-loc          (GL20/glGetUniformLocation new-pgm-id "iCam1")
-                ; i-cam2-loc          (GL20/glGetUniformLocation new-pgm-id "iCam2")
-                ; i-cam3-loc          (GL20/glGetUniformLocation new-pgm-id "iCam3")
-                ; i-cam4-loc          (GL20/glGetUniformLocation new-pgm-id "iCam4")
-                ;
-                ; i-video0-loc        (GL20/glGetUniformLocation new-pgm-id "iVideo0")
-                ; i-video1-loc        (GL20/glGetUniformLocation new-pgm-id "iVideo1")
-                ; i-video2-loc        (GL20/glGetUniformLocation new-pgm-id "iVideo2")
-                ; i-video3-loc        (GL20/glGetUniformLocation new-pgm-id "iVideo3")
-                ; i-video4-loc        (GL20/glGetUniformLocation new-pgm-id "iVideo4")
-                ;
-                ; i-channel-res-loc   (GL20/glGetUniformLocation new-pgm-id "iChannelResolution")
-                ; i-date-loc          (GL20/glGetUniformLocation new-pgm-id "iDate")
-                ; i-fftwave-loc       (GL20/glGetUniformLocation new-pgm-id "iFftWave")
-                ; i-dataArray-loc     (GL20/glGetUniformLocation new-pgm-id "iDataArray")
-                ;
-                ; i-text-loc              (GL20/glGetUniformLocation new-pgm-id "iText")
-                ;
-                ; i-previous-frame-loc    (GL20/glGetUniformLocation new-pgm-id "iPreviousFrame")
-                ]
+                i-uniforms                     (generate-uniform-locs locals new-pgm-id ) ]
             (GL20/glUseProgram new-pgm-id)
             (except-gl-errors "@ try-reload-shader useProgram")
             (when user-fn
@@ -257,18 +184,6 @@
                    :fs-id new-fs-id
                    :pgm-id new-pgm-id
                    :i-uniforms i-uniforms
-                   ;:i-resolution-loc i-resolution-loc
-                   ;:i-global-time-loc i-global-time-loc
-;;                    :i-mouse-loc i-mouse-loc
-                   ;i-channel-loc [i-channel0-loc i-channel1-loc i-channel2-loc i-channel3-loc]
-                   ;;:i-fftwave-loc [i-fftwave-loc]
-                   ;;:i-previous-frame-loc [i-previous-frame-loc]
-                   ;;:i-text-loc           [i-text-loc]
-                   ;;:i-dataArray-loc i-dataArray-loc
-                   ;;:i-cam-loc [i-cam0-loc i-cam1-loc i-cam2-loc i-cam3-loc i-cam4-loc]
-                   ;;:i-video-loc [i-video0-loc i-video1-loc i-video2-loc i-video3-loc i-video4-loc]
-                   ;:i-channel-res-loc i-channel-res-loc
-                   ;:i-date-loc i-date-loc
                    :shader-str fs-shader)))))))
 ;
 
