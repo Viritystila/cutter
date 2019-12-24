@@ -514,9 +514,9 @@
     (swap! locals
            assoc
            :last-time cur-time)
-    (if (:shader-good @locals)
+    (if (and (:shader-good @locals) (:vs-shader-good @locals))
       (do
-        (if @reload-shader
+        (if (or @reload-shader @vs-reload-shader)
           (try-reload-shader locals)  ; this must call glUseProgram
           (GL20/glUseProgram pgm-id)) ; else, normal path...
         (draw locals))
@@ -524,7 +524,7 @@
       (do
         (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
         (except-gl-errors "@ bad-draw glClear ")
-        (if @reload-shader
+        (if (or @reload-shader @vs-reload-shader)
           (try-reload-shader locals))))))
 
 (defn- destroy-gl

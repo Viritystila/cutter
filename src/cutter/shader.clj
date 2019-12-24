@@ -159,11 +159,11 @@
 (defn try-reload-shader
   [locals]
   (let [{:keys [vs-id fs-id pgm-id shader-filename vs-shader-filename user-fn]} @locals
-        vs-id (if (= vs-id 0)
-                (let [[ok? vs-id] (load-shader vs-shader GL20/GL_VERTEX_SHADER)
-                      _ (assert (== ok? GL11/GL_TRUE))]
-                  vs-id)
-                vs-id)
+        ; vs-id (if (= vs-id 0)
+        ;         (let [[ok? vs-id] (load-shader vs-shader GL20/GL_VERTEX_SHADER)
+        ;               _ (assert (== ok? GL11/GL_TRUE))]
+        ;           vs-id)
+        ;         vs-id)
         vs-shader       (if (nil? vs-shader-filename)
                           @vs-reload-shader-str
                           (slurp-fs locals vs-shader-filename))
@@ -176,7 +176,7 @@
         _               (reset! reload-shader false)]
     (if (== ok? GL11/GL_FALSE)
       ;; we didn't reload a good shader. Go back to the old one if possible
-      (when (:shader-good @locals)
+      (when (and (:shader-good @locals) (:vs-shader-good @locals) )
         (GL20/glUseProgram pgm-id)
         (except-gl-errors "@ try-reload-shader useProgram1"))
       ;; the load shader went well, keep going...
@@ -200,8 +200,8 @@
                 i-uniforms                     (generate-uniform-locs locals new-pgm-id ) ]
             (GL20/glUseProgram new-pgm-id)
             (except-gl-errors "@ try-reload-shader useProgram")
-            (when user-fn
-              (user-fn :init new-pgm-id (:tex-id-fftwave @locals)))
+            ; (when user-fn
+            ;   (user-fn :init new-pgm-id (:tex-id-fftwave @locals)))
             ;; cleanup the old program
             (when (not= pgm-id 0)
               (GL20/glDetachShader pgm-id vs-id)
@@ -212,6 +212,7 @@
             (swap! locals
                    assoc
                    :shader-good true
+                   :vs-shader-good true
                    :fs-id new-fs-id
                    :vs-id new-vs-id
                    :pgm-id new-pgm-id
@@ -245,6 +246,7 @@
 ;; watch the shader directory & reload the current shader if it changes.
 (defn- if-match-reload-shader
   [shader-filename files]
+  ;(println "fs" shader-filename files)
   (if @watcher-just-started
     ;; allow first, automatic call to pass unnoticed
     (reset! watcher-just-started false)
@@ -256,6 +258,7 @@
 ;
 (defn- vs-if-match-reload-shader
   [shader-filename files]
+  ;(println "vs" shader-filename files)
   (if @vs-watcher-just-started
     ;; allow first, automatic call to pass unnoticed
     (reset! vs-watcher-just-started false)
@@ -283,6 +286,7 @@
   "create a watch for glsl shaders in the directory and return the global
   future atom for that watcher"
   [shader-filename]
+  ;(println "vs" shader-filename)
   (let [dir (.getParent (File. ^String shader-filename))
         _   (println "dir" dir)]
     (reset! vs-watcher-just-started true)
