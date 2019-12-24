@@ -96,7 +96,7 @@
 ;* vec4(0.5*iRandom, 0.1, 0.0, 1.0)
 (defn- load-shader
   [^String shader-str ^Integer shader-type]
-  (println shader-str)
+  ;(println shader-str)
   (let [shader-id         (GL20/glCreateShader shader-type)
         _                 (except-gl-errors "@ load-shader glCreateShader ")
         _                 (GL20/glShaderSource shader-id shader-str)
@@ -113,6 +113,10 @@
 
 (defn init-shaders
   [locals]
+  (print "init-shaders, print shade-strs")
+  ;(println (:vs-shader-str @locals))
+  ;(println (:shader-str @locals))
+  (println )
   (let [_           (if (nil? (:vs-shader-filename @locals))
                       (println "Loading vertex shader from string")
                       (println "Loading vertex shader from file:" (:vs-shader-filename @locals)))
@@ -154,12 +158,17 @@
 
 (defn try-reload-shader
   [locals]
-  (let [{:keys [vs-id fs-id pgm-id shader-filename user-fn]} @locals
+  (let [{:keys [vs-id fs-id pgm-id shader-filename vs-shader-filename user-fn]} @locals
         vs-id (if (= vs-id 0)
                 (let [[ok? vs-id] (load-shader vs-shader GL20/GL_VERTEX_SHADER)
                       _ (assert (== ok? GL11/GL_TRUE))]
                   vs-id)
                 vs-id)
+        vs-shader       (if (nil? vs-shader-filename)
+                          @vs-reload-shader-str
+                          (slurp-fs locals vs-shader-filename))
+        [ok? new-vs-id] (load-shader vs-shader GL20/GL_VERTEX_SHADER)
+        _               (reset! vs-reload-shader false)
         fs-shader       (if (nil? shader-filename)
                           @reload-shader-str
                           (slurp-fs locals shader-filename))
@@ -173,7 +182,7 @@
       ;; the load shader went well, keep going...
       (let [new-pgm-id     (GL20/glCreateProgram)
             _ (except-gl-errors "@ try-reload-shader glCreateProgram")
-            _              (GL20/glAttachShader new-pgm-id vs-id)
+            _              (GL20/glAttachShader new-pgm-id new-vs-id)
             _ (except-gl-errors "@ try-reload-shader glAttachShader VS")
             _              (GL20/glAttachShader new-pgm-id new-fs-id)
             _ (except-gl-errors "@ try-reload-shader glAttachShader FS")
@@ -187,7 +196,7 @@
             (println (GL20/glGetProgramInfoLog new-pgm-id 10000))
             (GL20/glUseProgram pgm-id)
             (except-gl-errors "@ try-reload-shader"))
-          (let [_ (println "Reloading shader:" shader-filename)
+          (let [_ (println "Reloading fragment shader:" shader-filename "and vertex shader:" vs-shader-filename)
                 i-uniforms                     (generate-uniform-locs locals new-pgm-id ) ]
             (GL20/glUseProgram new-pgm-id)
             (except-gl-errors "@ try-reload-shader useProgram")
@@ -197,15 +206,18 @@
             (when (not= pgm-id 0)
               (GL20/glDetachShader pgm-id vs-id)
               (GL20/glDetachShader pgm-id fs-id)
-              (GL20/glDeleteShader fs-id))
+              (GL20/glDeleteShader fs-id)
+              (GL20/glDeleteShader vs-id))
             (except-gl-errors "@ try-reload-shader detach/delete")
             (swap! locals
                    assoc
                    :shader-good true
                    :fs-id new-fs-id
+                   :vs-id new-vs-id
                    :pgm-id new-pgm-id
                    :i-uniforms i-uniforms
-                   :shader-str fs-shader)))))))
+                   :shader-str fs-shader
+                   :vs-shader-str vs-shader)))))))
 ;
 
 ;; watch the shader-str-atom to reload on a change
@@ -263,7 +275,7 @@
      [dir]
      (watcher/rate 100)
      (watcher/file-filter watcher/ignore-dotfiles)
-     (watcher/file-filter (watcher/extensions :glsl))
+     (watcher/file-filter (watcher/extensions :fs))
      (watcher/on-change (partial if-match-reload-shader shader-filename)))))
 
 ;
@@ -278,7 +290,7 @@
      [dir]
      (watcher/rate 100)
      (watcher/file-filter watcher/ignore-dotfiles)
-     (watcher/file-filter (watcher/extensions :glsl))
+     (watcher/file-filter (watcher/extensions :vs))
      (watcher/on-change (partial vs-if-match-reload-shader shader-filename)))))
 
 

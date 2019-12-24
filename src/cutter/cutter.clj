@@ -217,34 +217,45 @@
    window-idx]
     (when-not (org.lwjgl.glfw.GLFW/glfwInit)
     (throw (IllegalStateException. "Unable to initialize GLFW")))
-    (let [
-        primaryMonitor      (org.lwjgl.glfw.GLFW/glfwGetPrimaryMonitor)
-        currentMonitor      (getMonitor window-idx true-fullscreen?)
-        ;mode                (if (= 0 currentMonitor) primaryMonitor (org.lwjgl.glfw.GLFW/glfwGetVideoMode currentMonitor))
-        current-time-millis (System/currentTimeMillis)
-        width               (nth display-mode 0)
-        height              (nth display-mode 1)]
-        (swap! locals
-           assoc
-           :active                :yes
-           :width                 width
-           :height                height
-           :title                 title
-           :display-sync-hz       display-sync-hz
-           :start-time            current-time-millis
-           :last-time             current-time-millis
-           :shader-filename       shader-filename
-           :shader-str-atom       shader-str-atom
-           :vs-shader-filename    vs-shader-filename
-           :vs-shader-str-atom    vs-shader-str-atom)
-        (println "Begin shader slurping.")
-        (let [shader-str (if (nil? shader-filename)
-                       @shader-str-atom
-                       (slurp-fs locals (:shader-filename @locals)))])
-        (let [vs-shader-str (if (nil? vs-shader-filename)
-               @vs-shader-str-atom
-               (slurp-fs locals (:vs-shader-filename @locals)))])
-        (println shader-str)
+    (let [primaryMonitor      (org.lwjgl.glfw.GLFW/glfwGetPrimaryMonitor)
+          currentMonitor      (getMonitor window-idx true-fullscreen?)
+          ;mode                (if (= 0 currentMonitor) primaryMonitor (org.lwjgl.glfw.GLFW/glfwGetVideoMode currentMonitor))
+          current-time-millis (System/currentTimeMillis)
+          width               (nth display-mode 0)
+          height              (nth display-mode 1)
+          shader-str          (if (nil? shader-filename)
+                                @shader-str-atom
+                                (slurp-fs locals shader-filename))
+          vs-shader-str       (if (nil? vs-shader-filename)
+                                @vs-shader-str-atom
+                                (slurp-fs locals  vs-shader-filename))]
+          (swap! locals
+            assoc
+            :active                :yes
+            :width                 width
+            :height                height
+            :title                 title
+            :display-sync-hz       display-sync-hz
+            :start-time            current-time-millis
+            :last-time             current-time-millis
+            :shader-filename       shader-filename
+            :shader-str-atom       shader-str-atom
+            :vs-shader-filename    vs-shader-filename
+            :vs-shader-str-atom    vs-shader-str-atom
+            :shader-str            shader-str
+            :vs-shader-str         vs-shader-str)
+        ;   (println "Begin shader slurping.")
+        ; (let [shader-str (if (nil? shader-filename)
+        ;                @shader-str-atom
+        ;                (slurp-fs locals (:shader-filename @locals)))
+        ;      vs-shader-str (if (nil? vs-shader-filename)
+        ;                @vs-shader-str-atom
+        ;               (slurp-fs locals (:vs-shader-filename @locals)))])
+        ; (let [vs-shader-str (if (nil? vs-shader-filename)
+        ;        @vs-shader-str-atom
+        ;        (slurp-fs locals (:vs-shader-filename @locals)))])
+        ;(println shader-str-atom)
+        ;(println vs-shader-str-atom)
         (if true-fullscreen? (fullscreen-display!) (undecorate-display!) )
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE    org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
@@ -428,8 +439,8 @@
                 i-channels
                 i-dataArrays
                 i-floats
-                dataArray1 dataArray2 dataArray3 dataArray4
-                dataArray1Buffer dataArray2Buffer dataArray3Buffer dataArray4Buffer
+                ;dataArray1 dataArray2 dataArray3 dataArray4
+                ;dataArray1Buffer dataArray2Buffer dataArray3Buffer dataArray4Buffer
                 save-frames
                 old-pgm-id old-fs-id
                 ]} @locals
@@ -579,7 +590,8 @@
   (Thread/sleep 200)))
   (remove-watch (:shader-str-atom @the-window-state) :shader-str-watch)
   (remove-watch (:vs-shader-str-atom @the-window-state) :vs-shader-str-watch)
-  (stop-watcher @vs-watcher-future))
+  (stop-watcher @vs-watcher-future)
+  (stop-watcher @watcher-future))
 
 (defn start-shader-display
   "Start a new shader display with the specified mode. Prefer start or
