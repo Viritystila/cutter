@@ -18,6 +18,8 @@
 (defonce reload-shader-str (atom ""))
 ;; Atom for the directory watcher future
 (defonce watcher-future (atom (future (fn [] nil))))
+(defonce vs-watcher-future (atom (future (fn [] nil))))
+
 ;; Flag to help avoid reloading shader right after loading it for the
 ;; first time.
 (defonce watcher-just-started (atom true))
@@ -94,6 +96,7 @@
 ;* vec4(0.5*iRandom, 0.1, 0.0, 1.0)
 (defn- load-shader
   [^String shader-str ^Integer shader-type]
+  (println shader-str)
   (let [shader-id         (GL20/glCreateShader shader-type)
         _                 (except-gl-errors "@ load-shader glCreateShader ")
         _                 (GL20/glShaderSource shader-id shader-str)
@@ -110,11 +113,14 @@
 
 (defn init-shaders
   [locals]
-  (let [[ok? vs-id] (load-shader vs-shader GL20/GL_VERTEX_SHADER)
+  (let [_           (if (nil? (:vs-shader-filename @locals))
+                      (println "Loading vertex shader from string")
+                      (println "Loading vertex shader from file:" (:vs-shader-filename @locals)))
+        [ok? vs-id] (load-shader (:vs-shader-str @locals) GL20/GL_VERTEX_SHADER)
         _           (assert (== ok? GL11/GL_TRUE)) ;; something is really wrong if our vs is bad
         _           (if (nil? (:shader-filename @locals))
-                      (println "Loading shader from string")
-                      (println "Loading shader from file:" (:shader-filename @locals)))
+                      (println "Loading fragment shader from string")
+                      (println "Loading fragment shader from file:" (:shader-filename @locals)))
         [ok? fs-id] (load-shader (:shader-str @locals) GL20/GL_FRAGMENT_SHADER)]
     (if (== ok? GL11/GL_TRUE)
       (let [pgm-id                (GL20/glCreateProgram)
@@ -137,13 +143,14 @@
         (swap! locals
                assoc
                :shader-good true
+               :vs-shader-good true
                :vs-id vs-id
                :fs-id fs-id
                :pgm-id pgm-id
                :i-uniforms i-uniforms
                ))
       ;; we didn't load the shader, don't be drawing
-      (swap! locals assoc :shader-good false))))
+      (swap! locals assoc :shader-good false :vs-shader-good false))))
 
 (defn try-reload-shader
   [locals]
@@ -212,6 +219,17 @@
     (reset! reload-shader-str new)
     (reset! reload-shader true)))
 
+;
+(defn vs-watch-shader-str-atom
+  [key identity old new]
+  (when (not= old new)
+    ;; if already reloading, wait for that to finish
+    (while @vs-reload-shader
+      ;; FIXME this can hang.  We should timeout instead
+      (Thread/sleep 100))
+    (reset! vs-reload-shader-str new)
+    (reset! vs-reload-shader true)))
+
 ;; watch the shader directory & reload the current shader if it changes.
 (defn- if-match-reload-shader
   [shader-filename files]
@@ -223,7 +241,17 @@
       (when (= (.getPath ^File f) shader-filename)
         ;; set a flag that the opengl thread will use
         (reset! reload-shader true)))))
-
+;
+(defn- vs-if-match-reload-shader
+  [shader-filename files]
+  (if @vs-watcher-just-started
+    ;; allow first, automatic call to pass unnoticed
+    (reset! vs-watcher-just-started false)
+    ;; otherwise do the reload check
+    (doseq [f files]
+      (when (= (.getPath ^File f) shader-filename)
+        ;; set a flag that the opengl thread will use
+        (reset! vs-reload-shader true)))))
 (defn start-watcher
   "create a watch for glsl shaders in the directory and return the global
   future atom for that watcher"
@@ -237,6 +265,22 @@
      (watcher/file-filter watcher/ignore-dotfiles)
      (watcher/file-filter (watcher/extensions :glsl))
      (watcher/on-change (partial if-match-reload-shader shader-filename)))))
+
+;
+(defn vs-start-watcher
+  "create a watch for glsl shaders in the directory and return the global
+  future atom for that watcher"
+  [shader-filename]
+  (let [dir (.getParent (File. ^String shader-filename))
+        _   (println "dir" dir)]
+    (reset! vs-watcher-just-started true)
+    (watcher/watcher
+     [dir]
+     (watcher/rate 100)
+     (watcher/file-filter watcher/ignore-dotfiles)
+     (watcher/file-filter (watcher/extensions :glsl))
+     (watcher/on-change (partial vs-if-match-reload-shader shader-filename)))))
+
 
 (defn stop-watcher
   "given a watcher-future f, put a stop to it"

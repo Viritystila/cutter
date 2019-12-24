@@ -210,6 +210,8 @@
    title
    shader-filename
    shader-str-atom
+   vs-shader-filename
+   vs-shader-str-atom
    true-fullscreen?
    display-sync-hz
    window-idx]
@@ -224,19 +226,25 @@
         height              (nth display-mode 1)]
         (swap! locals
            assoc
-           :active            :yes
-           :width             width
-           :height            height
-           :title             title
-           :display-sync-hz   display-sync-hz
-           :start-time        current-time-millis
-           :last-time         current-time-millis
-           :shader-filename   shader-filename
-           :shader-str-atom   shader-str-atom)
+           :active                :yes
+           :width                 width
+           :height                height
+           :title                 title
+           :display-sync-hz       display-sync-hz
+           :start-time            current-time-millis
+           :last-time             current-time-millis
+           :shader-filename       shader-filename
+           :shader-str-atom       shader-str-atom
+           :vs-shader-filename    vs-shader-filename
+           :vs-shader-str-atom    vs-shader-str-atom)
         (println "Begin shader slurping.")
         (let [shader-str (if (nil? shader-filename)
                        @shader-str-atom
                        (slurp-fs locals (:shader-filename @locals)))])
+        (let [vs-shader-str (if (nil? vs-shader-filename)
+               @vs-shader-str-atom
+               (slurp-fs locals (:vs-shader-filename @locals)))])
+        (println shader-str)
         (if true-fullscreen? (fullscreen-display!) (undecorate-display!) )
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE    org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
@@ -530,9 +538,9 @@
     (GL30/glDeleteVertexArrays vao-id)))
 
 (defn- run-thread
-  [locals mode shader-filename shader-str-atom  title true-fullscreen? display-sync-hz window-idx]
+  [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
   (println "init-window")
-  (init-window locals mode title shader-filename shader-str-atom true-fullscreen? display-sync-hz window-idx)
+  (init-window locals mode title shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom true-fullscreen? display-sync-hz window-idx)
   (println "init-gl")
   (init-gl locals)
   (try-reload-shader locals)
@@ -570,7 +578,8 @@
   (while (not (inactive?))
   (Thread/sleep 200)))
   (remove-watch (:shader-str-atom @the-window-state) :shader-str-watch)
-  (stop-watcher @watcher-future))
+  (remove-watch (:vs-shader-str-atom @the-window-state) :vs-shader-str-watch)
+  (stop-watcher @vs-watcher-future))
 
 (defn start-shader-display
   "Start a new shader display with the specified mode. Prefer start or
@@ -600,7 +609,8 @@
                               @shader-str-atom)
         vs-shader-str       (if-not vs-is-filename
                               @vs-shader-str-atom)]
-    (when (cutter.general/sane-user-inputs shader-filename shader-str)
+    (when (and (cutter.general/sane-user-inputs shader-filename shader-str)
+               (cutter.general/sane-user-inputs vs-shader-filename vs-shader-str))
       ;; stop the current shader
       (stop)
       ;; start the watchers
@@ -609,6 +619,11 @@
           (swap! watcher-future
                  (fn [x] (start-watcher shader-filename))))
         (add-watch shader-str-atom :shader-str-watch watch-shader-str-atom))
+      (if vs-is-filename
+        (when-not (nil? vs-shader-filename)
+          (swap! vs-watcher-future
+                 (fn [x] (vs-start-watcher vs-shader-filename))))
+        (add-watch vs-shader-str-atom :vs-shader-str-watch vs-watch-shader-str-atom))
       ;; set a global window-state instead of creating a new one
       ;(reset! the-window-state default-state-values)
       ;; start the requested shader
@@ -617,6 +632,8 @@
                                  mode
                                  shader-filename
                                  shader-str-atom
+                                 vs-shader-filename
+                                 vs-shader-str-atom
                                  title
                                  true-fullscreen?
                                  display-sync-hz
