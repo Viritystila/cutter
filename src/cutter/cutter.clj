@@ -72,7 +72,7 @@
     :maximum-texture-folders    1000
     :maximum-cameras            1000
     :maximum-videos             1000
-    :maximum-buffer-length      250  ;Frames 
+    :maximum-buffer-length      250  ;Frames
     :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
     :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false}, :fps 30, index: 0, :mode :fw, :start-index 0, :stop-index 0}
     :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0}}
@@ -409,8 +409,7 @@
                         1)))
                 )
                 nil)))
-(defn- draw
-  [locals]
+(defn- draw [locals]
   (let [{:keys [width height
                 start-time last-time i-global-time-loc
                 i-date-loc
@@ -438,10 +437,10 @@
     ((:gltype (:iRandom i-uniforms)) (:loc (:iRandom i-uniforms)) (rand))
 
     (doseq [x (keys i-dataArrays)]
-    ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:datavec (x i-dataArrays)) (:buffer (x i-dataArrays))))
+      ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:datavec (x i-dataArrays)) (:buffer (x i-dataArrays))))
 
     (doseq [x (keys i-floats)]
-    ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:data (x i-floats)) ))
+      ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:data (x i-floats)) ))
 
     ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) (:unit (:iText i-uniforms)))
     (get-textures locals :iText i-uniforms)
@@ -474,7 +473,6 @@
      (except-gl-errors "@ draw after DrawArrays")
      ;; Put everything back to default (deselect)
      ;Copying the previous image to its own texture
-
      (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:tex-id (:iPreviousFrame i-textures))))
      (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
      (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
@@ -489,7 +487,6 @@
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
      (GL20/glDisableVertexAttribArray 0)))
 
-
 (defn- update-and-draw
   [locals]
   (let [{:keys [width height last-time pgm-id
@@ -497,8 +494,7 @@
                 cur-time (System/currentTimeMillis)]
     (swap! locals
            assoc
-           :last-time cur-time
-           )
+           :last-time cur-time)
     (if (:shader-good @locals)
       (do
         (if @reload-shader
@@ -579,8 +575,9 @@
 (defn start-shader-display
   "Start a new shader display with the specified mode. Prefer start or
    start-fullscreen for simpler usage."
-  [mode shader-filename-or-str-atom   title true-fullscreen? display-sync-hz window-idx]
-  (let [is-filename     (not (instance? clojure.lang.Atom shader-filename-or-str-atom))
+  [mode shader-filename-or-str-atom  vs-shader-filename-or-str-atom title true-fullscreen? display-sync-hz window-idx]
+  (let [is-filename         (not (instance? clojure.lang.Atom shader-filename-or-str-atom))
+        vs-is-filename      (not (instance? clojure.lang.Atom vs-shader-filename-or-str-atom))
         shader-filename (if is-filename
                           shader-filename-or-str-atom)
         ;; Fix for issue 15.  Normalize the given shader-filename to the
@@ -603,11 +600,8 @@
           (swap! watcher-future
                  (fn [x] (start-watcher shader-filename))))
         (add-watch shader-str-atom :shader-str-watch watch-shader-str-atom))
-
       ;; set a global window-state instead of creating a new one
-
       ;(reset! the-window-state default-state-values)
-
       ;; start the requested shader
       (.start (Thread.
                (fn [] (run-thread the-window-state
@@ -621,7 +615,7 @@
 
 (defn start
   "Start a new shader display."
-  [shader-filename-or-str-atom
+  [shader-filename-or-str-atom vs-shader-filename-or-str-atom
    &{:keys [width height title display-sync-hz fullscreen? window-idx]
      :or {width             1280
           height            800
@@ -630,11 +624,11 @@
           fullscreen?       false
           window-idx        0}}]
    (let [mode  [width height]]
-    (start-shader-display mode shader-filename-or-str-atom   title false display-sync-hz window-idx)))
+    (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom  title false display-sync-hz window-idx)))
 
 (defn start-fullscreen
   "Start a new shader display."
-  [shader-filename-or-str-atom
+  [shader-filename-or-str-atom vs-shader-filename-or-str-atom
    &{:keys [width height title display-sync-hz  fullscreen? window-idx]
      :or {width           1280
           height          800
@@ -643,4 +637,4 @@
           fullscreen?     true
           window-idx      0}}]
    (let [mode  [width height]]
-    (start-shader-display mode shader-filename-or-str-atom title true display-sync-hz window-idx)))
+    (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
