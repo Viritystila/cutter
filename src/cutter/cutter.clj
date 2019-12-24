@@ -578,19 +578,28 @@
   [mode shader-filename-or-str-atom  vs-shader-filename-or-str-atom title true-fullscreen? display-sync-hz window-idx]
   (let [is-filename         (not (instance? clojure.lang.Atom shader-filename-or-str-atom))
         vs-is-filename      (not (instance? clojure.lang.Atom vs-shader-filename-or-str-atom))
-        shader-filename (if is-filename
-                          shader-filename-or-str-atom)
+        shader-filename     (if is-filename
+                              shader-filename-or-str-atom)
+        vs-shader-filename  (if is-filename
+                              vs-shader-filename-or-str-atom)
         ;; Fix for issue 15.  Normalize the given shader-filename to the
         ;; path separators that the system will use.  If user gives path/to/shader.glsl
         ;; and windows returns this as path\to\shader.glsl from .getPath, this
         ;; change should make comparison to path\to\shader.glsl work.
-        shader-filename (if (and is-filename (not (nil? shader-filename)))
-                          (.getPath (File. ^String shader-filename)))
-        shader-str-atom (if-not is-filename
-                          shader-filename-or-str-atom
-                          (atom nil))
-        shader-str      (if-not is-filename
-                          @shader-str-atom)]
+        shader-filename     (if (and is-filename (not (nil? shader-filename)))
+                              (.getPath (File. ^String shader-filename)))
+        vs-shader-filename  (if (and vs-is-filename (not (nil? vs-shader-filename)))
+                              (.getPath (File. ^String vs-shader-filename)))
+        shader-str-atom     (if-not is-filename
+                              shader-filename-or-str-atom
+                              (atom nil))
+        vs-shader-str-atom  (if-not vs-is-filename
+                              vs-shader-filename-or-str-atom
+                              (atom nil))
+        shader-str          (if-not is-filename
+                              @shader-str-atom)
+        vs-shader-str       (if-not vs-is-filename
+                              @vs-shader-str-atom)]
     (when (cutter.general/sane-user-inputs shader-filename shader-str)
       ;; stop the current shader
       (stop)
