@@ -12,7 +12,7 @@
            (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
 
-
+;;Fragment shader watching
 ;; The reload-shader atom communicates across the gl & watcher threads
 (defonce reload-shader (atom false))
 (defonce reload-shader-str (atom ""))
@@ -21,6 +21,17 @@
 ;; Flag to help avoid reloading shader right after loading it for the
 ;; first time.
 (defonce watcher-just-started (atom true))
+
+;Vertex shader watching
+(defonce vs-reload-shader (atom false))
+(defonce vs-reload-shader-str (atom ""))
+;; Atom for the directory watcher future
+(defonce vs-watcher-future (atom (future (fn [] nil))))
+;; Flag to help avoid reloading shader right after loading it for the
+;; first time.
+(defonce vs-watcher-just-started (atom true))
+
+;;;;;
 (defonce throw-on-gl-error (atom true))
 
 ;(GL20/glGetUniformLocation pgm-id (name x))

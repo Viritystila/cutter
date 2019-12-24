@@ -60,6 +60,10 @@
     :shader-filename            nil
     :shader-str-atom            (atom nil)
     :shader-str                 ""
+    :vs-shader-good             true ;; false in error condition
+    :vs-shader-filename         nil
+    :vs-shader-str-atom         (atom nil)
+    :vs-shader-str               ""
     :vs-id                      0
     :fs-id                      0
     :pgm-id                     0
@@ -68,11 +72,7 @@
     :maximum-texture-folders    1000
     :maximum-cameras            1000
     :maximum-videos             1000
-    :maximum-buffer-length      250  ;Frames
-    :texture-filenames          []
-    :texture-folders            []
-    :camera-devices             []
-    :video-filenames            []
+    :maximum-buffer-length      250  ;Frames 
     :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
     :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false}, :fps 30, index: 0, :mode :fw, :start-index 0, :stop-index 0}
     :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0}}
@@ -210,10 +210,6 @@
    title
    shader-filename
    shader-str-atom
-   texture-filenames
-   texture-folders
-   camera-devices
-   video-filenames
    true-fullscreen?
    display-sync-hz
    window-idx]
@@ -225,11 +221,7 @@
         ;mode                (if (= 0 currentMonitor) primaryMonitor (org.lwjgl.glfw.GLFW/glfwGetVideoMode currentMonitor))
         current-time-millis (System/currentTimeMillis)
         width               (nth display-mode 0)
-        height              (nth display-mode 1)
-        texture-filenames   (cutter.general/remove-inexistent texture-filenames (:maximum-textures @locals))
-        texture-folders     (cutter.general/remove-inexistent texture-folders (:maximum-texture-folders @locals))
-        camera-devices      (cutter.general/remove-inexistent camera-devices (:maximum-cameras @locals))
-        video-filenames     (cutter.general/remove-inexistent video-filenames (:maximum-videos @locals))]
+        height              (nth display-mode 1)]
         (swap! locals
            assoc
            :active            :yes
@@ -240,11 +232,7 @@
            :start-time        current-time-millis
            :last-time         current-time-millis
            :shader-filename   shader-filename
-           :shader-str-atom   shader-str-atom
-           :texture-filenames texture-filenames
-           :texture-folders   texture-folders
-           :camera-devices    camera-devices
-           :video-filenames   video-filenames)
+           :shader-str-atom   shader-str-atom)
         (println "Begin shader slurping.")
         (let [shader-str (if (nil? shader-filename)
                        @shader-str-atom
@@ -546,9 +534,9 @@
     (GL30/glDeleteVertexArrays vao-id)))
 
 (defn- run-thread
-  [locals mode shader-filename shader-str-atom tex-filenames texture-folders cams videos title true-fullscreen? display-sync-hz window-idx]
+  [locals mode shader-filename shader-str-atom  title true-fullscreen? display-sync-hz window-idx]
   (println "init-window")
-  (init-window locals mode title shader-filename shader-str-atom tex-filenames texture-folders cams videos true-fullscreen? display-sync-hz window-idx)
+  (init-window locals mode title shader-filename shader-str-atom true-fullscreen? display-sync-hz window-idx)
   (println "init-gl")
   (init-gl locals)
   (try-reload-shader locals)
@@ -591,7 +579,7 @@
 (defn start-shader-display
   "Start a new shader display with the specified mode. Prefer start or
    start-fullscreen for simpler usage."
-  [mode shader-filename-or-str-atom texture-filenames texture-folders cam-devices video-filenames title true-fullscreen? display-sync-hz window-idx]
+  [mode shader-filename-or-str-atom   title true-fullscreen? display-sync-hz window-idx]
   (let [is-filename     (not (instance? clojure.lang.Atom shader-filename-or-str-atom))
         shader-filename (if is-filename
                           shader-filename-or-str-atom)
@@ -626,10 +614,6 @@
                                  mode
                                  shader-filename
                                  shader-str-atom
-                                 texture-filenames
-                                 texture-folders
-                                 cam-devices
-                                 video-filenames
                                  title
                                  true-fullscreen?
                                  display-sync-hz
@@ -638,35 +622,25 @@
 (defn start
   "Start a new shader display."
   [shader-filename-or-str-atom
-   &{:keys [width height title display-sync-hz
-            texture-filenames texture-folders cam-devices video-filenames fullscreen? window-idx]
+   &{:keys [width height title display-sync-hz fullscreen? window-idx]
      :or {width             1280
           height            800
           title             "cutter"
           display-sync-hz   30
-          texture-filenames []
-          texture-folders   []
-          camera-devices    []
-          video-filenames   []
           fullscreen?       false
           window-idx        0}}]
    (let [mode  [width height]]
-    (start-shader-display mode shader-filename-or-str-atom texture-filenames texture-folders cam-devices video-filenames title false display-sync-hz window-idx)))
+    (start-shader-display mode shader-filename-or-str-atom   title false display-sync-hz window-idx)))
 
 (defn start-fullscreen
   "Start a new shader display."
   [shader-filename-or-str-atom
-   &{:keys [width height title display-sync-hz
-            texture-filenames texture-folders cam-devices video-filenames fullscreen? window-idx]
+   &{:keys [width height title display-sync-hz  fullscreen? window-idx]
      :or {width           1280
           height          800
           title           "cutter"
           display-sync-hz 30
-          texture-filenames []
-          texture-folders   []
-          camera-devices    []
-          video-filenames   []
           fullscreen?     true
           window-idx      0}}]
    (let [mode  [width height]]
-    (start-shader-display mode shader-filename-or-str-atom texture-filenames texture-folders cam-devices video-filenames title true display-sync-hz window-idx)))
+    (start-shader-display mode shader-filename-or-str-atom title true display-sync-hz window-idx)))

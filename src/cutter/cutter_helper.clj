@@ -7,7 +7,7 @@
             [cutter.cutter :refer :all]
             [cutter.buffer :refer :all]
             [cutter.camera :refer :all]
-            [cutter.video :refer :all]         
+            [cutter.video :refer :all]
             [cutter.opencv :refer :all]
             [clojure.core.async
              :as async
@@ -38,29 +38,29 @@
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
 
 ;;Data array
-(defn set-dataArray1-item [idx val]
-    (let [  oa  (:dataArray1  @the-window-state)
-            na  (assoc oa idx val)]
-        (swap! the-window-state assoc :dataArray1 na)
-        nil))
-
-(defn set-dataArray2-item [idx val]
-    (let [  oa  (:dataArray2  @the-window-state)
-            na  (assoc oa idx val)]
-        (swap! the-window-state assoc :dataArray2 na)
-        nil))
-
-(defn set-dataArray3-item [idx val]
-    (let [  oa  (:dataArray3  @the-window-state)
-            na  (assoc oa idx val)]
-        (swap! the-window-state assoc :dataArray3 na)
-        nil))
-
-(defn set-dataArray4-item [idx val]
-    (let [  oa  (:dataArray4  @the-window-state)
-            na  (assoc oa idx val)]
-        (swap! the-window-state assoc :dataArray4 na)
-        nil))
+; (defn set-dataArray1-item [idx val]
+;     (let [  oa  (:dataArray1  @the-window-state)
+;             na  (assoc oa idx val)]
+;         (swap! the-window-state assoc :dataArray1 na)
+;         nil))
+;
+; (defn set-dataArray2-item [idx val]
+;     (let [  oa  (:dataArray2  @the-window-state)
+;             na  (assoc oa idx val)]
+;         (swap! the-window-state assoc :dataArray2 na)
+;         nil))
+;
+; (defn set-dataArray3-item [idx val]
+;     (let [  oa  (:dataArray3  @the-window-state)
+;             na  (assoc oa idx val)]
+;         (swap! the-window-state assoc :dataArray3 na)
+;         nil))
+;
+; (defn set-dataArray4-item [idx val]
+;     (let [  oa  (:dataArray4  @the-window-state)
+;             na  (assoc oa idx val)]
+;         (swap! the-window-state assoc :dataArray4 na)
+;         nil))
 
 ;v4l2
 (defn openV4L2output [device]
@@ -156,28 +156,11 @@
 
 (defn list-texture-arrays [] (println (:texture-arrays @the-window-state)))
 
-(defn list-camera-devices [] (println (:camera-devices @the-window-state)))
-
-(defn list-video-filenames [] (println (:video-filenames @the-window-state)))
-
-(defn list-texture-filenames [] (println (:texture-filenames @the-window-state)))
-
-(defn list-texture-folders [] (println (:texture-folders @the-window-state)))
-
-(defn add-texture-filename [filename]
-  (let [filenames           (:texture-filenames @cutter.cutter/the-window-state)
-        filenames           (conj filenames filename)
-        filenames   (cutter.general/remove-inexistent filenames (:maximum-textures @cutter.cutter/the-window-state))]
-        (swap! cutter.cutter/the-window-state
-           assoc :texture-filenames filenames))
-           nil)
 
 (defn set-texture-by-filename [filename destination-texture-key]
   "Set texture by filename and adds the filename to the list"
   (let [  filenames           (:texture-filenames @cutter.cutter/the-window-state)
           textures            (:textures @cutter.cutter/the-window-state)
-          idx                 (count filenames)
-          _                   (add-texture-filename filename)
           i-textures          (:i-textures @cutter.cutter/the-window-state)
           texture             (destination-texture-key i-textures)
           mat                 (cutter.opencv/oc_load_image filename)
@@ -189,7 +172,7 @@
           queue               (:queue texture)
           texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
           i-textures          (assoc i-textures destination-texture-key texture)
-          textures            (assoc textures (keyword filename) {:idx idx,
+          textures            (assoc textures (keyword filename) {:idx filename,
                                                                   :destination destination-texture-key,
                                                                   :source mat,
                                                                   :running true})
@@ -200,13 +183,6 @@
           )
           nil)
 
-(defn set-texture_by_idx [idx destination-texture-key]
-  "Set the texture from he list of texture filenames"
-  (let [  filenames           (:texture-filenames @cutter.cutter/the-window-state)
-          textures            (:textures @cutter.cutter/the-window-state)
-          filename            (nth filenames (mod idx (count filenames)))]
-          (set-texture-by-filename  filename destination-texture-key))
-          nil)
 
 ;Text
 (defn write-text
