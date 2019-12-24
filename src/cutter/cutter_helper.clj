@@ -159,8 +159,7 @@
 
 (defn set-texture-by-filename [filename destination-texture-key]
   "Set texture by filename and adds the filename to the list"
-  (let [  filenames           (:texture-filenames @cutter.cutter/the-window-state)
-          textures            (:textures @cutter.cutter/the-window-state)
+  (let [  textures            (:textures @cutter.cutter/the-window-state)
           i-textures          (:i-textures @cutter.cutter/the-window-state)
           texture             (destination-texture-key i-textures)
           mat                 (cutter.opencv/oc_load_image filename)
@@ -175,14 +174,11 @@
           textures            (assoc textures (keyword filename) {:idx filename,
                                                                   :destination destination-texture-key,
                                                                   :source mat,
-                                                                  :running true})
-          ]
+                                                                  :running true})]
           (swap! cutter.cutter/the-window-state assoc :textures textures)
           (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
-          (async/offer! queue (matInfo mat))
-          )
+          (async/offer! queue (matInfo mat)))
           nil)
-
 
 ;Text
 (defn write-text
@@ -242,8 +238,8 @@
                                                                   :index 0
                                                                   :mode :fw
                                                                   :start-index start-index
-                                                                  :stop-index (min maximum-buffer-length newcount) )))) nil)
-;
+                                                                  :stop-index (min maximum-buffer-length newcount))))) nil)
+
 (defn replace-in-buffer [filename buffername index]
   (let [  texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
           buffername-key           (keyword buffername)
@@ -277,7 +273,7 @@
                                                                   :index 0
                                                                   :mode :fw
                                                                   :start-index start-index
-                                                                  :stop-index (min maximum-buffer-length newcount) )))) nil)
+                                                                  :stop-index (min maximum-buffer-length newcount))))) nil)
 
 (defn add-from-dir [dir buffername]
   (let [dir    (clojure.java.io/file dir)
@@ -285,9 +281,6 @@
        files   (filter #(.isFile %) files)
        files   (mapv str files)]
        (doseq [x files ](add-to-buffer x buffername)   )))
-
-
-;
 
 (defn rfs []  (stop)
               (cutter.buffer/stop-all-buffers)
