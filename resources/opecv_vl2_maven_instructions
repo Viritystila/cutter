@@ -1,0 +1,22 @@
+
+#OpenCV 4.2
+# or on linux
+mkdir -p native/linux/x86_64
+cp ./lib/libopencv_java420.so native/linux/x86_64/
+jar -cMf opencv-native-linux.jar native
+
+mvn install:install-file -DgroupId=org.viritystila -DartifactId=opencv -Dversion=4.2.0-linux -Dfile=opencv-420.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/OpenCV/  -DcreateChecksum=true
+
+mvn install:install-file -DgroupId=org.viritystila -DartifactId=opencv-native -Dversion=4.2.0-linux -Dfile=opencv-native-linux.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/OpenCV/  -DcreateChecksum=true
+
+
+#javacpp
+mkdir -p native/linux/x86_64
+cp classes/org/bytedeco/javacpp/linux-x86_64/libjniv4l2.so native/linux/x86_64/
+jar -cMf v4l2-native-linux.jar native
+
+mvn install:install-file -DgroupId=org.viritystila -DartifactId=v4l2-native -Dversion=1.0-linux -Dfile=v4l2-native-linux.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/v4l2javacpp/  -DcreateChecksum=true
+
+mvn install:install-file -DgroupId=org.viritystila -DartifactId=v4l2 -Dversion=1.0-linux -Dfile=v4l2.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/v4l2javacpp/  -DcreateChecksum=true
+
+mvn install:install-file -DgroupId=org.viritystila -DartifactId=v4l2-platform -Dversion=1.0-linux -Dfile=v4l2-platform.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/v4l2javacpp/  -DcreateChecksum=true

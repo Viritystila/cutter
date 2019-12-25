@@ -47,8 +47,12 @@
                   [org.viritystila/opencv "4.2.0-linux"]
                   [org.viritystila/opencv-native "4.2.0-linux"]
                   [org.bytedeco/javacpp "1.4.5-SNAPSHOT"]
-                  [org.viritystila/v4l2 "Latest-1.4.5-SNAPSHOT"]
-                  [org.viritystila/v4l2-platform "Latest-1.4.5-SNAPSHOT"]]
+                  ;[org.viritystila/v4l2 "Latest-1.4.5-SNAPSHOT"]
+                  ;[org.viritystila/v4l2-platform "Latest-1.4.5-SNAPSHOT"]
+                  [org.viritystila/v4l2 "1.0-linux"]
+                  [org.viritystila/v4l2-platform "1.0-linux"]
+                  [org.viritystila/v4l2-native "1.0-linux"]
+                  ]
   (lwjgl-deps-with-natives)))
 
 
@@ -58,7 +62,8 @@
     :license {:name "MIT License"
              :url "https://github.com/Viritystila/cutter/blob/master/LICENSE"}
     :injections [ (clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)]
-    :repositories [["Viritystila" "https://github.com/Viritystila/OpenCV/raw/master"]]
+    :repositories [["Viritystila OpenCV" "https://github.com/Viritystila/OpenCV/raw/master"]
+                  ["Viritystila v4l2javacpp" "https://github.com/Viritystila/v4l2javacpp/raw/master"]]
     :dependencies ~all-dependencies
     ;:java-source-paths ["src/java"]
     :main ^{:skip-aot true} cutter.core
