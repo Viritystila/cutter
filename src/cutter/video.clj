@@ -15,8 +15,6 @@
     [org.bytedeco.javacpp Pointer]
     [org.bytedeco.javacpp BytePointer]
     [org.bytedeco.javacpp v4l2]
-    ;[org.bytedeco.javacpp Loader]
-    ;[org.viritystila opencvMatConvert]
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
@@ -116,7 +114,7 @@
    (mapv (fn [x] (stop-video (clojure.string/join (rest (str x) )) ) ) (vec (keys (:videos @cutter.cutter/the-window-state)))))
 ;
 
-(defn- set-video-property [filename property val]
+(defn set-video-property [filename property val]
   (let [device-id                 filename
         videos                    (:videos @cutter.cutter/the-window-state)
         video-key                 (keyword filename)
@@ -203,7 +201,7 @@
                     ;                       (.put buffer_i)
                     ;                     (.flip))
                                         ]
-                    (swap! image-buffer conj image )))) ;[buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]
+                    (swap! image-buffer conj image ))))
                 (swap! cutter.cutter/the-window-state assoc :texture-arrays
                   (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
                                                                             :destination bufdestination

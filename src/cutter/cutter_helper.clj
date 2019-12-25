@@ -18,8 +18,6 @@
     [org.bytedeco.javacpp Pointer]
     [org.bytedeco.javacpp BytePointer]
     [org.bytedeco.javacpp v4l2]
-    ;[org.bytedeco.javacpp Loader]
-    ;[org.viritystila opencvMatConvert]
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
@@ -36,31 +34,6 @@
            (org.lwjgl BufferUtils)
            (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
-
-;;Data array
-; (defn set-dataArray1-item [idx val]
-;     (let [  oa  (:dataArray1  @the-window-state)
-;             na  (assoc oa idx val)]
-;         (swap! the-window-state assoc :dataArray1 na)
-;         nil))
-;
-; (defn set-dataArray2-item [idx val]
-;     (let [  oa  (:dataArray2  @the-window-state)
-;             na  (assoc oa idx val)]
-;         (swap! the-window-state assoc :dataArray2 na)
-;         nil))
-;
-; (defn set-dataArray3-item [idx val]
-;     (let [  oa  (:dataArray3  @the-window-state)
-;             na  (assoc oa idx val)]
-;         (swap! the-window-state assoc :dataArray3 na)
-;         nil))
-;
-; (defn set-dataArray4-item [idx val]
-;     (let [  oa  (:dataArray4  @the-window-state)
-;             na  (assoc oa idx val)]
-;         (swap! the-window-state assoc :dataArray4 na)
-;         nil))
 
 ;v4l2
 (defn openV4L2output [device]

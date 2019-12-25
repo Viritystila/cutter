@@ -19,8 +19,6 @@
     [org.bytedeco.javacpp Pointer]
     [org.bytedeco.javacpp BytePointer]
     [org.bytedeco.javacpp v4l2]
-    ;[org.bytedeco.javacpp Loader]
-    ;[org.viritystila opencvMatConvert]
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
@@ -245,18 +243,6 @@
             :vs-shader-str-atom    vs-shader-str-atom
             :shader-str            shader-str
             :vs-shader-str         vs-shader-str)
-        ;   (println "Begin shader slurping.")
-        ; (let [shader-str (if (nil? shader-filename)
-        ;                @shader-str-atom
-        ;                (slurp-fs locals (:shader-filename @locals)))
-        ;      vs-shader-str (if (nil? vs-shader-filename)
-        ;                @vs-shader-str-atom
-        ;               (slurp-fs locals (:vs-shader-filename @locals)))])
-        ; (let [vs-shader-str (if (nil? vs-shader-filename)
-        ;        @vs-shader-str-atom
-        ;        (slurp-fs locals (:vs-shader-filename @locals)))])
-        ;(println shader-str-atom)
-        ;(println vs-shader-str-atom)
         (if true-fullscreen? (fullscreen-display!) (undecorate-display!) )
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE    org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
         (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
@@ -440,8 +426,6 @@
                 i-channels
                 i-dataArrays
                 i-floats
-                ;dataArray1 dataArray2 dataArray3 dataArray4
-                ;dataArray1Buffer dataArray2Buffer dataArray3Buffer dataArray4Buffer
                 save-frames
                 old-pgm-id old-fs-id
                 ]} @locals

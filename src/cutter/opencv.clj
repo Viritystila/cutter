@@ -14,8 +14,6 @@
     [org.bytedeco.javacpp Pointer]
     [org.bytedeco.javacpp BytePointer]
     [org.bytedeco.javacpp v4l2]
-    ;[org.bytedeco.javacpp Loader]
-    ;[org.viritystila opencvMatConvert]
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
@@ -34,7 +32,6 @@
            (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
 ;
 
-;(def matConverter (new org.viritystila.opencvMatConvert))
 
 (defn oc-mat-to-bytebuffer [mat] (let [height      (.height mat)
                                        width       (.width mat)

@@ -16,8 +16,6 @@
     [org.bytedeco.javacpp Pointer]
     [org.bytedeco.javacpp BytePointer]
     [org.bytedeco.javacpp v4l2]
-    ;[org.bytedeco.javacpp Loader]
-    ;[org.viritystila opencvMatConvert]
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]

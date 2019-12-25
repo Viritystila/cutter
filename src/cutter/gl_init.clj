@@ -15,8 +15,6 @@
     [org.bytedeco.javacpp Pointer]
     [org.bytedeco.javacpp BytePointer]
     [org.bytedeco.javacpp v4l2]
-    ;[org.bytedeco.javacpp Loader]
-    ;[org.viritystila opencvMatConvert]
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
@@ -47,9 +45,8 @@
         buffer              (oc-mat-to-bytebuffer mat)
         channels            (.channels mat)
         queue               queue
-        mlt                 mlt ;(clojure.core.async/mult queue)
-        out1                out1 ;(clojure.core.async/chan (async/buffer 1))
-        ;_                   (clojure.core.async/tap mlt out1)
+        mlt                 mlt
+        out1                out1
         texture             { :tex-id           tex-id,
                               :target           target,
                               :height           height,
@@ -63,7 +60,6 @@
                               :queue            queue
                               :mult             mlt
                               :out1             out1}]
-        ;(async/offer! queue (matInfo mat))
         (GL11/glBindTexture target tex-id)
         (GL11/glTexParameteri target GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
         (GL11/glTexParameteri target GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
@@ -85,6 +81,5 @@
                                                   tex-id
                                                   queue
                                                   out1
-                                                  mlt))
-        ]
+                                                  mlt))]
                i-textures))
