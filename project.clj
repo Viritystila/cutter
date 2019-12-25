@@ -45,10 +45,10 @@
                   [org.viritystila/opencv "4.2.0-linux"]
                   [org.viritystila/opencv-native "4.2.0-linux"]
                   [org.bytedeco/javacpp "1.4.5-SNAPSHOT"]
-                   [org.viritystila/v4l2 "1.0-linux"]
+                  [org.viritystila/v4l2 "1.0-linux"]
                   [org.viritystila/v4l2-platform "1.0-linux"]
                   [org.viritystila/v4l2-native "1.0-linux"]
-                  ]
+                  [overtone/osc-clj "0.7.1"]]
   (lwjgl-deps-with-natives)))
 
 

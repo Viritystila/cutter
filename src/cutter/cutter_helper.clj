@@ -115,7 +115,7 @@
     (let [{:keys [i-floats]} @cutter.cutter/the-window-state
           haskey        (contains? i-floats floatKey)
           floatVal      (floatKey i-floats)
-          val           (if haskey (:data floatVal) nil) ]
+          val           (if haskey (:data floatVal) nil)]
         val))
 
 
