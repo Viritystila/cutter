@@ -1,7 +1,7 @@
 (ns #^{:author "Mikael Reponen"
        :doc " Core library derived from Shadertone (Roger Allen https://github.com/overtone/shadertone)."}
   cutter.cutter
-  (:use [overtone.core])
+  (:use [overtone.osc])
   (:require [clojure.tools.namespace.repl :refer [refresh]]
             [watchtower.core :as watcher]
             [clojure.java.io :as io]
@@ -48,8 +48,8 @@
     :window                     nil
     :keyCallback                nil
     ;OSC
-    ;:osc-server                (overtone.osc/osc-server 44100 "cutter-osc")
-    ;:osc-client                (overtone.osc/osc-client "localhost" 44100)
+    :osc-server                (overtone.osc/osc-server 44100 "cutter-osc")
+    :osc-client                (overtone.osc/osc-client "localhost" 44100)
     :osc-port                   44100
     ;; geom ids
     :vbo-id                     0
@@ -612,7 +612,7 @@
     (when (and (cutter.general/sane-user-inputs shader-filename shader-str)
                (cutter.general/sane-user-inputs vs-shader-filename vs-shader-str))
       ;; stop the current shader
-      (stop)
+      (stop-cutter)
       ;; start the watchers
       (if is-filename
         (when-not (nil? shader-filename)
