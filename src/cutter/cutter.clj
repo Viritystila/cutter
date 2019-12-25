@@ -9,6 +9,7 @@
             [cutter.general :refer :all]
             [cutter.gl_init :refer :all]
             [cutter.opencv :refer :all]
+            [clojure.java.io :as io]
             [clojure.core.async
              :as async
              :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
@@ -653,26 +654,32 @@
 
 (defn start
   "Start a new shader display."
-  [shader-filename-or-str-atom vs-shader-filename-or-str-atom
-   &{:keys [width height title display-sync-hz fullscreen? window-idx]
-     :or {width             1280
+  [&{:keys [fs vs width height title display-sync-hz fullscreen? window-idx]
+     :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
+          vs                (.getPath (clojure.java.io/resource "default.vs"))
+          width             1280
           height            800
           title             "cutter"
           display-sync-hz   30
           fullscreen?       false
           window-idx        0}}]
-   (let [mode  [width height]]
+   (let [mode  [width height]
+        shader-filename-or-str-atom fs
+        vs-shader-filename-or-str-atom vs]
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom  title false display-sync-hz window-idx)))
 
 (defn start-fullscreen
   "Start a new shader display."
-  [shader-filename-or-str-atom vs-shader-filename-or-str-atom
-   &{:keys [width height title display-sync-hz  fullscreen? window-idx]
-     :or {width           1280
+  [&{:keys [fs vs width height title display-sync-hz  fullscreen? window-idx]
+     :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
+          vs                (.getPath (clojure.java.io/resource "default.vs"))
+          width           1280
           height          800
           title           "cutter"
           display-sync-hz 30
           fullscreen?     true
           window-idx      0}}]
-   (let [mode  [width height]]
+   (let [mode  [width height]
+        shader-filename-or-str-atom fs
+        vs-shader-filename-or-str-atom vs]
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
