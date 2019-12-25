@@ -246,7 +246,6 @@
 ;; watch the shader directory & reload the current shader if it changes.
 (defn- if-match-reload-shader
   [shader-filename files]
-  ;(println "fs" shader-filename files)
   (if @watcher-just-started
     ;; allow first, automatic call to pass unnoticed
     (reset! watcher-just-started false)
@@ -258,7 +257,6 @@
 ;
 (defn- vs-if-match-reload-shader
   [shader-filename files]
-  ;(println "vs" shader-filename files)
   (if @vs-watcher-just-started
     ;; allow first, automatic call to pass unnoticed
     (reset! vs-watcher-just-started false)
@@ -286,7 +284,6 @@
   "create a watch for glsl shaders in the directory and return the global
   future atom for that watcher"
   [shader-filename]
-  ;(println "vs" shader-filename)
   (let [dir (.getParent (File. ^String shader-filename))
         _   (println "dir" dir)]
     (reset! vs-watcher-just-started true)
