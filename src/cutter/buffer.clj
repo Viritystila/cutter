@@ -166,5 +166,40 @@
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
 
+(defn replace-in-buffer [filename buffername index]
+  (let [  texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+          buffername-key           (keyword buffername)
+          texture-array            (buffername-key texture-arrays)
+          running?                 false
+          idx                      buffername
+          maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+          bufdestination           (:destination texture-array)
+          bufdestination           (if (nil? bufdestination) :iChannelNull bufdestination)
+          running?                 (:running texture-array)
+          running?                 (if (nil? running?) false running?)
+          mode                     (:mode texture-array)
+          mode                     (if (nil? mode) :fw mode)
+          fps                      (:fps texture-array)
+          fps                      (if (nil? fps) 30 fps)
+          start-index              (:start-index texture-array)
+          start-index              (if (nil? start-index) 0 start-index)
+          stop-index               (:stop-index texture-array)
+          stop-index               (if (nil? stop-index) maximum-buffer-length stop-index)
+          source                   (:source texture-array)
+          source                   (if (nil? source) [] source)
+          mat                      (cutter.opencv/oc_load_image filename)
+          source                   (if (< index (count source)) (assoc source index (matInfo mat)) source )
+          newcount                 (count source)]
+      (swap! cutter.cutter/the-window-state assoc :texture-arrays
+        (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+                                                                  :destination bufdestination
+                                                                  :source source
+                                                                  :running running?
+                                                                  :fps fps
+                                                                  :index 0
+                                                                  :mode :fw
+                                                                  :start-index start-index
+                                                                  :stop-index (min maximum-buffer-length newcount))))) nil)
+
 (defn stop-all-buffers []
   (mapv (fn [x] (stop-buffer (str (name x)))) (vec (keys (:texture-arrays @cutter.cutter/the-window-state)))))

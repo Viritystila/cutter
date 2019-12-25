@@ -137,7 +137,7 @@
         (swap! cutter.cutter/the-window-state assoc :videos videos) nil))
 
 
-(defn- get-video-property [filename property val]
+(defn get-video-property [filename property val]
   (let [device-id                 filename
         videos                    (:videos @cutter.cutter/the-window-state)
         video-key                 (keyword filename)
