@@ -255,6 +255,7 @@
        files   (mapv str files)]
        (doseq [x files ](add-to-buffer x buffername)   )))
 
+
 (defn rfs []  (stop)
               (cutter.buffer/stop-all-buffers)
               (cutter.camera/stop-all-cameras)

@@ -14,6 +14,7 @@
    [cutter.buffer :refer :all]
    [cutter.video :refer :all]
    [cutter.cutter_helper :refer :all]
+   [cutter.interface :refer :all]
    [clojure.tools.namespace.repl :refer [refresh]]))
 
   (defn main

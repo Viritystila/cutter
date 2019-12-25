@@ -92,10 +92,10 @@
 
 
 (defn stop-all-cameras []
-   (mapv (fn [x]  (stop-camera (clojure.string/join (rest (str x) )) ) ) (vec (keys (:cameras @cutter.cutter/the-window-state)))))
+   (mapv (fn [x]  (stop-camera (clojure.string/join (rest (str x)))))(vec (keys (:cameras @cutter.cutter/the-window-state)))))
 
 
-(defn rec [device buffername]
+(defn rec-camera [device buffername]
   (let [device-id                (read-string (str (last device)))
         cameras                  (:cameras @the-window-state)
         camera-key               (keyword device)
