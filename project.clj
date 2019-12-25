@@ -1,4 +1,3 @@
-
   ;LWJGL3 from from https://github.com/rogerallen/hello_lwjgl/blob/master/project.clj
   (require 'leiningen.core.eval)
 
@@ -43,10 +42,10 @@
                   [org.clojure/core.async "0.4.490"]
                   [while-let "0.2.0"]
                   [watchtower          "0.1.1"]
-                  [org.bytedeco.javacpp-presets/opencv-platform "4.0.1-1.4.5-SNAPSHOT"]
-                  [org.bytedeco.javacpp-presets/opencv "4.0.1-1.4.5-SNAPSHOT" :classifier "linux-x86_64"]
-                  ;[org.viritystila/opencv "4.0.1-linux"]
-                  ;[org.viritystila/opencv-native "4.0.1-linux"]
+                  ;[org.bytedeco.javacpp-presets/opencv-platform "4.0.1-1.4.5-SNAPSHOT"]
+                  ;[org.bytedeco.javacpp-presets/opencv "4.0.1-1.4.5-SNAPSHOT" :classifier "linux-x86_64"]
+                  [org.viritystila/opencv "4.2.0-linux"]
+                  [org.viritystila/opencv-native "4.2.0-linux"]
                   [org.bytedeco/javacpp "1.4.5-SNAPSHOT"]
                   [org.viritystila/v4l2 "Latest-1.4.5-SNAPSHOT"]
                   [org.viritystila/v4l2-platform "Latest-1.4.5-SNAPSHOT"]]
@@ -58,10 +57,10 @@
     :url "https://github.com/Viritystila/cutter"
     :license {:name "MIT License"
              :url "https://github.com/Viritystila/cutter/blob/master/LICENSE"}
-    ;:injections [ (clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)]
+    :injections [ (clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)]
     :repositories [["Viritystila" "https://github.com/Viritystila/OpenCV/raw/master"]]
     :dependencies ~all-dependencies
-    :java-source-paths ["src/java"]
+    ;:java-source-paths ["src/java"]
     :main ^{:skip-aot true} cutter.core
     :jvm-opts ^:replace ~(jvm-opts)
     )

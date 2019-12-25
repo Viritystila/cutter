@@ -15,8 +15,8 @@
     [org.bytedeco.javacpp Pointer]
     [org.bytedeco.javacpp BytePointer]
     [org.bytedeco.javacpp v4l2]
-    [org.bytedeco.javacpp Loader]
-    [org.viritystila opencvMatConvert]
+    ;[org.bytedeco.javacpp Loader]
+    ;[org.viritystila opencvMatConvert]
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
@@ -197,12 +197,13 @@
                     h                   (nth image 4)
                     w                   (nth image 5)
                     ib                  (nth image 6)
-                    buffer_i            (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
-                    buffer-capacity     (.capacity buffer_i)
-                    buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity)
-                                          (.put buffer_i)
-                                        (.flip))]
-                    (swap! image-buffer conj [buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]))))
+                    buffer_i            (nth image 0);(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                    ; buffer-capacity     (.capacity buffer_i)
+                    ; buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity)
+                    ;                       (.put buffer_i)
+                    ;                     (.flip))
+                                        ]
+                    (swap! image-buffer conj image )))) ;[buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]
                 (swap! cutter.cutter/the-window-state assoc :texture-arrays
                   (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
                                                                             :destination bufdestination

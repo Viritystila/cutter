@@ -19,8 +19,8 @@
     [org.bytedeco.javacpp Pointer]
     [org.bytedeco.javacpp BytePointer]
     [org.bytedeco.javacpp v4l2]
-    [org.bytedeco.javacpp Loader]
-    [org.viritystila opencvMatConvert]
+    ;[org.bytedeco.javacpp Loader]
+    ;[org.viritystila opencvMatConvert]
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
@@ -174,7 +174,7 @@
 (defonce the-window-state (atom default-state-values))
 
 ;Opencv Java related
-(org.bytedeco.javacpp.Loader/load org.bytedeco.javacpp.opencv_java)
+;(org.bytedeco.javacpp.Loader/load org.bytedeco.javacpp.opencv_java)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
@@ -414,7 +414,7 @@
                   (instance? java.lang.Long (nth image 0)) (set-opengl-texture
                                                                     locals
                                                                     texture-key
-                                                                    (.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                                                                    0 ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
                                                                     (nth image 5)
                                                                     (nth image 4)
                                                                     (nth image 6)
