@@ -8,7 +8,7 @@
             [cutter.opencv :refer :all]
             [clojure.core.async
              :as async
-             :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
+             :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
                      alts! alts!! timeout]]
             clojure.string)
   (:import
@@ -18,7 +18,7 @@
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
-    [org.opencv.utils.Converters]
+    ;[org.opencv.utils.Converters]
     [org.opencv.imgproc Imgproc]
     [org.opencv.imgcodecs Imgcodecs]
            (java.awt.image BufferedImage DataBuffer DataBufferByte WritableRaster)

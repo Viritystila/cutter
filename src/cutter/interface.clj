@@ -5,14 +5,14 @@
             [clojure.java.io :as io]
             [while-let.core :as while-let]
             [cutter.cutter :refer :all]
-            [cutter.buffer :refer :all]
+            [cutter.texturearray :refer :all]
             [cutter.camera :refer :all]
             [cutter.video :refer :all]
             [cutter.opencv :refer :all]
             [cutter.cutter_helper :refer :all]
             [clojure.core.async
              :as async
-             :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
+             :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
                      alts! alts!! timeout]]
             clojure.string))
 ;;;;;;;;;;;;
@@ -78,47 +78,47 @@
 ;;;;;;;;;;;;
 (defn buf [buffername destination-texture-key]
   "Play buffer, example (buf \"a \" :iChannel1)"
-  (cutter.buffer/set-buffer-texture buffername destination-texture-key))
+  (cutter.texturearray/set-buffer-texture buffername destination-texture-key))
 
 (defn c-buf [src tgt]
   "Copy buffer, example (c-buf \"a \" \"b \")"
-  (cutter.buffer/copy-buffer src tgt))
+  (cutter.texturearray/copy-buffer src tgt))
 
 (defn stop-buf [buffername]
   "Stop buffer, example (stop-buf \"a \" )"
-  (cutter.buffer/stop-buffer buffername))
+  (cutter.texturearray/stop-buffer buffername))
 
 (defn fps-buf [buffername val]
   "Set buffer frame rate, example (fps-buf \"a \"  30)"
-  (cutter.buffer/set-buffer-fps buffername val))
+  (cutter.texturearray/set-buffer-fps buffername val))
 
 (defn f-buf [buffername]
   "Play buffer forwards, example (f-buf \"a \" )"
-  (cutter.buffer/set-buffer-fw buffername))
+  (cutter.texturearray/set-buffer-fw buffername))
 
 (defn b-buf [buffername]
   "Play buffer backwards, example (b-buf \"a \" )"
-  (cutter.buffer/set-buffer-bw buffername))
+  (cutter.texturearray/set-buffer-bw buffername))
 
 (defn p-buf [buffername]
   "Pause buffer continous playback, example (p-buf \"a \" )"
-  (cutter.buffer/set-buffer-paused buffername))
+  (cutter.texturearray/set-buffer-paused buffername))
 
 (defn i-buf [buffername val]
   "Set buffer index, example (i-buf \"a \" 25)"
-  (cutter.buffer/set-buffer-index buffername val))
+  (cutter.texturearray/set-buffer-index buffername val))
 
 (defn l-buf [buffername start-index stop-index]
   "Set buffer playback limits, example (l-buf \"a \" 25 50)"
-  (cutter.buffer/set-buffer-limits buffername start-index stop-index))
+  (cutter.texturearray/set-buffer-limits buffername start-index stop-index))
 
 (defn r-buf [filename buffername index]
   "Replace iteam at index in buffer, example (r-buf \"./test1.png \" 25)"
-  (cutter.buffer/replace-in-buffer filename buffername index))
+  (cutter.texturearray/replace-in-buffer filename buffername index))
 
 (defn sab []
   "Stop all buffers"
-  (cutter.buffer/stop-all-buffers []))
+  (cutter.texturearray/stop-all-buffers []))
 
 ;;;;;;;;;;
 ;;;V4l2;;;

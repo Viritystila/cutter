@@ -5,13 +5,13 @@
             [clojure.java.io :as io]
             [while-let.core :as while-let]
             [cutter.cutter :refer :all]
-            [cutter.buffer :refer :all]
+            [cutter.texturearray :refer :all]
             [cutter.camera :refer :all]
             [cutter.video :refer :all]
             [cutter.opencv :refer :all]
             [clojure.core.async
              :as async
-             :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
+             :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
                      alts! alts!! timeout]]
             clojure.string)
   (:import
@@ -21,7 +21,7 @@
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
-    [org.opencv.utils.Converters]
+    ;[org.opencv.utils.Converters]
     [org.opencv.imgproc Imgproc]
     [org.opencv.imgcodecs Imgcodecs]
            (java.awt.image BufferedImage DataBuffer DataBufferByte WritableRaster)
@@ -210,8 +210,8 @@
        (doseq [x files ](add-to-buffer x buffername)   )))
 
 
-(defn rfs []  (stop)
-              (cutter.buffer/stop-all-buffers)
+(defn rfs []  (stop-cutter)
+              (cutter.texturearray/stop-all-buffers)
               (cutter.camera/stop-all-cameras)
               (cutter.video/stop-all-videos)
               (refresh))

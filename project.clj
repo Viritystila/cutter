@@ -37,7 +37,7 @@
 
   (def all-dependencies
     (into ;; Add your non-LWJGL dependencies here
-     '[           [org.clojure/clojure "1.9.0"]
+     '[           [org.clojure/clojure "1.10.1"]
                   [org.clojure/tools.namespace "0.2.11"]
                   [org.clojure/core.async "0.4.490"]
                   [while-let "0.2.0"]
@@ -48,7 +48,8 @@
                   [org.viritystila/v4l2 "1.0-linux"]
                   [org.viritystila/v4l2-platform "1.0-linux"]
                   [org.viritystila/v4l2-native "1.0-linux"]
-                  [overtone/osc-clj "0.7.1"]]
+                  ;[overtone/osc-clj "0.7.1"]
+                  [overtone "0.10.6"]]
   (lwjgl-deps-with-natives)))
 
 

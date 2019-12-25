@@ -1,6 +1,7 @@
 (ns #^{:author "Mikael Reponen"
        :doc " Core library derived from Shadertone (Roger Allen https://github.com/overtone/shadertone)."}
   cutter.cutter
+  (:use [overtone.core])
   (:require [clojure.tools.namespace.repl :refer [refresh]]
             [watchtower.core :as watcher]
             [clojure.java.io :as io]
@@ -12,7 +13,7 @@
             [clojure.java.io :as io]
             [clojure.core.async
              :as async
-             :refer [>! <! >!! <!! go go-loop chan buffer sliding-buffer dropping-buffer close! thread
+             :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
                      alts! alts!! timeout]]
             clojure.string)
   (:import
@@ -22,19 +23,19 @@
     [org.opencv.core Mat Core CvType]
     [org.opencv.videoio Videoio VideoCapture]
     [org.opencv.video Video]
-    [org.opencv.utils.Converters]
+    ;[org.opencv.utils.Converters]
     [org.opencv.imgproc Imgproc]
     [org.opencv.imgcodecs Imgcodecs]
-           (java.awt.image BufferedImage DataBuffer DataBufferByte WritableRaster)
-           (java.io File FileInputStream)
-           (java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
-           (java.util Calendar)
-           (java.util List)
-           (javax.imageio ImageIO)
-           (java.lang.reflect Field)
-           (org.lwjgl BufferUtils)
-           (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
-           (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)))
+    [java.awt.image BufferedImage DataBuffer DataBufferByte WritableRaster]
+           [java.io File FileInputStream]
+           [java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder]
+           [java.util Calendar]
+           [java.util List]
+           [javax.imageio ImageIO]
+           [java.lang.reflect Field]
+           [org.lwjgl BufferUtils]
+           [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
+           [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40]))
 
 (defonce default-state-values
   { :active                     :no  ;; :yes/:stopping/:no
@@ -46,6 +47,10 @@
     :last-time                  0
     :window                     nil
     :keyCallback                nil
+    ;OSC
+    ;:osc-server                (overtone.osc/osc-server 44100 "cutter-osc")
+    ;:osc-client                (overtone.osc/osc-client "localhost" 44100)
+    :osc-port                   44100
     ;; geom ids
     :vbo-id                     0
     :vertices-count             0
@@ -168,11 +173,9 @@
                       :iChannel16     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}
                     }
      })
-;; GLOBAL STATE ATOMS iPreviousFrame
+;; GLOBAL STATE ATOMS
 (defonce the-window-state (atom default-state-values))
 
-;Opencv Java related
-;(org.bytedeco.javacpp.Loader/load org.bytedeco.javacpp.opencv_java)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
@@ -566,7 +569,7 @@
   []
   (= :no (:active @the-window-state)))
 
-(defn stop
+(defn stop-cutter
   "Stop and destroy the shader display. Blocks until completed."
   []
   (when (active?)
@@ -621,6 +624,7 @@
           (swap! vs-watcher-future
                  (fn [x] (vs-start-watcher vs-shader-filename))))
         (add-watch vs-shader-str-atom :vs-shader-str-watch vs-watch-shader-str-atom))
+
       ;; set a global window-state instead of creating a new one
       ;(reset! the-window-state default-state-values)
       ;; start the requested shader
