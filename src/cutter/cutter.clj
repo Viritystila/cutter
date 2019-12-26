@@ -672,7 +672,8 @@
         vs-shader-filename-or-str-atom vs]
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
 
-
+;;Cutter startup osc handlers
+;(overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/start" "fs" "./test/test.fs" "vs" "./test/test.vs"  "width" 1920 "height" 1080 )
 (defn set-start-handler []
  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start"
  (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
@@ -685,15 +686,22 @@
                 height          (if (nil? (:height input)) 800 (:height input))
                 title           (if (nil? (:title input))  "cutter" (:title input))
                 display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
+                fullscreen?     false]
+                (println input)
+           (start :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz))))
+ (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start-fullscreen"
+ (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
+                inputkeys       (map keyword (keys inputmap))
+                inputvals       (vals inputmap)
+                input           (zipmap inputkeys inputvals)
+                fs              (if (nil? (:fs input))     (.getPath (clojure.java.io/resource "default.fs")) (:fs input))
+                vs              (if (nil? (:vs input))     (.getPath (clojure.java.io/resource "default.vs")) (:vs input))
+                width           (if (nil? (:width input))  1280 (:width input))
+                height          (if (nil? (:height input)) 800 (:height input))
+                title           (if (nil? (:title input))  "cutter" (:title input))
+                display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
+                window-idx      (if (nil? (:window-idx input)) 0 (:window-idx input))
                 fullscreen?     true]
-          ;(println (type input))
-          ;(println (type (first inputkeys)))
-          ;(println (count input))
-          ;(println  (first  input))
-          ;(println (:fs input))
-          ;(println (keys input))
-          ;(println  (vals input))
-          ;(println  (:fs input))
-          ;(println {:fs (:fs inputmap) :vs (:vs inputmap) :width (:width inputmap) :height (:height inputmap)} )
-           (start :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz)
-          input  ))))
+           (start-fullscreen :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz :window-idx window-idx))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop"
+  (fn [msg] (stop-cutter))))
