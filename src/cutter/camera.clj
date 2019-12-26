@@ -46,6 +46,7 @@
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
         mat                       (oc-new-mat)
         fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
+
         camera                    {:idx device-id,
                                    :destination destination-texture-key,
                                    :source capture,
@@ -56,7 +57,11 @@
         (swap! cutter.cutter/the-window-state assoc :cameras cameras)
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
           (do
-            (.open capture device-id)
+
+            (.open capture device-id org.opencv.videoio.Videoio/CAP_V4L2)
+            (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
+            ;(println (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS))
+            ;(println (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G )))
             (swap! cutter.cutter/the-window-state assoc :cameras
               (assoc cameras
                 camera-key (assoc camera :running true,
@@ -169,7 +174,9 @@
         source                   (:source camera)]
         (if (= property :fps)
           (swap! cutter.cutter/the-window-state assoc :cameras (assoc cameras camera-key (assoc camera :fps val)))
-          (cutter.opencv/oc-set-capture-property property source val)))
+          (.set source org.opencv.videoio.Videoio/CAP_PROP_FPS  val)
+          ;(cutter.opencv/oc-set-capture-property property source val)
+          ))
           nil)
 
 (defn get-camera-property [device property]

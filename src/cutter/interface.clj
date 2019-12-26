@@ -37,7 +37,7 @@
 
 (defn get-cam [device property]
   "Get camera property, example (cam \"0\" :fps)"
-  (cutter.camera/set-camera-property device property))
+  (cutter.camera/get-camera-property device property))
 
 (defn sac []
   "Stop all cameras"
