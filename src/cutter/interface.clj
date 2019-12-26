@@ -1,20 +1,21 @@
 (ns #^{:author "Mikael Reponen"}
   cutter.interface
-  (:require [clojure.tools.namespace.repl :refer [refresh]]
-            [watchtower.core :as watcher]
-            [clojure.java.io :as io]
-            [while-let.core :as while-let]
+  (:require ;[clojure.tools.namespace.repl :refer [refresh]]
+            ;[watchtower.core :as watcher]
+            ;[clojure.java.io :as io]
+            ;[while-let.core :as while-let]
             [cutter.cutter :refer :all]
             [cutter.texturearray :refer :all]
             [cutter.camera :refer :all]
             [cutter.video :refer :all]
             [cutter.opencv :refer :all]
             [cutter.cutter_helper :refer :all]
-            [clojure.core.async
-             :as async
-             :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
-                     alts! alts!! timeout]]
-            clojure.string))
+            ; [clojure.core.async
+            ;  :as async
+            ;  :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
+            ;          alts! alts!! timeout]]
+            ;clojure.string
+            ))
 ;;;;;;;;;;;;
 ;;;Camera;;;
 ;;;;;;;;;;;;
@@ -71,7 +72,7 @@
 
 (defn sav []
   "Stop all videos"
-  (cutter.video/stop-all-videos []))
+  (cutter.video/stop-all-videos))
 
 ;;;;;;;;;;;;
 ;;;Buffer;;;

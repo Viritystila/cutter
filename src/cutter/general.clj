@@ -1,12 +1,13 @@
 (ns #^{:author "Mikael Reponen"
        :doc " General functions"}
   cutter.general
-  (:require [clojure.tools.namespace.repl :refer [refresh]]
-            [watchtower.core :as watcher]
+  (:require ;[clojure.tools.namespace.repl :refer [refresh]]
+            ;[watchtower.core :as watcher]
             [clojure.java.io :as io]
-            clojure.string)
-  (:import (java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
-           (org.lwjgl BufferUtils)
+            ;clojure.string
+            )
+  (:import ;(java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
+           ;(org.lwjgl BufferUtils)
            (java.io File FileInputStream)))
 
 ;
