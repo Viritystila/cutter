@@ -1,5 +1,6 @@
 (ns #^{:author "Mikael Reponen"}
   cutter.interface
+  (:use [overtone.osc])
   (:require ;[clojure.tools.namespace.repl :refer [refresh]]
             ;[watchtower.core :as watcher]
             ;[clojure.java.io :as io]
@@ -184,7 +185,19 @@
 ;;;OSC;;;
 ;;;;;;;;;
 
-(defn set-interface-handlers [])
+(defn set-interface-handlers []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/cam"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)
+                    device                  (nth input 0)
+                    destination-texture-key (keyword (nth input 1))]
+                    (println device)
+                    (println destination-texture-key)
+                    (cam device destination-texture-key)) ))
+
+
+  )
 
 
 

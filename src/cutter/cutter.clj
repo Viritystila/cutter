@@ -687,7 +687,7 @@
                 title           (if (nil? (:title input))  "cutter" (:title input))
                 display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
                 fullscreen?     false]
-                (println input)
+                ;(println input)
            (start :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz))))
  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start-fullscreen"
  (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
