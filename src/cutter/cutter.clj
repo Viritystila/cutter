@@ -674,7 +674,7 @@
 
 ;;Cutter startup osc handlers
 ;(overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/start" "fs" "./test/test.fs" "vs" "./test/test.vs"  "width" 1920 "height" 1080 )
-(defn set-start-handler []
+(defn set-start-stop-handler []
  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start"
  (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
                 inputkeys       (map keyword (keys inputmap))
@@ -705,3 +705,5 @@
            (start-fullscreen :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz :window-idx window-idx))))
   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop"
   (fn [msg] (stop-cutter))))
+
+(set-start-stop-handler)

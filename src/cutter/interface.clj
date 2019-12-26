@@ -179,3 +179,14 @@
 
 (defn list-texture-arrays [] (println (:texture-arrays @the-window-state)))
 (defn list-texture-array-keys [] (keys (:texture-arrays @the-window-state)))
+
+;;;;;;;;;
+;;;OSC;;;
+;;;;;;;;;
+
+(defn set-interface-handlers [])
+
+
+
+
+(set-interface-handlers)
