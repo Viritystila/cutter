@@ -210,6 +210,17 @@
                     ic                      (count input)]
                     (if (and (= 3 ic) (string? (nth input 0)) (string? (nth input 1)))
                       (set-cam (nth input 0) (keyword (nth input 1)) (nth input 2))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/get-cam"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/cam-prop" (nth input 0) (nth input 1) (get-cam (nth input 0) (keyword (nth input 1))))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/sac"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                      (sac))))
 
 
                       )
