@@ -90,8 +90,9 @@
           isarray       (vector? val)
           data          (if haskey (:datavec dataArray) nil )
           data          (if haskey
-                            (if isarray  (apply assoc dataArray (interleave (range (count val)) val ))
+                            (if isarray  (apply assoc data (interleave (range idx (+ idx (count val ))) val ))
                               (assoc data idx val)) nil)
+                              _ (println data)
           dataArray     (if haskey (assoc dataArray :datavec data))
           i-dataArrays  (if haskey (assoc i-dataArrays arraykey dataArray))]
         (swap! the-window-state assoc :i-dataArrays i-dataArrays)
