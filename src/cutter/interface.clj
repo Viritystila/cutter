@@ -185,21 +185,36 @@
 ;;;OSC;;;
 ;;;;;;;;;
 
-(defn set-interface-handlers []
+(defn set-camera-interface-handlers []
   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/cam"
     (fn [msg] (let [input                   (:args msg)
                     input                   (vec input)
-                    ic                      (count input)
-                    device                  (nth input 0)
-                    destination-texture-key (keyword (nth input 1))]
-                    (println device)
-                    (println destination-texture-key)
-                    (cam device destination-texture-key)) ))
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (cam (nth input 0) (keyword (nth input 1)))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop-cam"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (stop-cam (nth input 0))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/rec"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (rec (nth input 0) (nth input 1) )))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-cam"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 3 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (set-cam (nth input 0) (keyword (nth input 1)) (nth input 2))))))
 
 
-  )
+                      )
 
 
 
 
-(set-interface-handlers)
+(set-camera-interface-handlers)
