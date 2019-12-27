@@ -5,6 +5,7 @@
             ;[watchtower.core :as watcher]
             ;[clojure.java.io :as io]
             ;[while-let.core :as while-let]
+            [clojure.edn :as edn]
             [cutter.cutter :refer :all]
             [cutter.texturearray :refer :all]
             [cutter.camera :refer :all]
@@ -115,12 +116,12 @@
   (cutter.texturearray/set-buffer-limits buffername start-index stop-index))
 
 (defn r-buf [filename buffername index]
-  "Replace iteam at index in buffer, example (r-buf \"./test1.png \" 25)"
+  "Replace iteam at index in buffer, example (r-buf \"./test1.png \" \"a\" 25)"
   (cutter.texturearray/replace-in-buffer filename buffername index))
 
 (defn sab []
   "Stop all buffers"
-  (cutter.texturearray/stop-all-buffers []))
+  (cutter.texturearray/stop-all-buffers))
 
 ;;;;;;;;;;
 ;;;V4l2;;;
@@ -268,9 +269,100 @@
                     ic                      (count input)]
                     (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
                       (buf (nth input 0) (keyword (nth input 1)))))))
-
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/c-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (c-buf (nth input 0) (nth input 1) )))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (stop-buf (nth input 0))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/fps-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (int? (nth input 1)))
+                      (fps-buf (nth input 0) (int (nth input 1)))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/f-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (f-buf (nth input 0))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/b-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (b-buf (nth input 0))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/p-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (p-buf (nth input 0))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/i-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (int? (nth input 1)))
+                      (i-buf (nth input 0) (int (nth input 1)))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/l-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 3 ic) (string? (nth input 0)) (int? (nth input 1))(int? (nth input 2)))
+                      (l-buf (nth input 0) (int (nth input 1))(int (nth input 2)))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/r-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 3 ic) (string? (nth input 0)) (string? (nth input 1))(int? (nth input 2)))
+                      (r-buf (nth input 0) (str (nth input 1))(int (nth input 2)))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/sab"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                      (sab))))
 )
 
+(defn set-v4l2-interface-handlers []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/v4l2"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (v4l2 (nth input 0) )))))
+)
+
+(defn set-arrays-interface-handlers []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-arr"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)
+                    data                    (clojure.edn/read-string (nth input 2))]
+                    ;(println data)
+                    (if (and (= 3 ic) (string? (nth input 0)) )
+                      (set-arr (keyword (nth input 0))  (nth input 1) data )))))
+)
+
+(defn set-float-interface-handlers []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-float"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    ;(println data)
+                    (if (and (= 2 ic) (string? (nth input 0)) )
+                      (set-float (keyword (nth input 0))  (nth input 1) )))))
+)
 
 (set-camera-interface-handlers)
 (set-video-interface-handlers)
+(set-buffer-interface-handlers)
+(set-v4l2-interface-handlers)
+(set-arrays-interface-handlers)
+(set-float-interface-handlers)
