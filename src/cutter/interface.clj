@@ -221,11 +221,19 @@
                     input                   (vec input)
                     ic                      (count input)]
                       (sac))))
+)
 
-
-                      )
+(defn set-video-interface-handlers []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/vid"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (vid (nth input 0) (keyword (nth input 1)))))))
+  )
 
 
 
 
 (set-camera-interface-handlers)
+(set-video-interface-handlers)
