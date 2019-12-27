@@ -230,6 +230,35 @@
                     ic                      (count input)]
                     (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
                       (vid (nth input 0) (keyword (nth input 1)))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop-vid"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (stop-vid (nth input 0))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/cut"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 3 ic) (string? (nth input 0)) (string? (nth input 1))  )
+                      (cut (nth input 0) (nth input 1) (int (nth input 2)) )))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-vid"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 3 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (set-vid (nth input 0) (keyword (nth input 1)) (nth input 2))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/get-vid"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/vid-prop" (nth input 0) (nth input 1) (get-vid (nth input 0) (keyword (nth input 1))))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/sav"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                      (sav))))
   )
 
 
