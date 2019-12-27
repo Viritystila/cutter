@@ -81,13 +81,17 @@
               (Thread/sleep 100)))))
 
 ;Data array
+;(apply assoc [1 2 3 4] (interleave (range (count [1 2 3 4])) [11 32 13 14] ))
 (defn set-dataArray-item [arraykey idx val]
     (let [{:keys [maxDataArrays maxDataArraysLength i-dataArrays]} @cutter.cutter/the-window-state
           haskey        (contains? i-dataArrays arraykey)
           idx           (mod idx (- maxDataArraysLength 1))
           dataArray     (arraykey i-dataArrays)
+          isarray       (vector? val)
           data          (if haskey (:datavec dataArray) nil )
-          data          (if haskey (assoc data idx val) nil)
+          data          (if haskey
+                            (if isarray  (apply assoc dataArray (interleave (range (count val)) val ))
+                              (assoc data idx val)) nil)
           dataArray     (if haskey (assoc dataArray :datavec data))
           i-dataArrays  (if haskey (assoc i-dataArrays arraykey dataArray))]
         (swap! the-window-state assoc :i-dataArrays i-dataArrays)

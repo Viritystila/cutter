@@ -259,9 +259,17 @@
                     input                   (vec input)
                     ic                      (count input)]
                       (sav))))
-  )
+)
 
+(defn set-buffer-interface-handlers []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 2 ic) (string? (nth input 0)) (string? (nth input 1)))
+                      (buf (nth input 0) (keyword (nth input 1)))))))
 
+)
 
 
 (set-camera-interface-handlers)

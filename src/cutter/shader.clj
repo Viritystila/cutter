@@ -113,7 +113,7 @@
 
 (defn init-shaders
   [locals]
-  (print "init-shaders, print shade-strs")
+  (print "init-shaders")
   ;(println (:vs-shader-str @locals))
   ;(println (:shader-str @locals))
   (println )
