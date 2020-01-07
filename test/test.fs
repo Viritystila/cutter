@@ -2,8 +2,8 @@
 //in vec2 texCoordV;
 out vec4 op;
 void main(void) {
-  vec2 uv = (gl_FragCoord.xy / iResolution.xy);
-  uv.y=1.0-uv.y;
+  vec2 uv = (gl_FragCoord.xy/ iResolution.xy);
+  uv.y=1.0-uv.y*1;
   //uv.x = uv.x + 5.5*sin(0.015*iGlobalTime);
   //uv.y = uv.y + 2.5*cos(0.03*iGlobalTime);
   float data1_0=iDataArray1[0];

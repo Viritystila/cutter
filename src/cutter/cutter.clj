@@ -78,7 +78,7 @@
     :maximum-videos             1000
     :maximum-buffer-length      250  ;Frames
     :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
-    :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false}, :fps 30, index: 0, :mode :fw, :start-index 0, :stop-index 0}
+    :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0}
     :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0}}
     :videos                     {} ;{:filename, {:idx :destination :source "capture" :running false, :fps 30}}
     ;Data Arrays

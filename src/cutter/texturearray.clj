@@ -161,6 +161,8 @@
           running?                 (if (nil? running?) false running?)
           mode                     (:mode texture-array)
           mode                     (if (nil? mode) :fw mode)
+          loop?                    (:loop texture-array)
+          loop?                    (if (nil? loop?) true loop?)
           fps                      (:fps texture-array)
           fps                      (if (nil? fps) 30 fps)
           start-index              (:start-index texture-array)
@@ -179,7 +181,8 @@
                                                                   :running running?
                                                                   :fps fps
                                                                   :index 0
-                                                                  :mode :fw
+                                                                  :mode mode
+                                                                  :loop  loop?
                                                                   :start-index start-index
                                                                   :stop-index (min maximum-buffer-length newcount))))) nil)
 
