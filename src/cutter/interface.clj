@@ -104,8 +104,12 @@
   (cutter.texturearray/set-buffer-bw buffername))
 
 (defn p-buf [buffername]
-  "Pause buffer continous playback, example (p-buf \"a \" )"
+  "Pause buffer playback, example (p-buf \"a \" )"
   (cutter.texturearray/set-buffer-paused buffername))
+
+(defn loop-buf [buffername loop?]
+  "Pause buffer playback, example (p-buf \"a \" )"
+  (cutter.texturearray/set-buffer-loop buffername loop?))
 
 (defn i-buf [buffername val]
   "Set buffer index, example (i-buf \"a \" 25)"
@@ -305,6 +309,18 @@
                     ic                      (count input)]
                     (if (and (= 1 ic) (string? (nth input 0)) )
                       (p-buf (nth input 0))))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/loop-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (loop-buf (nth input 0) true)))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/unloop-buf"
+    (fn [msg] (let [input                   (:args msg)
+                    input                   (vec input)
+                    ic                      (count input)]
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                      (loop-buf (nth input 0) false)))))
   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/i-buf"
     (fn [msg] (let [input                   (:args msg)
                     input                   (vec input)
