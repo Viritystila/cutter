@@ -14,12 +14,6 @@
             )
             )
 
-(defn looptest [index maxindex loop? f]
-  (if loop?
-    (swap! index f)
-    (if (< @index maxindex)
-      (swap! index f))))
-
 ;Texture buffers
 (defn set-buffer-texture [buffername destination-texture-key]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
@@ -47,11 +41,12 @@
                                     :mode mode,
                                     :loop loop?
                                     :fps fps,
+                                    :index (mod (max 0 start-index) (min stop-index buffer-length))
                                     :start-index start-index,
                                     :stop-index stop-index)
         texture-arrays            (assoc texture-arrays  buffername-key texture-array)
         startTime                 (atom (System/nanoTime))
-        index                     (atom 0)]
+        internal-index             (atom 0)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays)
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
         (do
@@ -64,6 +59,7 @@
                   (let [mode                (:mode (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         loop?               (:loop (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         fps                 (:fps (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
+                        index               (:index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         buffer-destination  (:destination (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         queue               (:queue ( buffer-destination (:i-textures @cutter.cutter/the-window-state)))
                         start-index         (:start-index (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
@@ -71,23 +67,26 @@
                         source              (:source (buffername-key (:texture-arrays @cutter.cutter/the-window-state)))
                         buffer-length       (count source)
                         texture-arrays      (:texture-arrays @cutter.cutter/the-window-state)
-                        ;_                   (println @index start-index stop-index buffer-length)
-                        cur-index           (mod (max @index start-index) (min stop-index buffer-length))]
+                        cur-index           (case mode
+                                                  :fw (if loop? (mod (max index start-index) (min stop-index buffer-length))
+                                                        (min index (min stop-index (- buffer-length 1))))
+                                                  :bw (if loop? (mod (min index stop-index) (min stop-index buffer-length))
+                                                    (max index (min start-index buffer-length))))]
                       (reset! startTime (System/nanoTime))
-                      (reset! index cur-index)
+                      (reset! internal-index cur-index)
                       (async/offer!
                         queue
-                        (nth source  cur-index))
+                        (nth source  (mod cur-index (min stop-index buffer-length)) ))
                       (case mode
-                        :fw  (looptest index buffer-length loop? inc)                 ;(do (swap! index inc))
-                        :bw  (looptest index buffer-length loop? dec)                 ;(do (swap! index dec))
-                        :idx (reset! index (:index (buffername-key texture-arrays))))
+                        :fw  (do (swap! internal-index inc))
+                        :bw  (do (swap! internal-index dec))
+                        :idx (reset! index (:index (buffername-key texture-arrays)) ))
                       (swap! cutter.cutter/the-window-state assoc :texture-arrays
                         (assoc texture-arrays buffername-key (assoc texture-array
                                                               :fps fps
                                                               :mode mode
                                                               :loop loop?
-                                                              :index cur-index
+                                                              :index @internal-index
                                                               :destination buffer-destination
                                                               :queue queue
                                                               :start-index start-index
@@ -157,7 +156,9 @@
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
         texture-array            (buffername-key texture-arrays)
-        texture-array            (assoc texture-array :index (int val))
+        source                   (:source texture-array)
+        buffer-length            (count source)
+        texture-array            (assoc texture-array :index (mod (int val) buffer-length))
         texture-arrays           (assoc texture-arrays buffername-key texture-array)]
         (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays) nil))
 
