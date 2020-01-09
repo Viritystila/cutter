@@ -4,6 +4,7 @@
   (:require [clojure.tools.namespace.repl :refer [refresh]]
             [watchtower.core :as watcher]
             [clojure.java.io :as io]
+            [cutter.general :refer :all]
             clojure.string)
   (:import (java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
            (org.lwjgl BufferUtils)
@@ -273,11 +274,11 @@
         _   (println "dir" dir)]
     (reset! watcher-just-started true)
     (watcher/watcher
-     [dir]
-     (watcher/rate 100)
-     (watcher/file-filter watcher/ignore-dotfiles)
-     (watcher/file-filter (watcher/extensions :fs))
-     (watcher/on-change (partial if-match-reload-shader shader-filename)))))
+      [dir]
+      (watcher/rate 100)
+      (watcher/file-filter watcher/ignore-dotfiles)
+      (watcher/file-filter (watcher/extensions :fs))
+      (watcher/on-change (partial if-match-reload-shader shader-filename)))))
 
 ;
 (defn vs-start-watcher
@@ -288,11 +289,11 @@
         _   (println "dir" dir)]
     (reset! vs-watcher-just-started true)
     (watcher/watcher
-     [dir]
-     (watcher/rate 100)
-     (watcher/file-filter watcher/ignore-dotfiles)
-     (watcher/file-filter (watcher/extensions :vs))
-     (watcher/on-change (partial vs-if-match-reload-shader shader-filename)))))
+      [dir]
+      (watcher/rate 100)
+      (watcher/file-filter watcher/ignore-dotfiles)
+      (watcher/file-filter (watcher/extensions :vs))
+      (watcher/on-change (partial vs-if-match-reload-shader shader-filename)))))
 
 
 (defn stop-watcher

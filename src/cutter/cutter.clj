@@ -706,4 +706,42 @@
   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop"
   (fn [msg] (stop-cutter))))
 
+
+(defn set-shader [shader-filename-or-str-atom shader-type]
+  (let [watcher-key                   (case shader-type :fs :shader-str-watch :vs :vs-shader-str-watch)
+        watcher-future-atom           (case shader-type :fs watcher-future :vs vs-watcher-future)
+        shader-str-atom-key           (case shader-type :fs :shader-str-atom :vs :vs-shader-str-atom)
+        shader-str-key                (case shader-type :fs :shader-str :vs :vs-shader-str)
+        watch-shader-str-atom-fn      (case shader-type :fs watch-shader-str-atom :vs vs-watch-shader-str-atom)
+        start-watcher-fn              (case shader-type :fs start-watcher :vs vs-start-watcher)
+        shader-filename-key           (case shader-type :fs :shader-filename :vs :vs-shader-filename)
+        is-filename                   (not (instance? clojure.lang.Atom shader-filename-or-str-atom))
+        shader-filename               (if is-filename shader-filename-or-str-atom)
+        shader-filename               (if (and is-filename (not (nil? shader-filename)))
+                                        (.getPath (File. ^String shader-filename)))
+        shader-str-atom               (if-not is-filename shader-filename-or-str-atom (atom nil))
+        shader-str                    (if-not is-filename @shader-str-atom)
+        shader-str                    (if (nil? shader-filename)
+                                        @shader-str-atom
+                                          (slurp-fs cutter.cutter/the-window-state shader-filename))]
+    (if is-filename
+      (do
+        (remove-watch (shader-str-atom-key @cutter.cutter/the-window-state) watcher-key)
+        (stop-watcher @watcher-future-atom)
+        (if is-filename
+          (when-not (nil? shader-filename)
+            (swap! watcher-future-atom
+            (fn [x] (start-watcher-fn shader-filename))))
+        (add-watch shader-str-atom watcher-key watch-shader-str-atom-fn))
+        (swap! cutter.cutter/the-window-state
+          assoc
+          shader-filename-key       shader-filename
+          shader-str-atom-key       shader-str-atom
+          shader-str-key            shader-str)
+        (println "Shader"shader-filename-or-str-atom "set")
+  )
+      (println "Setting shader failed")))
+  nil)
+
+
 (set-start-stop-handler)

@@ -11,7 +11,6 @@ float y = radius * sin(angle);
 vec2 xy = vec2(x,y);
 
 //out vec2 texCoordV;
-
 void main(void) {
   //texCoordV=xy;
   gl_Position = vertexPosition_modelspace;//* vec4(xy*0.1, 0.1, 1);
