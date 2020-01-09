@@ -71,6 +71,10 @@
     :vs-id                      0
     :fs-id                      0
     :pgm-id                     0
+    :temp-fs-string             ""
+    :temp-vs-string             ""
+    :temp-fs-filename           ""
+    :temp-vs-filename           ""
     ;; Textures, cameras and video paths
     :maximum-textures           1000
     :maximum-texture-folders    1000
@@ -672,41 +676,7 @@
         vs-shader-filename-or-str-atom vs]
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
 
-;;Cutter startup osc handlers
-;(overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/start" "fs" "./test/test.fs" "vs" "./test/test.vs"  "width" 1920 "height" 1080 )
-(defn set-start-stop-handler []
- (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start"
- (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
-                inputkeys       (map keyword (keys inputmap))
-                inputvals       (vals inputmap)
-                input           (zipmap inputkeys inputvals)
-                fs              (if (nil? (:fs input))     (.getPath (clojure.java.io/resource "default.fs")) (:fs input))
-                vs              (if (nil? (:vs input))     (.getPath (clojure.java.io/resource "default.vs")) (:vs input))
-                width           (if (nil? (:width input))  1280 (:width input))
-                height          (if (nil? (:height input)) 800 (:height input))
-                title           (if (nil? (:title input))  "cutter" (:title input))
-                display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
-                fullscreen?     false]
-                ;(println input)
-           (start :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz))))
- (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start-fullscreen"
- (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
-                inputkeys       (map keyword (keys inputmap))
-                inputvals       (vals inputmap)
-                input           (zipmap inputkeys inputvals)
-                fs              (if (nil? (:fs input))     (.getPath (clojure.java.io/resource "default.fs")) (:fs input))
-                vs              (if (nil? (:vs input))     (.getPath (clojure.java.io/resource "default.vs")) (:vs input))
-                width           (if (nil? (:width input))  1280 (:width input))
-                height          (if (nil? (:height input)) 800 (:height input))
-                title           (if (nil? (:title input))  "cutter" (:title input))
-                display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
-                window-idx      (if (nil? (:window-idx input)) 0 (:window-idx input))
-                fullscreen?     true]
-           (start-fullscreen :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz :window-idx window-idx))))
-  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop"
-  (fn [msg] (stop-cutter))))
-
-
+;;Shader input handling
 (defn set-shader [shader-filename-or-str-atom shader-type]
   (let [watcher-key                   (case shader-type :fs :shader-str-watch :vs :vs-shader-str-watch)
         watcher-future-atom           (case shader-type :fs watcher-future :vs vs-watcher-future)
@@ -740,10 +710,75 @@
             (fn [x] (start-watcher-fn shader-filename))))
         (add-watch shader-str-atom watcher-key watch-shader-str-atom-fn))
         (reset! reload-shader-atom true)
-        (println "Shader" shader-filename-or-str-atom "set")
-  )
-      (println "Setting shader failed")))
-  nil)
+        (println "Shader" shader-filename-or-str-atom "set"))
+      (println "Setting shader failed"))) nil)
 
+
+
+;;Cutter startup osc handlers
+;(overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/start" "fs" "./test/test.fs" "vs" "./test/test.vs"  "width" 1920 "height" 1080 )
+(defn set-start-stop-handler []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start"
+    (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
+                inputkeys       (map keyword (keys inputmap))
+                inputvals       (vals inputmap)
+                input           (zipmap inputkeys inputvals)
+                fs              (if (nil? (:fs input))     (.getPath (clojure.java.io/resource "default.fs")) (:fs input))
+                vs              (if (nil? (:vs input))     (.getPath (clojure.java.io/resource "default.vs")) (:vs input))
+                width           (if (nil? (:width input))  1280 (:width input))
+                height          (if (nil? (:height input)) 800 (:height input))
+                title           (if (nil? (:title input))  "cutter" (:title input))
+                display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
+                fullscreen?     false]
+           (start :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start-fullscreen"
+    (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
+                inputkeys       (map keyword (keys inputmap))
+                inputvals       (vals inputmap)
+                input           (zipmap inputkeys inputvals)
+                fs              (if (nil? (:fs input))     (.getPath (clojure.java.io/resource "default.fs")) (:fs input))
+                vs              (if (nil? (:vs input))     (.getPath (clojure.java.io/resource "default.vs")) (:vs input))
+                width           (if (nil? (:width input))  1280 (:width input))
+                height          (if (nil? (:height input)) 800 (:height input))
+                title           (if (nil? (:title input))  "cutter" (:title input))
+                display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
+                window-idx      (if (nil? (:window-idx input)) 0 (:window-idx input))
+                fullscreen?     true]
+           (start-fullscreen :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz :window-idx window-idx))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop"
+    (fn [msg] (stop-cutter))))
+
+(defn reset-temp-string [shader-type]
+  (let [temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string)]
+  (swap! cutter.cutter/the-window-state
+    assoc
+    temp-shader-key "")) nil)
+
+(defn apped-to-temp-string [input shader-type]
+  (let [temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string)
+        temp-shader-string  (temp-shader-key @cutter.cutter/the-window-state)]
+  (swap! cutter.cutter/the-window-state
+    assoc
+    temp-shader-key (str temp-shader-string input))) nil)
+
+(defn create-temp-shader-file [filename shader-type]
+  (let [fd                        (java.io.File/createTempFile filename nil)
+        temp-shader-filename-key  (case shader-type :fs :temp-fs-filename :vs :temp-vs-filename)]
+    (swap! cutter.cutter/the-window-state
+      assoc
+      temp-shader-filename-key (.getPath fd))
+    (.deleteOnExit fd)
+    fd))
+
+(defn write-file [path input]
+  (with-open [w (clojure.java.io/writer  path :append true)]
+    (.write w input )))
+
+(defn save-temp-shader [filename shader-type]
+  (let [fd                  (create-temp-shader-file filename shader-type)
+        path                (.getPath fd)
+        temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string)
+        temp-shader-string  (temp-shader-key @cutter.cutter/the-window-state)]
+    (write-file path temp-shader-string)))
 
 (set-start-stop-handler)

@@ -266,6 +266,7 @@
       (when (= (.getPath ^File f) shader-filename)
         ;; set a flag that the opengl thread will use
         (reset! vs-reload-shader true)))))
+
 (defn start-watcher
   "create a watch for glsl shaders in the directory and return the global
   future atom for that watcher"
