@@ -20,7 +20,6 @@ void main(void) {
   vec4 iChannel6_texture=texture2D(iChannel6, uv);
   vec4 iChannel7_texture=texture2D(iChannel7, uv);
 
-
   vec4 ich[6];
   ich[0]=iChannel1_texture;
   ich[1]=iChannel2_texture;
