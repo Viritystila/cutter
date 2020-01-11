@@ -217,10 +217,10 @@
        (doseq [x files ](add-to-buffer x buffername)   )))
 
 
-(defn rfs []  (stop-cutter)
+(defn rfs []  (overtone.osc/osc-close (:osc-server @cutter.cutter/the-window-state))
+              (overtone.osc/osc-close (:osc-client @cutter.cutter/the-window-state))
+              (stop-cutter)
               (cutter.texturearray/stop-all-buffers)
               (cutter.camera/stop-all-cameras)
               (cutter.video/stop-all-videos)
-              (overtone.osc/osc-close (:osc-server @cutter.cutter/the-window-state))
-              (overtone.osc/osc-close (:osc-client @cutter.cutter/the-window-state))
               (refresh))
