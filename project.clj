@@ -58,7 +58,7 @@
     :url "https://github.com/Viritystila/cutter"
     :license {:name "MIT License"
              :url "https://github.com/Viritystila/cutter/blob/master/LICENSE"}
-    :injections [ (clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)]
+    :injections [(clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)]
     :repositories [["Viritystila OpenCV" "https://github.com/Viritystila/OpenCV/raw/master"]
                   ["Viritystila v4l2javacpp" "https://github.com/Viritystila/v4l2javacpp/raw/master"]]
     :dependencies ~all-dependencies

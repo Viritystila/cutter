@@ -16,7 +16,7 @@
     ;[org.bytedeco.javacpp Pointer]
     ;[org.bytedeco.javacpp BytePointer]
     ;[org.bytedeco.javacpp v4l2]
-    ;[org.opencv.core Mat Core CvType]
+    [org.opencv.core Mat Core CvType]
     ;[org.opencv.videoio Videoio VideoCapture]
     ;[org.opencv.video Video]
     ;[org.opencv.imgproc Imgproc]

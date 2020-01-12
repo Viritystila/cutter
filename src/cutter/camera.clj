@@ -163,8 +163,8 @@
                                                                             :index 0
                                                                             :mode mode
                                                                             :loop loop?
-                                                                            :start-index start-index
-                                                                            :stop-index stop-index)))
+                                                                            :start-index 1
+                                                                            :stop-index maximum-buffer-length )))
               (clojure.core.async/untap mlt out)
               (println "Finished recording from:" device "to" buffername)
               (if start-camera? (stop-camera (str device-id))))))
