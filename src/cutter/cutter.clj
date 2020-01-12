@@ -724,7 +724,7 @@
         temp-shader-string  (temp-shader-key @cutter.cutter/the-window-state)]
   (swap! cutter.cutter/the-window-state
     assoc
-    temp-shader-key (str temp-shader-string input))) nil)
+    temp-shader-key (str temp-shader-string input "\n"))) nil)
 
 (defn create-temp-shader-file [filename shader-type]
   (let [fd                        (java.io.File/createTempFile filename nil)
@@ -737,14 +737,18 @@
 
 (defn write-file [path input]
   (with-open [w (clojure.java.io/writer  path :append true)]
-    (.write w input )))
+    (doseq [x input]
+    (.write w x )
+    (.newLine w))))
 
 (defn save-temp-shader [filename shader-type]
   (let [fd                  (create-temp-shader-file filename shader-type)
         path                (.getPath fd)
         temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string)
-        temp-shader-string  (temp-shader-key @cutter.cutter/the-window-state)]
-    (write-file path temp-shader-string)))
+        temp-shader-string  (temp-shader-key @cutter.cutter/the-window-state)
+        split-string        (clojure.string/split-lines temp-shader-string)]
+    (println split-string)
+    (write-file path split-string )))
 
 (def tmp-str "out vec4 op;
 void main(void) {
@@ -796,10 +800,10 @@ void main(void) {
         split-input       (flatten split-input)
         ]
     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/reset-fs-string")
-    (doseq [x split-input] (if (not (nil? x)) (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/append-to-fs-string" x )
-      (Thread/sleep 200)))
+    (doseq [x split-input]  (if (not (nil? x)) (do (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/append-to-fs-string" x )
+      (Thread/sleep 10))))
     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/save-fs-file" )
-    (Thread/sleep 200)
+    (Thread/sleep 10)
     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/set-fs-shader" )
     ))
 
