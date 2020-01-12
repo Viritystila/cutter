@@ -747,7 +747,7 @@
         temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string)
         temp-shader-string  (temp-shader-key @cutter.cutter/the-window-state)
         split-string        (clojure.string/split-lines temp-shader-string)]
-    (println split-string)
+    ;(println split-string)
     (write-file path split-string )))
 
 (def tmp-str "out vec4 op;

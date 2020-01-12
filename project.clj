@@ -14,7 +14,7 @@
          (vec (set (concat (get JVM-OPTS :common)
                            (get JVM-OPTS os))))))
   (def LWJGL_NS "org.lwjgl")
-  (def LWJGL_VERSION "3.2.1")
+  (def LWJGL_VERSION "3.2.3")
   ;; Edit this to add/remove packages.
   (def LWJGL_MODULES ["lwjgl"
                       "lwjgl-glfw"
