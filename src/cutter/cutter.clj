@@ -275,11 +275,11 @@
 (defn- init-buffers
   [locals]
   (let [vertices  (float-array  [-1.0 -1.0 0.0 1.0
-                                 1.0 -1.0 0.0 1.0
-                                -1.0  1.0 0.0 1.0
-                                -1.0  1.0 0.0 1.0
-                                 1.0 -1.0 0.0 1.0
-                                 1.0  1.0 0.0 1.0])
+                                  1.0 -1.0 0.0 1.0
+                                 -1.0  1.0 0.0 1.0
+                                 -1.0  1.0 0.0 1.0
+                                  1.0 -1.0 0.0 1.0
+                                  1.0  1.0 0.0 1.0])
           vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
                                 (.put vertices)
                                 (.flip))
@@ -425,7 +425,7 @@
 (defn- draw [locals]
   (let [{:keys [width height
                 start-time last-time i-global-time-loc
-                i-date-loc
+                ;i-date-loc
                 pgm-id vbo-id vao-id vboi-id vboc-id
                 vertices-count
                 i-uniforms
@@ -464,7 +464,7 @@
      (GL30/glBindVertexArray vao-id)
      (GL20/glEnableVertexAttribArray 0)
 
-     ;Inidices
+     ;Vertices
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
      (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0);
      ;Colors
@@ -853,12 +853,14 @@ void main(void) {
     (fn [msg] (let [input                   (:args msg)
                     input                   (vec input)
                     ic                      (count input)]
-                      (set-shader (:temp-fs-filename @cutter.cutter/the-window-state) :fs))))
+                    (if (nil? (:args msg))  (set-shader (:temp-fs-filename @cutter.cutter/the-window-state) :fs)
+                      (set-shader (nth input 0) :fs)))))
   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-vs-shader"
     (fn [msg] (let [input                   (:args msg)
                     input                   (vec input)
                     ic                      (count input)]
-                      (set-shader (:temp-vs-filename @cutter.cutter/the-window-state) :vs))))
+                      (if (nil? (:args msg)) (set-shader (:temp-vs-filename @cutter.cutter/the-window-state) :vs)
+                        (set-shader (nth input 0) :vs)))))
   )
 
 ;;Cutter startup osc handlers
