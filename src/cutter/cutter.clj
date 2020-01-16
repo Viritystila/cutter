@@ -273,10 +273,10 @@
 
 ;
 
-
+;Code snippet from https://blog.jayway.com/2010/02/15/opengl-es-tutorial-for-android-part-v/
 (defn plane [width height widthSegments, heightSegments]
-  (let [vertices          (atom (vec (make-array Float/TYPE (* (+ 1 widthSegments) (+ 1 heightSegments) 1  ))))
-        indices           (atom (vec (make-array Float/TYPE (* (+ 1 widthSegments) (+ 1 heightSegments) 1 ))))
+  (let [vertices          (atom (vec (make-array Float/TYPE (* (+ 0 widthSegments) (+ 0 heightSegments) 0  ))))
+        indices           (atom (vec (make-array Float/TYPE (* (+ 0 widthSegments) (+ 0 heightSegments) 0 ))))
         ;_ (println @vertices)
         xOffset           (/ width -2)
         yOffset           (/ height -2)
@@ -314,13 +314,13 @@
 
 (defn- init-buffers
   [locals]
-  (let [vertices_and_indices    (plane 1 1 20 20)
-        vertices  (float-array  [-1.0 -1.0 0.0 1.0
-                                  1.0 -1.0 0.0 1.0
-                                 -1.0  1.0 0.0 1.0
-                                 -1.0  1.0 0.0 1.0
-                                  1.0 -1.0 0.0 1.0
-                                  1.0  1.0 0.0 1.0])
+  (let [vertices_and_indices    (plane 0.5 0.5 20 20)
+        ; vertices  (float-array  [-1.0 -1.0 0.0 1.0
+        ;                           1.0 -1.0 0.0 1.0
+        ;                          -1.0  1.0 0.0 1.0
+        ;                          -1.0  1.0 0.0 1.0
+        ;                           1.0 -1.0 0.0 1.0
+        ;                           1.0  1.0 0.0 1.0])
         vertices   (float-array (nth vertices_and_indices 0))
         vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
                                 (.put vertices)
@@ -333,9 +333,9 @@
         colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
             (.put colors)
             (.flip))
-        indices (byte-array
-          (map byte
-            [0 1 2])) ;; otherwise it whines about longs
+        ; indices (byte-array
+        ;   (map byte
+        ;     [0 1 2])) ;; otherwise it whines about longs
         indices (byte-array (nth vertices_and_indices 1))
         indices-count (count indices)
         indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
