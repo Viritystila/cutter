@@ -271,65 +271,108 @@
         (org.lwjgl.glfw.GLFW/glfwSwapInterval         2)
         (org.lwjgl.glfw.GLFW/glfwShowWindow           (:window @locals))))
 
+;
+
+
+(defn plane [width height widthSegments, heightSegments]
+  (let [vertices          (atom (vec (make-array Float/TYPE (* (+ 1 widthSegments) (+ 1 heightSegments) 1  ))))
+        indices           (atom (vec (make-array Float/TYPE (* (+ 1 widthSegments) (+ 1 heightSegments) 1 ))))
+        ;_ (println @vertices)
+        xOffset           (/ width -2)
+        yOffset           (/ height -2)
+        xWidth            (/ width widthSegments)
+        yHeight           (/ height heightSegments)
+        currentVertex     (atom (int 0))
+        currentIndex      (atom (int 0))
+        w                 (+ 1 widthSegments)
+        op                (doseq [y (range heightSegments) x (range widthSegments)]
+                            (let [v0       (+ xOffset (* x xWidth))
+                                  v1       (+ yOffset (* y yHeight))
+                                  v2       0
+                                  _        (swap! vertices assoc (int @currentVertex) v0)
+                                  _        (swap! vertices assoc (int (+ 1 @currentVertex)) v1)
+                                  _        (swap! vertices assoc (int (+ 2 @currentVertex)) v2)
+                                  _        (swap! currentVertex (fn [n] (+ n 3)))
+                                  n        (+ (* y (+ 1 widthSegments)) x)
+                                  _        (if (and (< y heightSegments) (< x heightSegments))
+                                             (do
+                                               (let [i0   n
+                                                     i1   (+ n 1)
+                                                     i2   (+ n w)
+                                                     i3   (+ n 1)
+                                                     i4   (+ n 1 w)
+                                                     i5   (- (+ n 1 w) 1)
+                                                     _    (swap! indices assoc (int (+ 0 @currentIndex)) i0)
+                                                     _    (swap! indices assoc (int (+ 1 @currentIndex)) i1)
+                                                     _    (swap! indices assoc (int (+ 2 @currentIndex)) i2)
+                                                     _    (swap! indices assoc (int (+ 3 @currentIndex)) i3)
+                                                     _    (swap! indices assoc (int (+ 4 @currentIndex)) i4)
+                                                     _    (swap! indices assoc (int (+ 5 @currentIndex)) i5)
+                                                     _    (swap! currentIndex (fn [n] (+ n 6)))])))]))]
+    [(map float@vertices) @indices]))
+
 
 (defn- init-buffers
   [locals]
-  (let [vertices  (float-array  [-1.0 -1.0 0.0 1.0
+  (let [vertices_and_indices    (plane 1 1 20 20)
+        vertices  (float-array  [-1.0 -1.0 0.0 1.0
                                   1.0 -1.0 0.0 1.0
                                  -1.0  1.0 0.0 1.0
                                  -1.0  1.0 0.0 1.0
                                   1.0 -1.0 0.0 1.0
                                   1.0  1.0 0.0 1.0])
-          vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
+        vertices   (float-array (nth vertices_and_indices 0))
+        vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
                                 (.put vertices)
                                 (.flip))
-          vertices-count      (count vertices)
-          colors (float-array
-                [1.0 0.0 0.0
-                0.0 1.0 0.0
-                0.0 0.0 1.0])
-          colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
-              (.put colors)
-              (.flip))
-          indices (byte-array
-            (map byte
+        vertices-count      (count vertices)
+        colors (float-array
+              [1.0 0.0 0.0
+              0.0 1.0 0.0
+              0.0 0.0 1.0])
+        colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
+            (.put colors)
+            (.flip))
+        indices (byte-array
+          (map byte
             [0 1 2])) ;; otherwise it whines about longs
-          indices-count (count indices)
-          indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
-                        (.put indices)
-                        (.flip))
-          ;; create & bind Vertex Array Object
-          vao-id              (GL30/glGenVertexArrays)
-          _                   (GL30/glBindVertexArray vao-id)
-          ;; create & bind Vertex Buffer Object for vertices
-          vbo-id              (GL15/glGenBuffers)
-          _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
-          _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER
-                                          ^FloatBuffer vertices-buffer
-                                          GL15/GL_STATIC_DRAW)
-          _                   (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0)
-          _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-          ;; create & bind VBO for colors
-          vboc-id             (GL15/glGenBuffers)
-          _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
-          _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
-          _                   (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
-          _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-          ;; deselect the VAO
-          _                   (GL30/glBindVertexArray 0)
-          ;; create & bind VBO for indices
-          vboi-id             (GL15/glGenBuffers)
-          _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
-          _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
-          _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-          _ (except-gl-errors "@ end of init-buffers")]
-            (swap! locals
-              assoc
-              :vbo-id vbo-id
-              :vao-id vao-id
-              :vboc-id vboc-id
-              :vboi-id vboi-id
-              :vertices-count vertices-count)))
+        indices (byte-array (nth vertices_and_indices 1))
+        indices-count (count indices)
+        indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
+                      (.put indices)
+                      (.flip))
+        ;; create & bind Vertex Array Object
+        vao-id              (GL30/glGenVertexArrays)
+        _                   (GL30/glBindVertexArray vao-id)
+        ;; create & bind Vertex Buffer Object for vertices
+        vbo-id              (GL15/glGenBuffers)
+        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
+        _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER
+                                        ^FloatBuffer vertices-buffer
+                                        GL15/GL_STATIC_DRAW)
+        _                   (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0)
+        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+        ;; create & bind VBO for colors
+        vboc-id             (GL15/glGenBuffers)
+        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
+        _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
+        _                   (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
+        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+        ;; deselect the VAO
+        _                   (GL30/glBindVertexArray 0)
+        ;; create & bind VBO for indices
+        vboi-id             (GL15/glGenBuffers)
+        _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
+        _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
+        _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+        _ (except-gl-errors "@ end of init-buffers")]
+          (swap! locals
+            assoc
+            :vbo-id vbo-id
+            :vao-id vao-id
+            :vboc-id vboc-id
+            :vboi-id vboi-id
+            :vertices-count vertices-count)))
 
   (defn- init-gl
     [locals]
