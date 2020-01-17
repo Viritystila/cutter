@@ -275,8 +275,8 @@
 
 ;Code snippet from https://blog.jayway.com/2010/02/15/opengl-es-tutorial-for-android-part-v/
 (defn plane [width height widthSegments, heightSegments]
-  (let [vertices          (atom (vec (make-array Float/TYPE (* (+ 0 widthSegments) (+ 0 heightSegments) 0  ))))
-        indices           (atom (vec (make-array Float/TYPE (* (+ 0 widthSegments) (+ 0 heightSegments) 0 ))))
+  (let [vertices          (atom (vec (make-array Float/TYPE (* (+ 1 widthSegments) (+ 1 heightSegments) 0  ))))
+        indices           (atom (vec (make-array Float/TYPE (* (+ 1 widthSegments) (+ 1 heightSegments) 0 ))))
         ;_ (println @vertices)
         xOffset           (/ width -2)
         yOffset           (/ height -2)
@@ -285,7 +285,7 @@
         currentVertex     (atom (int 0))
         currentIndex      (atom (int 0))
         w                 (+ 1 widthSegments)
-        op                (doseq [y (range heightSegments) x (range widthSegments)]
+        op                (doseq [y (range (+ 1 heightSegments)) x (range (+ 1 widthSegments))]
                             (let [v0       (+ xOffset (* x xWidth))
                                   v1       (+ yOffset (* y yHeight))
                                   v2       0
