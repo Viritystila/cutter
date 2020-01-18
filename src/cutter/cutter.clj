@@ -105,24 +105,24 @@
     :i-uniforms                 {:iResolution   {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
                                 :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
                                 :iRandom        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 0},
-                                :iText          {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 1},
-                                :iChannel1      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 2},
-                                :iChannel2      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 3},
-                                :iChannel3      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 4},
-                                :iChannel4      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 5},
-                                :iChannel5      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 6},
-                                :iChannel6      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 7},
-                                :iChannel7      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 8},
-                                :iChannel8      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 9},
-                                :iChannel9      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 10},
-                                :iChannel10     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 11},
-                                :iChannel11     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 12},
-                                :iChannel12     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 13},
-                                :iChannel13     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 14},
-                                :iChannel14     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 15},
-                                :iChannel15     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 16},
-                                :iChannel16     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 17},
+                                :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 1},
+                                :iText          {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 2},
+                                :iChannel1      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 3},
+                                :iChannel2      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 4},
+                                :iChannel3      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 5},
+                                :iChannel4      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 6},
+                                :iChannel5      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 7},
+                                :iChannel6      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 8},
+                                :iChannel7      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 9},
+                                :iChannel8      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 10},
+                                :iChannel9      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 11},
+                                :iChannel10     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 12},
+                                :iChannel11     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 13},
+                                :iChannel12     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 14},
+                                :iChannel13     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 15},
+                                :iChannel14     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 16},
+                                :iChannel15     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 17},
+                                :iChannel16     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 18},
                                 :iDataArray1    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray2    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                 :iDataArray3    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
@@ -274,21 +274,23 @@
 ;
 
 ;Code snippet from https://blog.jayway.com/2010/02/15/opengl-es-tutorial-for-android-part-v/
-(defn plane [width height widthSegments, heightSegments]
-  (let [vertices          (atom (vec (make-array Float/TYPE (* (+ 1 widthSegments) (+ 1 heightSegments) 0  ))))
-        indices           (atom (vec (make-array Float/TYPE (* (+ 1 widthSegments) (+ 1 heightSegments) 0 ))))
+(defn plane [width height depth widthSegments heightSegments depthSegments]
+  (let [vertices          (atom (vec (make-array Float/TYPE (* (+ 0 widthSegments) (+ 0 heightSegments) 3  ))))
+        indices           (atom (vec (make-array Float/TYPE (* (+ 0 widthSegments) (+ 0 heightSegments) 6 ))))
         ;_ (println @vertices)
         xOffset           (/ width -2)
         yOffset           (/ height -2)
+        zOffset           (/ depth -2)
         xWidth            (/ width widthSegments)
         yHeight           (/ height heightSegments)
+        zDepth            (/ depth depthSegments)
         currentVertex     (atom (int 0))
         currentIndex      (atom (int 0))
         w                 (+ 1 widthSegments)
-        op                (doseq [y (range (+ 1 heightSegments)) x (range (+ 1 widthSegments))]
+        op                (doseq [ x (range (+ 1 widthSegments)) y (range (+ 1 heightSegments))]
                             (let [v0       (+ xOffset (* x xWidth))
                                   v1       (+ yOffset (* y yHeight))
-                                  v2       0
+                                  v2       0;//(+ zOffset (* z zDepth)) ; z (range (+ 1 depthSegments))
                                   _        (swap! vertices assoc (int @currentVertex) v0)
                                   _        (swap! vertices assoc (int (+ 1 @currentVertex)) v1)
                                   _        (swap! vertices assoc (int (+ 2 @currentVertex)) v2)
@@ -314,14 +316,43 @@
 
 (defn- init-buffers
   [locals]
-  (let [vertices_and_indices    (plane 0.5 0.5 20 20)
-        ; vertices  (float-array  [-1.0 -1.0 0.0 1.0
-        ;                           1.0 -1.0 0.0 1.0
-        ;                          -1.0  1.0 0.0 1.0
-        ;                          -1.0  1.0 0.0 1.0
-        ;                           1.0 -1.0 0.0 1.0
-        ;                           1.0  1.0 0.0 1.0])
-        vertices   (float-array (nth vertices_and_indices 0))
+  (let [vertices_and_indices    (plane 2 2 0 20 20 20)
+         vertices  (float-array  [-1.0 -1.0 0.0
+                                   1.0  1.0 -1.0
+                                   0.0  1.0 -1.0
+                                   1.0  0.0 1.0
+                                   -1.0 1.0 0.0
+                                   1.0  1.0 -1.0
+                                   0.0  1.0 1.0
+                                   1.0  0.0 1.0
+                                   -1.0 -1.0 0.0
+                                                             1.0  1.0 -1.0
+                                                             0.0  1.0 -1.0
+                                                             1.0  0.0 1.0
+                                                             -1.0 1.0 0.0
+                                                             1.0  1.0 -1.0
+                                                             0.0  1.0 1.0
+                                                             1.0  0.0 1.0
+                                                             -1.0 -1.0 0.0
+                                                                                       1.0  1.0 -1.0
+                                                                                       0.0  1.0 -1.0
+                                                                                       1.0  0.0 1.0
+                                                                                       -1.0 1.0 0.0
+                                                                                       1.0  1.0 -1.0
+                                                                                       0.0  1.0 1.0
+                                                                                       1.0  0.0 1.0
+                                                                                       -1.0 -1.0 0.0
+                                                                                                                 1.0  1.0 -1.0
+                                                                                                                 0.0  1.0 -1.0
+                                                                                                                 1.0  0.0 1.0
+                                                                                                                 -1.0 1.0 0.0
+                                                                                                                 1.0  1.0 -1.0
+                                                                                                                 0.0  1.0 1.0
+                                                                                                                 1.0  0.0 1.0
+                                  ])
+         ; vertices  (float-array  [-1.0 -1.0 0.0 -1.0 -1.0 0.0 -1.0 1.0 0.0 -1.0 1.0 0.0 1.0 -1.0 0.0 1.0 -1.0 0.0 1.0 1.0 0.0 1.0 1.0 0.0
+         ;                          ])
+        ;vertices   (float-array (nth vertices_and_indices 0))
         vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
                                 (.put vertices)
                                 (.flip))
@@ -333,9 +364,9 @@
         colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
             (.put colors)
             (.flip))
-        ; indices (byte-array
-        ;   (map byte
-        ;     [0 1 2])) ;; otherwise it whines about longs
+         ; indices (byte-array
+         ;  (map byte
+         ;      [0 1 2])) ;; otherwise it whines about longs
         indices (byte-array (nth vertices_and_indices 1))
         indices-count (count indices)
         indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
