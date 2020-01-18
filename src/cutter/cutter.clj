@@ -272,6 +272,16 @@
         (org.lwjgl.glfw.GLFW/glfwShowWindow           (:window @locals))))
 
 ;
+(defn load-obj [path]
+  (let [content           (slurp path)
+        split-content     (clojure.string/split-lines content)]
+    split-content)
+)
+
+(defn load-plane []
+  (let [path      (.getPath (clojure.java.io/resource "plane.obj"))
+        output    (cutter.cutter/load-obj path) ]
+    output))
 
 ;Code snippet from https://blog.jayway.com/2010/02/15/opengl-es-tutorial-for-android-part-v/
 (defn plane [width height depth widthSegments heightSegments depthSegments]
@@ -325,31 +335,7 @@
                                    1.0  1.0 -1.0
                                    0.0  1.0 1.0
                                    1.0  0.0 1.0
-                                   -1.0 -1.0 0.0
-                                                             1.0  1.0 -1.0
-                                                             0.0  1.0 -1.0
-                                                             1.0  0.0 1.0
-                                                             -1.0 1.0 0.0
-                                                             1.0  1.0 -1.0
-                                                             0.0  1.0 1.0
-                                                             1.0  0.0 1.0
-                                                             -1.0 -1.0 0.0
-                                                                                       1.0  1.0 -1.0
-                                                                                       0.0  1.0 -1.0
-                                                                                       1.0  0.0 1.0
-                                                                                       -1.0 1.0 0.0
-                                                                                       1.0  1.0 -1.0
-                                                                                       0.0  1.0 1.0
-                                                                                       1.0  0.0 1.0
-                                                                                       -1.0 -1.0 0.0
-                                                                                                                 1.0  1.0 -1.0
-                                                                                                                 0.0  1.0 -1.0
-                                                                                                                 1.0  0.0 1.0
-                                                                                                                 -1.0 1.0 0.0
-                                                                                                                 1.0  1.0 -1.0
-                                                                                                                 0.0  1.0 1.0
-                                                                                                                 1.0  0.0 1.0
-                                  ])
+                                   -1.0 -1.0 0.0 ])
          ; vertices  (float-array  [-1.0 -1.0 0.0 -1.0 -1.0 0.0 -1.0 1.0 0.0 -1.0 1.0 0.0 1.0 -1.0 0.0 1.0 -1.0 0.0 1.0 1.0 0.0 1.0 1.0 0.0
          ;                          ])
         ;vertices   (float-array (nth vertices_and_indices 0))
