@@ -315,7 +315,7 @@
 )
 
 (defn load-plane []
-  (let [path      (.getPath (clojure.java.io/resource "plane.obj"))
+  (let [path      (.getPath (clojure.java.io/resource "plane2.obj"))
         output    (cutter.cutter/load-obj path) ]
     output))  ;
 
@@ -325,31 +325,34 @@
     output))
 
 
+(defn load-sphere []
+  (let [path      (.getPath (clojure.java.io/resource "sphere.obj"))
+        output    (cutter.cutter/load-obj path) ]
+    output))
+
+
 (defn- init-buffers
   [locals]
-  (let [vertices_and_indices     (cutter.cutter/load-plane)
-        vertices  (float-array   [-1.0 -1.0 0.0 ;1.0
-                                    1.0  1.0 -1.0 ;1.0
-                                    0.0  1.0 -1.0 ;1.0
-                                    1.0  0.0 1.0 ;1.0
-                                    -1.0 1.0 0.0 ;1.0
-                                    1.0  1.0 -1.0 ;1.0
-                                    0.0  1.0 1.0 ;1.0
-                                    1.0  0.0 1.0 ;1.0
-                                  ;-1.0 -1.0 0.0
-                                  ])
-     vertices (float-array
-               [-1.0    -1.0 1.0
-                1.0      -1.0   1.0
-                1.0        1.0    1.0
-                -1.0        1.0    0.0
-                ;0.25      0.433 .0
-                ;   -0.25  0.433 0.0
-                ;   -0.25 -0.433 0.0
-                   ])
+  (let [vertices_and_indices     (cutter.cutter/load-cube)
+     ;;    vertices  (float-array   [-1.0 -1.0 0.0 ;1.0
+     ;;                                1.0  1.0 -1.0 ;1.0
+     ;;                                0.0  1.0 -1.0 ;1.0
+     ;;                                1.0  0.0 1.0 ;1.0
+     ;;                                -1.0 1.0 0.0 ;1.0
+     ;;                                1.0  1.0 -1.0 ;1.0
+     ;;                                0.0  1.0 1.0 ;1.0
+     ;;                                1.0  0.0 1.0 ;1.0
+     ;;                              ;-1.0 -1.0 0.0
+     ;;                              ])
+     ;; vertices (float-array
+     ;;           [-1.0    -1.0       0.0
+     ;;            1.0      -1.0      0.0
+     ;;            1.0        1.0     0.0
+     ;;            -1.0        1.0    0.0
+     ;;             ])
          ; vertices  (float-array  [-1.0 -1.0 0.0 -1.0 -1.0 0.0 -1.0 1.0 0.0 -1.0 1.0 0.0 1.0 -1.0 0.0 1.0 -1.0 0.0 1.0 1.0 0.0 1.0 1.0 0.0
          ;                          ])
-        ;vertices   (float-array (vec (nth vertices_and_indices 0)))
+        vertices   (float-array (vec (nth vertices_and_indices 0)))
         ;_ (println  (nth vertices_and_indices 0))
         vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
                                 (.put vertices)
@@ -363,11 +366,11 @@
             (.put colors)
             (.flip))
                                         ;
-        indices (byte-array (map byte  [;0 3 1
-                                        1 3 2
-                                        2 3 0
-                                        0 1 2]))
-        ;indices (byte-array (nth vertices_and_indices 3))
+        ;; indices (byte-array (map byte  [0 3 1
+        ;;                                 1 3 2
+        ;;                                 ;2 3 0
+        ;;                                 0 1 2]))
+        indices (byte-array (nth vertices_and_indices 3))
         indices-count (count indices)
         ;_ (println indices-count)
         indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
