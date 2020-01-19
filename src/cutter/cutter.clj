@@ -10,6 +10,7 @@
             [cutter.general :refer :all]
             [cutter.gl_init :refer :all]
             [cutter.opencv :refer :all]
+            [clojure.edn :as edn]
             ;[clojure.java.io :as io]
             [clojure.core.async
              :as async
@@ -271,74 +272,85 @@
         (org.lwjgl.glfw.GLFW/glfwSwapInterval         2)
         (org.lwjgl.glfw.GLFW/glfwShowWindow           (:window @locals))))
 
-;
+                                        ;
+                                        ;
+(defn line-parser-1 [input atom-array]
+  (let  [num    (mapv (fn [x] (clojure.edn/read-string x)) input)]
+    (swap! atom-array concat   num)))
+
+(defn line-parser-2 [input vi ni ti]
+  (let  [split        (mapv (fn [x] (clojure.string/split x #"/")) input)
+         via          (mapv (fn [x] (nth x 0)) split)
+         nia          (mapv (fn [x] (nth x 2)) split)
+         tia          (mapv (fn [x] (nth x 1)) split)
+                                        ;num    (map (fn [x] (clojure.edn/read-string x)) input)
+         ]
+    ;(println split)
+    ;(println via nia tia)
+    (swap! vi concat (mapv (fn [x] (- (clojure.edn/read-string x) 1)) via))
+    (swap! ni concat (mapv (fn [x] (- (clojure.edn/read-string x) 1)) nia))
+    (swap! ti concat (mapv (fn [x] (- (clojure.edn/read-string x) 1)) tia))
+    ))
+
 (defn load-obj [path]
   (let [content           (slurp path)
-        split-content     (clojure.string/split-lines content)]
-    split-content)
+        vertices          (atom [])
+        normals           (atom [])
+        texture-coords    (atom [])
+        vertice-indices   (atom [])
+        normal-indices    (atom [])
+        texture-indices   (atom [])
+        split-content     (clojure.string/split-lines content)
+        split-content     (mapv (fn [x] (clojure.string/split x #"\s+")) split-content)]
+    (doseq [line split-content]
+      ;(println line)
+      (let [first-element   (first line)]
+        (case first-element
+          "v"  (do (cutter.cutter/line-parser-1 (rest line) vertices))
+          "vn" (do (cutter.cutter/line-parser-1 (rest line) normals))
+          "vt" (do (cutter.cutter/line-parser-1 (rest line) texture-coords))
+          "f"  (do (cutter.cutter/line-parser-2 (rest line) vertice-indices normal-indices texture-indices))
+          "default")))
+    [@vertices @normals @texture-coords @vertice-indices @texture-indices @normal-indices])
 )
 
 (defn load-plane []
   (let [path      (.getPath (clojure.java.io/resource "plane.obj"))
         output    (cutter.cutter/load-obj path) ]
-    output))
+    output))  ;
 
-;Code snippet from https://blog.jayway.com/2010/02/15/opengl-es-tutorial-for-android-part-v/
-(defn plane [width height depth widthSegments heightSegments depthSegments]
-  (let [vertices          (atom (vec (make-array Float/TYPE (* (+ 0 widthSegments) (+ 0 heightSegments) 3  ))))
-        indices           (atom (vec (make-array Float/TYPE (* (+ 0 widthSegments) (+ 0 heightSegments) 6 ))))
-        ;_ (println @vertices)
-        xOffset           (/ width -2)
-        yOffset           (/ height -2)
-        zOffset           (/ depth -2)
-        xWidth            (/ width widthSegments)
-        yHeight           (/ height heightSegments)
-        zDepth            (/ depth depthSegments)
-        currentVertex     (atom (int 0))
-        currentIndex      (atom (int 0))
-        w                 (+ 1 widthSegments)
-        op                (doseq [ x (range (+ 1 widthSegments)) y (range (+ 1 heightSegments))]
-                            (let [v0       (+ xOffset (* x xWidth))
-                                  v1       (+ yOffset (* y yHeight))
-                                  v2       0;//(+ zOffset (* z zDepth)) ; z (range (+ 1 depthSegments))
-                                  _        (swap! vertices assoc (int @currentVertex) v0)
-                                  _        (swap! vertices assoc (int (+ 1 @currentVertex)) v1)
-                                  _        (swap! vertices assoc (int (+ 2 @currentVertex)) v2)
-                                  _        (swap! currentVertex (fn [n] (+ n 3)))
-                                  n        (+ (* y (+ 1 widthSegments)) x)
-                                  _        (if (and (< y heightSegments) (< x heightSegments))
-                                             (do
-                                               (let [i0   n
-                                                     i1   (+ n 1)
-                                                     i2   (+ n w)
-                                                     i3   (+ n 1)
-                                                     i4   (+ n 1 w)
-                                                     i5   (- (+ n 1 w) 1)
-                                                     _    (swap! indices assoc (int (+ 0 @currentIndex)) i0)
-                                                     _    (swap! indices assoc (int (+ 1 @currentIndex)) i1)
-                                                     _    (swap! indices assoc (int (+ 2 @currentIndex)) i2)
-                                                     _    (swap! indices assoc (int (+ 3 @currentIndex)) i3)
-                                                     _    (swap! indices assoc (int (+ 4 @currentIndex)) i4)
-                                                     _    (swap! indices assoc (int (+ 5 @currentIndex)) i5)
-                                                     _    (swap! currentIndex (fn [n] (+ n 6)))])))]))]
-    [(map float@vertices) @indices]))
+(defn load-cube []
+  (let [path      (.getPath (clojure.java.io/resource "cube.obj"))
+        output    (cutter.cutter/load-obj path) ]
+    output))
 
 
 (defn- init-buffers
   [locals]
-  (let [vertices_and_indices    (plane 2 2 0 20 20 20)
-         vertices  (float-array  [-1.0 -1.0 0.0
-                                   1.0  1.0 -1.0
-                                   0.0  1.0 -1.0
-                                   1.0  0.0 1.0
-                                   -1.0 1.0 0.0
-                                   1.0  1.0 -1.0
-                                   0.0  1.0 1.0
-                                   1.0  0.0 1.0
-                                   -1.0 -1.0 0.0 ])
+  (let [vertices_and_indices     (cutter.cutter/load-plane)
+        vertices  (float-array   [-1.0 -1.0 0.0 ;1.0
+                                    1.0  1.0 -1.0 ;1.0
+                                    0.0  1.0 -1.0 ;1.0
+                                    1.0  0.0 1.0 ;1.0
+                                    -1.0 1.0 0.0 ;1.0
+                                    1.0  1.0 -1.0 ;1.0
+                                    0.0  1.0 1.0 ;1.0
+                                    1.0  0.0 1.0 ;1.0
+                                  ;-1.0 -1.0 0.0
+                                  ])
+     vertices (float-array
+               [-1.0    -1.0 1.0
+                1.0      -1.0   1.0
+                1.0        1.0    1.0
+                -1.0        1.0    0.0
+                ;0.25      0.433 .0
+                ;   -0.25  0.433 0.0
+                ;   -0.25 -0.433 0.0
+                   ])
          ; vertices  (float-array  [-1.0 -1.0 0.0 -1.0 -1.0 0.0 -1.0 1.0 0.0 -1.0 1.0 0.0 1.0 -1.0 0.0 1.0 -1.0 0.0 1.0 1.0 0.0 1.0 1.0 0.0
          ;                          ])
-        ;vertices   (float-array (nth vertices_and_indices 0))
+        ;vertices   (float-array (vec (nth vertices_and_indices 0)))
+        ;_ (println  (nth vertices_and_indices 0))
         vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
                                 (.put vertices)
                                 (.flip))
@@ -350,11 +362,14 @@
         colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
             (.put colors)
             (.flip))
-         ; indices (byte-array
-         ;  (map byte
-         ;      [0 1 2])) ;; otherwise it whines about longs
-        indices (byte-array (nth vertices_and_indices 1))
+                                        ;
+        indices (byte-array (map byte  [;0 3 1
+                                        1 3 2
+                                        2 3 0
+                                        0 1 2]))
+        ;indices (byte-array (nth vertices_and_indices 3))
         indices-count (count indices)
+        ;_ (println indices-count)
         indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
                       (.put indices)
                       (.flip))
@@ -367,7 +382,7 @@
         _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER
                                         ^FloatBuffer vertices-buffer
                                         GL15/GL_STATIC_DRAW)
-        _                   (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0)
+        _                   (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0)
         _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
         ;; create & bind VBO for colors
         vboc-id             (GL15/glGenBuffers)
@@ -382,6 +397,8 @@
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
         _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+        ;; deselect the VAO
+        ;_                   (GL30/glBindVertexArray 0)
         _ (except-gl-errors "@ end of init-buffers")]
           (swap! locals
             assoc
@@ -389,7 +406,8 @@
             :vao-id vao-id
             :vboc-id vboc-id
             :vboi-id vboi-id
-            :vertices-count vertices-count)))
+            :vertices-count vertices-count
+            :indices-count indices-count)))
 
   (defn- init-gl
     [locals]
@@ -398,6 +416,8 @@
       (println "OpenGL version:" (GL11/glGetString GL11/GL_VERSION))
       (GL11/glClearColor 0.0 0.0 0.0 0.0)
       (GL11/glViewport 0 0 width height)
+      (GL11/glEnable GL11/GL_DEPTH_TEST)
+      (GL11/glDepthFunc GL11/GL_LESS)
       (init-buffers locals)
       (doseq [x i-channels]
         (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals x width height)))
@@ -488,6 +508,7 @@
                 ;i-date-loc
                 pgm-id vbo-id vao-id vboi-id vboc-id
                 vertices-count
+                indices-count
                 i-uniforms
                 i-textures
                 i-channels
@@ -523,13 +544,17 @@
     ;; get vertex array ready
      (GL30/glBindVertexArray vao-id)
      (GL20/glEnableVertexAttribArray 0)
+     (GL20/glEnableVertexAttribArray 1)
 
      ;Vertices
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
-     (GL20/glVertexAttribPointer 0 4 GL11/GL_FLOAT false 0 0);
+     (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0);
      ;Colors
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
      (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0);
+    ;Indices
+     (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
+     (GL20/glVertexAttribPointer 2 3 GL11/GL_FLOAT false 0 0);
     ;// attribute 0. No particular reason for 0, but must match the layout in the shader.
     ;// size
     ;// type
@@ -539,8 +564,9 @@
      (except-gl-errors "@ draw prior to DrawArrays")
 
      ;; Draw the vertices
-     (GL11/glDrawArrays GL11/GL_TRIANGLES 0 vertices-count)
-
+     ;(GL11/glDrawArrays GL11/GL_TRIANGLES 0 vertices-count)
+     ;(println indices-count)
+     (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_BYTE 0)
      (except-gl-errors "@ draw after DrawArrays")
      ;; Put everything back to default (deselect)
      ;Copying the previous image to its own texture
@@ -556,7 +582,9 @@
      (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
 
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-     (GL20/glDisableVertexAttribArray 0)))
+     (GL20/glDisableVertexAttribArray 0)
+     (GL20/glDisableVertexAttribArray 1)
+))
 
 (defn- update-and-draw
   [locals]

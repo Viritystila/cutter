@@ -1,5 +1,5 @@
 //#version 460 core
-layout(location = 0) in vec4 vertexPosition_modelspace;
+layout(location = 0) in vec3 vertexPosition_modelspace;
 layout(location = 1) in vec3 colors_modelspace;
 
 float ux = floor((gl_VertexID*1.0) / 8.0) + mod((gl_VertexID*1.0), 2.2);
@@ -13,5 +13,5 @@ vec2 xy = vec2(x,y);
 out vec2 texCoordV;
 void main(void) {
   texCoordV=xy;
-  gl_Position = vertexPosition_modelspace*vec4(xy*0.1, 0.1, 1);
+  gl_Position = vec4(vertexPosition_modelspace, 1);
 }

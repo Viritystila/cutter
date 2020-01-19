@@ -1,4 +1,3 @@
-
 in vec2 texCoordV;
 out vec4 op;
 void main(void) {
@@ -17,7 +16,7 @@ void main(void) {
   vec4 iChannel3_texture=texture2D(iChannel3, uv);
   vec4 iChannel4_texture=texture2D(iChannel4, uv);
   vec4 iChannel5_texture=texture2D(iChannel5, uv);
-  vec4 iChannel6_texture=texture2D(iChannel6, uv2);
+  vec4 iChannel6_texture=texture2D(iChannel6, uv);
   vec4 iChannel7_texture=texture2D(iChannel7, uv);
 
   vec4 ich[6];
