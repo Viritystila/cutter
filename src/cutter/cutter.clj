@@ -59,6 +59,7 @@
     :vboc-id                    0
     :vboi-id                    0
     :indices-count              0
+    :vbot-id                    0
     ;; shader program
     :shader-ver                 "#version 460 core"
     :shader-good                true ;; false in error condition
@@ -315,7 +316,7 @@
 )
 
 (defn load-plane []
-  (let [path      (.getPath (clojure.java.io/resource "plane2.obj"))
+  (let [path      (.getPath (clojure.java.io/resource "plane.obj"))
         output    (cutter.cutter/load-obj path) ]
     output))  ;
 
@@ -376,6 +377,11 @@
         indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
                       (.put indices)
                       (.flip))
+        texture-coords (float-array (vec (nth vertices_and_indices 2)))
+        uvcount        (count texture-coords)
+        uv-buffer      (-> (BufferUtils/createFloatBuffer uvcount)
+                      (.put texture-coords)
+                      (.flip))
         ;; create & bind Vertex Array Object
         vao-id              (GL30/glGenVertexArrays)
         _                   (GL30/glBindVertexArray vao-id)
@@ -393,6 +399,12 @@
         _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
         _                   (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
         _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+        ;; create & bind VBO for texture coordinates
+        vbot-id             (GL15/glGenBuffers)
+        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbot-id)
+        _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER uv-buffer GL15/GL_STATIC_DRAW)
+        _                   (GL20/glVertexAttribPointer 2 2 GL11/GL_FLOAT false 0 0)
+        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
         ;; deselect the VAO
         _                   (GL30/glBindVertexArray 0)
         ;; create & bind VBO for indices
@@ -409,6 +421,7 @@
             :vao-id vao-id
             :vboc-id vboc-id
             :vboi-id vboi-id
+            :vbot-id vbot-id
             :vertices-count vertices-count
             :indices-count indices-count)))
 
