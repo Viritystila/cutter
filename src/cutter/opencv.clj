@@ -32,7 +32,20 @@
 
            ))
 ;
-
+(defn buffer-from-mat-address [mat]
+  (let [address     (.getDeclaredField java.nio.Buffer "address")
+        capacity    (.getDeclaredField java.nio.Buffer "capacity")
+        _           (.setAccessible address true)
+        _           (.setAccessible capacity true)
+        bb          (java.nio.ByteBuffer/allocateDirect 0)
+        _           (.order bb (java.nio.ByteOrder/nativeOrder))
+        mat_address (.dataAddr mat)
+        mat_step    (.step1 mat)
+        mat_rows    (.rows mat)
+        mat_size    (* mat_step mat_rows)
+        _           (.setLong address bb mat_address)
+        _           (.setInt  capacity bb mat_size)]
+    bb))
 
 (defn oc-mat-to-bytebuffer [mat] (let [height      (.height mat)
                                        width       (.width mat)
@@ -44,7 +57,7 @@
                                               (.put data)
                                               (.flip))))
 
-(defn matInfo [mat] [(oc-mat-to-bytebuffer mat) ;(.dataAddr mat)
+(defn matInfo [mat] [(buffer-from-mat-address mat)     ;(oc-mat-to-bytebuffer mat) ;(.dataAddr mat)
                      (.rows mat)
                      (.step1 mat)
                      (.elemSize1 mat)
