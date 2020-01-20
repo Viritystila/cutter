@@ -156,18 +156,18 @@
                     copybuf             (oc-mat-to-bytebuffer mat)
                     buffer-capacity     (.capacity copybuf)
                     buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity) (.put copybuf) (.flip) )  ]
-                (swap! image-buffer conj (assoc image 0 buffer-copy)))))
-                (swap! cutter.cutter/the-window-state assoc :texture-arrays
-                  (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
-                                                                            :destination bufdestination
-                                                                            :source @image-buffer
-                                                                            :running running?
-                                                                            :fps fps
-                                                                            :index 0
-                                                                            :mode mode
-                                                                            :loop loop?
-                                                                            :start-index 1
-                                                                            :stop-index maximum-buffer-length )))
+                (swap! image-buffer conj (assoc image 0 buffer-copy) )))
+            (swap! cutter.cutter/the-window-state assoc :texture-arrays
+                   (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+                                                               :destination bufdestination
+                                                               :source @image-buffer
+                                                               :running running?
+                                                               :fps fps
+                                                               :index 0
+                                                               :mode mode
+                                                               :loop loop?
+                                                               :start-index 1
+                                                               :stop-index maximum-buffer-length ))))
               (clojure.core.async/untap mlt out)
               (println "Finished recording from:" device "to" buffername)
               (if start-camera? (stop-camera (str device-id))))))
