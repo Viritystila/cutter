@@ -12,7 +12,8 @@
              :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
                      alts! alts!! timeout]]
             clojure.string)
-  ; (:import
+                                        ;
+  (:import
   ;   [org.bytedeco.javacpp Pointer]
   ;   [org.bytedeco.javacpp BytePointer]
   ;   [org.bytedeco.javacpp v4l2]
@@ -28,9 +29,10 @@
   ;          (java.util List)
   ;          (javax.imageio ImageIO)
   ;          (java.lang.reflect Field)
-  ;          (org.lwjgl BufferUtils)
+            (org.lwjgl BufferUtils)
   ;          (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
-  ;          (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40))
+                                        ;          (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)
+            )
            )
 
 ;
@@ -144,16 +146,17 @@
           (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
             (do
               (let [image               (async/<!! out)
+                    rows                (nth image 1)
+                    step                (nth image 2)
                     h                   (nth image 4)
                     w                   (nth image 5)
                     ib                  (nth image 6)
-                    buffer_i            (nth image 0) ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
-                    ; buffer-capacity     (.capacity buffer_i)
-                    ; buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity)
-                    ;                       (.put buffer_i)
-                    ;                     (.flip))
-                                        ]
-                    (swap! image-buffer conj image)))) ;[buffer-copy (nth image 1) (nth image 2) (nth image 3) h w ib]
+                    mat                 (nth image 7)
+                    buffer_i            (nth image 0)
+                    copybuf             (oc-mat-to-bytebuffer mat)
+                    buffer-capacity     (.capacity copybuf)
+                    buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity) (.put copybuf) (.flip) )  ]
+                (swap! image-buffer conj (assoc image 0 buffer-copy)))))
                 (swap! cutter.cutter/the-window-state assoc :texture-arrays
                   (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
                                                                             :destination bufdestination

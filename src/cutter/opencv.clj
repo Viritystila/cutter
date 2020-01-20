@@ -57,13 +57,15 @@
                                               (.put data)
                                               (.flip))))
 
-(defn matInfo [mat] [(buffer-from-mat-address mat)     ;(oc-mat-to-bytebuffer mat) ;(.dataAddr mat)
-                     (.rows mat)
-                     (.step1 mat)
-                     (.elemSize1 mat)
-                     (.height mat)
-                     (.width mat)
-                     (.channels mat)])
+(defn matInfo [mat]  [(buffer-from-mat-address mat)
+                      ;(oc-mat-to-bytebuffer mat) ;(.dataAddr mat)
+                      (.rows mat)
+                      (.step1 mat)
+                      (.elemSize1 mat)
+                      (.height mat)
+                      (.width mat)
+                      (.channels mat)
+                      mat])
 
 
 
