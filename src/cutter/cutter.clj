@@ -432,14 +432,14 @@
       (println "OpenGL version:" (GL11/glGetString GL11/GL_VERSION))
       (GL11/glClearColor 0.0 0.0 0.0 0.0)
       (GL11/glViewport 0 0 width height)
-      (GL11/glEnable GL11/GL_DEPTH_TEST)
+      ;(GL11/glEnable GL11/GL_DEPTH_TEST)
       (GL11/glDepthFunc GL11/GL_LESS)
       (init-buffers locals)
+      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
+      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
       (doseq [x i-channels]
         (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals x width height)))
       (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iChannelNull width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
-      (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
       (init-shaders locals)))
 
 (defn- set-texture [tex-image-target internal-format width height format buffer]
@@ -518,6 +518,7 @@
                         1)))
                 )
                 nil)))
+
 (defn- draw [locals]
   (let [{:keys [width height
                 start-time last-time i-global-time-loc
@@ -584,29 +585,37 @@
      ;(println indices-count)
      (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_BYTE 0)
      (except-gl-errors "@ draw after DrawArrays")
-     ;; Put everything back to default (deselect)
-     ;Copying the previous image to its own texture
-     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:tex-id (:iPreviousFrame i-textures))))
+
+
+     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+     (GL20/glDisableVertexAttribArray 0)
+     (GL20/glDisableVertexAttribArray 1)
+
+     (doseq [x i-channels]
+       (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (x i-uniforms))))
+        (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
+     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:unit (:iText i-uniforms)) ))
+     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+          ;;Copying the previous image to its own texture
+     ;(println (:loc (:iPreviousFrame i-uniforms)))
+     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (:iPreviousFrame i-uniforms)) ))
      (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
-     (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
+     (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB8 0 0 width height 0)
+     ;(GL11/glCopyTexSubImage2D GL11/GL_TEXTURE_2D 0 0 0 0 0 width height)
+     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
      (if @save-frames
        (do ; download it and copy the previous image to its own texture
          (let [tex-buf  (:buffer (:iPreviousFrame i-textures))
                bb       (new org.bytedeco.javacpp.BytePointer tex-buf)
                minsize   (long  @(:minsize @the-window-state))]
+           (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
            (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer tex-buf)
-           (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
            (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) bb minsize )
-           ))
-         nil)
-     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-
-     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-     (GL20/glDisableVertexAttribArray 0)
-     (GL20/glDisableVertexAttribArray 1)
+           )
+         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0) )
+       nil)
 ))
 
-;/(GL11/GL_RGB8)
 
 (defn- update-and-draw
   [locals]
@@ -624,7 +633,7 @@
         (draw locals))
       ;; else clear to prevent strobing awfulness
       (do
-        (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+       (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
         (except-gl-errors "@ bad-draw glClear ")
         (if (or @reload-shader @vs-reload-shader)
           (try-reload-shader locals))))))
