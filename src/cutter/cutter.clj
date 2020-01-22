@@ -591,9 +591,13 @@
      (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB 0 0 width height 0)
      (if @save-frames
        (do ; download it and copy the previous image to its own texture
-         (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer (:buffer (:iPreviousFrame i-textures)))
-         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-         (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) (new org.bytedeco.javacpp.BytePointer (:buffer (:iPreviousFrame i-textures))) (long  @(:minsize @the-window-state))))
+         (let [tex-buf  (:buffer (:iPreviousFrame i-textures))
+               bb       (new org.bytedeco.javacpp.BytePointer tex-buf)
+               minsize   (long  @(:minsize @the-window-state))]
+           (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer tex-buf)
+           (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+           (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) bb minsize )
+           ))
          nil)
      (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
 
@@ -601,6 +605,8 @@
      (GL20/glDisableVertexAttribArray 0)
      (GL20/glDisableVertexAttribArray 1)
 ))
+
+;/(GL11/GL_RGB8)
 
 (defn- update-and-draw
   [locals]
