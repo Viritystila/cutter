@@ -59,8 +59,10 @@
         (swap! cutter.cutter/the-window-state assoc :cameras cameras)
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
           (do
-
-            (.open capture device-id org.opencv.videoio.Videoio/CAP_V4L2)
+            ; org.opencv.videoio.Videoio/CAP_V4L2
+            (.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
+            (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
+            ;(println  (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS) )
             (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
             ;(println (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS))
             ;(println (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G )))
@@ -84,7 +86,7 @@
                         fps ))))
               (.release capture)))))
         nil)
-;
+
 (defn stop-camera [device]
   (let [device-id                (read-string (str (last device)))
         cameras                  (:cameras @the-window-state)
