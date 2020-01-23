@@ -497,27 +497,24 @@
           (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 unit))
           (GL11/glBindTexture target tex-id)
           (if  (not (nil? image))
-                (do ;
-
-                (if
-                  (instance? java.lang.Long (nth image 0)) (set-opengl-texture
-                                                                    locals
-                                                                    texture-key
-                                                                    0 ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
-                                                                    (nth image 5)
-                                                                    (nth image 4)
-                                                                    (nth image 6)
-                                                                    (nth image 0))
-                  (do (set-opengl-texture
-                        locals
-                        texture-key
-                        (nth image 0)
-                        (nth image 5)
-                        (nth image 4)
-                        (nth image 6)
-                        1)))
-                )
-                nil)))
+                (do
+                  (if
+                      (instance? java.lang.Long (nth image 0)) (set-opengl-texture
+                                                                locals
+                                                                texture-key
+                                                                0 ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                                                                (nth image 5)
+                                                                (nth image 4)
+                                                                (nth image 6)
+                                                                (nth image 0))
+                      (do (set-opengl-texture
+                           locals
+                           texture-key
+                           (nth image 0)
+                           (nth image 5)
+                           (nth image 4)
+                           (nth image 6)
+                           1))))  nil)))
 
 (defn- draw [locals]
   (let [{:keys [width height
@@ -545,14 +542,20 @@
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
     ((:gltype (:iRandom i-uniforms)) (:loc (:iRandom i-uniforms)) (rand))
 
+    ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (:iPreviousFrame i-uniforms))))
+    ;(GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)) )
+
+    ((:gltype (:iPreviousFrame i-uniforms)) (:loc (:iPreviousFrame i-uniforms)) (:unit (:iPreviousFrame i-uniforms)))
+        (get-textures locals :iPreviousFrame i-uniforms)
+
+    ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) (:unit (:iText i-uniforms)))
+        (get-textures locals :iText i-uniforms)
+
     (doseq [x (keys i-dataArrays)]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:datavec (x i-dataArrays)) (:buffer (x i-dataArrays))))
 
     (doseq [x (keys i-floats)]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:data (x i-floats)) ))
-
-    ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) (:unit (:iText i-uniforms)))
-    (get-textures locals :iText i-uniforms)
 
     (doseq [x i-channels]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:unit (x i-uniforms)))
@@ -581,28 +584,27 @@
      (except-gl-errors "@ draw prior to DrawArrays")
 
      ;; Draw the vertices
-     ;(GL11/glDrawArrays GL11/GL_TRIANGLES 0 vertices-count)
-     ;(println indices-count)
      (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_BYTE 0)
      (except-gl-errors "@ draw after DrawArrays")
-
 
      (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
      (GL20/glDisableVertexAttribArray 0)
      (GL20/glDisableVertexAttribArray 1)
 
+     ;Unbind textures
      (doseq [x i-channels]
        (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (x i-uniforms))))
         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
-     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:unit (:iText i-uniforms)) ))
+     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:unit (:iPreviousFrame i-uniforms)) ))
      (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (:iPreviousFrame i-uniforms))))
+     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+
           ;;Copying the previous image to its own texture
-     ;(println (:loc (:iPreviousFrame i-uniforms)))
-     (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (:iPreviousFrame i-uniforms)) ))
      (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
      (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB8 0 0 width height 0)
-     ;(GL11/glCopyTexSubImage2D GL11/GL_TEXTURE_2D 0 0 0 0 0 width height)
      (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+
      (if @save-frames
        (do ; download it and copy the previous image to its own texture
          (let [tex-buf  (:buffer (:iPreviousFrame i-textures))

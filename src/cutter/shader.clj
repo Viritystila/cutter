@@ -1,5 +1,5 @@
-(ns #^{:author "(Shadertone), Mikael Reponen (Viritystone)"
-       :doc " Core library derived from Shadertone (Roger Allen https://github.com/overtone/shadertone)."}
+(ns #^{:author "Mikael Reponen (Viritystone)"
+       :doc "Core library derived from Shadertone (Roger Allen https://github.com/overtone/shadertone)."}
   cutter.shader
   (:require [clojure.tools.namespace.repl :refer [refresh]]
             [watchtower.core :as watcher]

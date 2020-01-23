@@ -10,6 +10,7 @@ float x = radius * cos(angle);
 float y = radius * sin(angle);
 vec2 xy = vec2(x,y);
 
+  vec4 pf1=texture2D(iPreviousFrame, xy);
 out vec2 texCoordV;
 void main(void) {
   float time = iGlobalTime + 20.0;
