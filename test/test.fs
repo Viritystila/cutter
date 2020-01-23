@@ -14,7 +14,7 @@ void main(void) {
   float data1_1=iDataArray1[1];
   float data2_0=iDataArray2[0];
   uv=floor(uv * (100+iRandom*iFloat2 )) / ( 100+iRandom*iFloat2 + data1_0);
-  vec2 uv2=gl_FragCoord.xy*texCoordV/ iResolution.xy;
+  vec2 uv2=texCoordV;
 
   vec4 iChannel1_texture=texture2D(iChannel1, uv);
   vec4 iChannel2_texture=texture2D(iChannel2, uv);
@@ -22,7 +22,7 @@ void main(void) {
   vec4 iChannel4_texture=texture2D(iChannel4, uv);
   vec4 iChannel5_texture=texture2D(iChannel5, uv);
   vec4 iChannel6_texture=texture2D(iChannel6, uv);
-  vec4 iChannel7_texture=texture2D(iChannel7, uv);
+  vec4 iChannel7_texture=texture2D(iChannel7, uv2);
 
   vec4 ich[6];
   ich[0]=iChannel1_texture;
@@ -37,7 +37,7 @@ void main(void) {
   //vec4 pf1=texture2D(iPreviousFrame, uv);
   vec4 text=texture2D(iText, uv);
   vec4 ccc=vec4(cos(iGlobalTime*10.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1);
-  vec4 ppp=mix(iChannel7_texture, pf1, 0.7999);
+  vec4 ppp=mix(iChannel7_texture, pf1, 0.008999);
   float fade_size=2;
   float p1= mix(fade_size, 0.0-fade_size, uv.x-0.125);
   vec4 mixxx =mix(iChannel6_texture, ppp, smoothstep(1.0, 0.0+iFloat1, p1));
