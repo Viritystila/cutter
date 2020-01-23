@@ -1,42 +1,42 @@
 (ns #^{:author "Mikael Reponen"}
   cutter.camera
   (:require ;[clojure.tools.namespace.repl :refer [refresh]]
-            ;[watchtower.core :as watcher]
-            ;[clojure.java.io :as io]
-            [while-let.core :as while-let]
-            [cutter.cutter :refer :all]
-            [cutter.opencv :refer :all]
-            [cutter.texturearray :refer :all]
-             [clojure.core.async
-             :as async
-             :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
-                     alts! alts!! timeout]]
-            clojure.string)
+                                        ;[watchtower.core :as watcher]
+                                        ;[clojure.java.io :as io]
+   [while-let.core :as while-let]
+   [cutter.cutter :refer :all]
+   [cutter.opencv :refer :all]
+   [cutter.texturearray :refer :all]
+   [clojure.core.async
+    :as async
+    :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
+            alts! alts!! timeout]]
+   clojure.string)
                                         ;
   (:import
-  ;   [org.bytedeco.javacpp Pointer]
-  ;   [org.bytedeco.javacpp BytePointer]
-  ;   [org.bytedeco.javacpp v4l2]
-  ;   [org.opencv.core Mat Core CvType]
-  ;   [org.opencv.videoio Videoio VideoCapture]
-  ;   [org.opencv.video Video]
-  ;   [org.opencv.imgproc Imgproc]
-  ;   [org.opencv.imgcodecs Imgcodecs]
-  ;          (java.awt.image BufferedImage DataBuffer DataBufferByte WritableRaster)
-  ;          (java.io File FileInputStream)
-  ;          (java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
-  ;          (java.util Calendar)
-  ;          (java.util List)
-  ;          (javax.imageio ImageIO)
-  ;          (java.lang.reflect Field)
-            (org.lwjgl BufferUtils)
-  ;          (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
+                                        ;   [org.bytedeco.javacpp Pointer]
+                                        ;   [org.bytedeco.javacpp BytePointer]
+                                        ;   [org.bytedeco.javacpp v4l2]
+                                        ;   [org.opencv.core Mat Core CvType]
+                                        ;   [org.opencv.videoio Videoio VideoCapture]
+                                        ;   [org.opencv.video Video]
+                                        ;   [org.opencv.imgproc Imgproc]
+                                        ;   [org.opencv.imgcodecs Imgcodecs]
+                                        ;          (java.awt.image BufferedImage DataBuffer DataBufferByte WritableRaster)
+                                        ;          (java.io File FileInputStream)
+                                        ;          (java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
+                                        ;          (java.util Calendar)
+                                        ;          (java.util List)
+                                        ;          (javax.imageio ImageIO)
+                                        ;          (java.lang.reflect Field)
+   (org.lwjgl BufferUtils)
+                                        ;          (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
                                         ;          (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)
-            )
-           )
+   )
+  )
 
-;
-;Camera
+                                        ;
+                                        ;Camera
 (defn set-live-camera-texture [device destination-texture-key]
   "Set texture by filename and adds the filename to the list"
   (let [device-id                 (read-string (str (last device)))
@@ -56,36 +56,36 @@
                                    :fps fps}
         cameras                   (assoc cameras camera-key camera)
         startTime                 (atom (System/nanoTime))]
-        (swap! cutter.cutter/the-window-state assoc :cameras cameras)
-        (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
-          (do
-            ; org.opencv.videoio.Videoio/CAP_V4L2
-            (.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
-            (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
-            ;(println  (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS) )
-            (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
-            ;(println (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS))
-            ;(println (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G )))
-            (swap! cutter.cutter/the-window-state assoc :cameras
-              (assoc cameras
-                camera-key (assoc camera :running true,
-                  :fps (cutter.opencv/oc-get-capture-property :fps capture))))
-            (async/thread
-              (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
-                (let [fps                 (:fps (camera-key (:cameras @cutter.cutter/the-window-state)))
-                      camera-destination  (:destination (camera-key (:cameras @cutter.cutter/the-window-state)))
-                      queue               (:queue ( camera-destination (:i-textures @cutter.cutter/the-window-state)))]
-                    (reset! startTime (System/nanoTime))
-                    (oc-query-frame capture mat)
-                    (async/offer!
-                      queue
-                      (matInfo mat))
-                    (Thread/sleep
-                      (cutter.general/sleepTime @startTime
-                        (System/nanoTime)
-                        fps ))))
-              (.release capture)))))
-        nil)
+    (swap! cutter.cutter/the-window-state assoc :cameras cameras)
+    (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
+      (do
+                                        ; org.opencv.videoio.Videoio/CAP_V4L2
+        (.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
+        (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
+                                        ;(println  (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS) )
+        (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
+                                        ;(println (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS))
+                                        ;(println (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G )))
+        (swap! cutter.cutter/the-window-state assoc :cameras
+               (assoc cameras
+                      camera-key (assoc camera :running true,
+                                        :fps (cutter.opencv/oc-get-capture-property :fps capture))))
+        (async/thread
+          (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
+            (let [fps                 (:fps (camera-key (:cameras @cutter.cutter/the-window-state)))
+                  camera-destination  (:destination (camera-key (:cameras @cutter.cutter/the-window-state)))
+                  queue               (:queue ( camera-destination (:i-textures @cutter.cutter/the-window-state)))]
+              (reset! startTime (System/nanoTime))
+              (oc-query-frame capture mat)
+              (async/offer!
+               queue
+               (matInfo mat))
+              (Thread/sleep
+               (cutter.general/sleepTime @startTime
+                                         (System/nanoTime)
+                                         fps ))))
+          (.release capture))))
+    nil))
 
 (defn stop-camera [device]
   (let [device-id                (read-string (str (last device)))
@@ -95,13 +95,13 @@
         capture                  (:source camera)
         camera                   (assoc camera :running false)
         cameras                  (assoc cameras camera-key camera)]
-        (swap! cutter.cutter/the-window-state assoc :cameras cameras)
-        (.release capture))
+    (swap! cutter.cutter/the-window-state assoc :cameras cameras)
+    (.release capture))
   nil)
 
 
 (defn stop-all-cameras []
-   (mapv (fn [x]  (stop-camera (clojure.string/join (rest (str x)))))(vec (keys (:cameras @cutter.cutter/the-window-state)))))
+  (mapv (fn [x]  (stop-camera (clojure.string/join (rest (str x)))))(vec (keys (:cameras @cutter.cutter/the-window-state)))))
 
 
 (defn rec-camera [device buffername]
@@ -143,36 +143,36 @@
         image-buffer             (atom [])
         out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
         _                        (if start-camera? nil (clojure.core.async/tap mlt out) )]
-        (println "Recording from: " device " to " buffername)
-        (async/thread
-          (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
-            (do
-              (let [image               (async/<!! out)
-                    rows                (nth image 1)
-                    step                (nth image 2)
-                    h                   (nth image 4)
-                    w                   (nth image 5)
-                    ib                  (nth image 6)
-                    mat                 (nth image 7)
-                    buffer_i            (nth image 0)
-                    copybuf             (oc-mat-to-bytebuffer mat)
-                    buffer-capacity     (.capacity copybuf)
-                    buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity) (.put copybuf) (.flip) )  ]
-                (swap! image-buffer conj (assoc image 0 buffer-copy) )))
-            (swap! cutter.cutter/the-window-state assoc :texture-arrays
-                   (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
-                                                               :destination bufdestination
-                                                               :source @image-buffer
-                                                               :running running?
-                                                               :fps fps
-                                                               :index 0
-                                                               :mode mode
-                                                               :loop loop?
-                                                               :start-index 1
-                                                               :stop-index maximum-buffer-length ))))
-              (clojure.core.async/untap mlt out)
-              (println "Finished recording from:" device "to" buffername)
-              (if start-camera? (stop-camera (str device-id))))))
+    (println "Recording from: " device " to " buffername)
+    (async/thread
+      (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
+        (do
+          (let [image               (async/<!! out)
+                rows                (nth image 1)
+                step                (nth image 2)
+                h                   (nth image 4)
+                w                   (nth image 5)
+                ib                  (nth image 6)
+                mat                 (nth image 7)
+                buffer_i            (nth image 0)
+                copybuf             (oc-mat-to-bytebuffer mat)
+                buffer-capacity     (.capacity copybuf)
+                buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity) (.put copybuf) (.flip) )  ]
+            (swap! image-buffer conj (assoc image 0 buffer-copy) )))
+        (swap! cutter.cutter/the-window-state assoc :texture-arrays
+               (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+                                                           :destination bufdestination
+                                                           :source @image-buffer
+                                                           :running running?
+                                                           :fps fps
+                                                           :index 0
+                                                           :mode mode
+                                                           :loop loop?
+                                                           :start-index 1
+                                                           :stop-index maximum-buffer-length ))))
+      (clojure.core.async/untap mlt out)
+      (println "Finished recording from:" device "to" buffername)
+      (if start-camera? (stop-camera (str device-id))))))
 
 (defn set-camera-property [device property val]
   (let [device-id                (read-string (str (last device)))
@@ -180,12 +180,12 @@
         camera-key               (keyword device)
         camera                   (camera-key cameras)
         source                   (:source camera)]
-        (if (= property :fps)
-          (swap! cutter.cutter/the-window-state assoc :cameras (assoc cameras camera-key (assoc camera :fps val)))
-          (.set source org.opencv.videoio.Videoio/CAP_PROP_FPS  val)
-          ;(cutter.opencv/oc-set-capture-property property source val)
-          ))
-          nil)
+    (if (= property :fps)
+      (swap! cutter.cutter/the-window-state assoc :cameras (assoc cameras camera-key (assoc camera :fps val)))
+      (.set source org.opencv.videoio.Videoio/CAP_PROP_FPS  val)
+                                        ;(cutter.opencv/oc-set-capture-property property source val)
+      ))
+  nil)
 
 (defn get-camera-property [device property]
   (let [device-id                (read-string (str (last device)))
@@ -194,6 +194,6 @@
         camera                   (camera-key cameras)
         source                   (:source camera)
         fps                      (:fps camera)]
-        (if (= property :fps)
-          fps
-          (cutter.opencv/oc-get-capture-property property source))))
+    (if (= property :fps)
+      fps
+      (cutter.opencv/oc-get-capture-property property source))))
