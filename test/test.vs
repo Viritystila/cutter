@@ -13,13 +13,14 @@ float x = radius * cos(angle);
 float y = radius * sin(angle);
 vec2 xy = vec2(x,y);
 
-  vec4 pf1=texture2D(iPreviousFrame, xy);
+vec4 pf1=texture2D(iPreviousFrame, xy);
 
-  vec4 t1=texture2D(iChannel7, xy);
+vec4 t1=texture2D(iChannel7, xy);
+vec2 t2uv=vec2(t1.x, t1.y);
 out vec2 texCoordV;
 void main(void) {
   float time = iGlobalTime + 20.0;
   mat3 rotma =mat3(cos(time),sin(time),-sin(time),cos(time), 1.0, 1.0, 1.0, 1.0, 1.0);
   texCoordV=uv_modelspace;
-  gl_Position = vec4(vertexPosition_modelspace*rotma, 2);
+  gl_Position = vec4(vertexPosition_modelspace, 1);
 }

@@ -15,6 +15,7 @@ void main(void) {
   float data2_0=iDataArray2[0];
   uv=floor(uv * (100+iRandom*iFloat2 )) / ( 100+iRandom*iFloat2 + data1_0);
   vec2 uv2=texCoordV;
+  uv2.y=1.0-uv2.y;
 
   vec4 iChannel1_texture=texture2D(iChannel1, uv);
   vec4 iChannel2_texture=texture2D(iChannel2, uv);
@@ -41,5 +42,5 @@ void main(void) {
   float fade_size=2;
   float p1= mix(fade_size, 0.0-fade_size, uv.x-0.125);
   vec4 mixxx =mix(iChannel6_texture, ppp, smoothstep(1.0, 0.0+iFloat1, p1));
-  op = ppp;//mixxx;// ich[timefloor];//mixxx;//mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
+  op = mixxx;//mixxx;// ich[timefloor];//mixxx;//mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
 }

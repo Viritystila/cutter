@@ -61,6 +61,8 @@
    :indices-count              0
    :vbot-id                    0
    :vbon-id                    0
+
+   :buffer-objects             {} ;{:plane {:vao 0, :verticex-count 0, :indices-count 0,  :vbo-id, 0 :vbo-buffer 0, :vboc-id 0, :color-buffer 0, :vboi-id 0, :index-buffer 0, :vbot-id 0, :uv-buffer 0, :vbon-id 0, :normal-buffer 0 }
    ;; shader program
    :shader-ver                 "#version 460 core"
    :shader-good                true ;; false in error condition
@@ -73,6 +75,8 @@
    :vs-shader-str               ""
    :vs-id                      0
    :fs-id                      0
+   :gs-id                      0
+   :ts-id                      0
    :pgm-id                     0
    :temp-fs-string             ""
    :temp-vs-string             ""
@@ -317,7 +321,7 @@
   )
 
 (defn load-plane []
-  (let [path      (.getPath (clojure.java.io/resource "plane.obj"))
+  (let [path      (.getPath (clojure.java.io/resource "plane3.obj"))
         output    (cutter.cutter/load-obj path) ]
     output))  ;
 
@@ -335,7 +339,7 @@
 
 (defn- init-buffers
   [locals]
-  (let [vertices_and_indices     (cutter.cutter/load-cube)
+  (let [vertices_and_indices     (cutter.cutter/load-plane)
         ;;    vertices  (float-array   [-1.0 -1.0 0.0 ;1.0
         ;;                                1.0  1.0 -1.0 ;1.0
         ;;                                0.0  1.0 -1.0 ;1.0
@@ -558,9 +562,6 @@
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
     ((:gltype (:iRandom i-uniforms)) (:loc (:iRandom i-uniforms)) (rand))
 
-                                        ;(GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (:iPreviousFrame i-uniforms))))
-                                        ;(GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)) )
-
     ((:gltype (:iPreviousFrame i-uniforms)) (:loc (:iPreviousFrame i-uniforms)) (:unit (:iPreviousFrame i-uniforms)))
     (get-textures locals :iPreviousFrame i-uniforms)
 
@@ -578,12 +579,12 @@
       (get-textures locals x i-uniforms))
 
     ;; get vertex array ready
-    (GL30/glBindVertexArray vao-id)
-    (GL20/glEnableVertexAttribArray 0)
-    (GL20/glEnableVertexAttribArray 1)
-    (GL20/glEnableVertexAttribArray 2)
-    (GL20/glEnableVertexAttribArray 3)
-    (GL20/glEnableVertexAttribArray 4)
+    ;; (GL30/glBindVertexArray vao-id)
+    ;; (GL20/glEnableVertexAttribArray 0)
+    ;; (GL20/glEnableVertexAttribArray 1)
+    ;; (GL20/glEnableVertexAttribArray 2)
+    ;; (GL20/glEnableVertexAttribArray 3)
+    ;; (GL20/glEnableVertexAttribArray 4)
 
                                         ;Vertices
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
@@ -612,21 +613,21 @@
     (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_BYTE 0)
     (except-gl-errors "@ draw after DrawArrays")
 
-    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-    (GL20/glDisableVertexAttribArray 0)
-    (GL20/glDisableVertexAttribArray 1)
-    (GL20/glDisableVertexAttribArray 2)
-    (GL20/glDisableVertexAttribArray 3)
-    (GL20/glDisableVertexAttribArray 4)
+    ;(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+    ;; (GL20/glDisableVertexAttribArray 0)
+    ;; (GL20/glDisableVertexAttribArray 1)
+    ;; (GL20/glDisableVertexAttribArray 2)
+    ;; (GL20/glDisableVertexAttribArray 3)
+    ;; (GL20/glDisableVertexAttribArray 4)
 
-                                        ;Unbind textures
-    (doseq [x i-channels]
-      (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (x i-uniforms))))
-      (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
-    (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:unit (:iPreviousFrame i-uniforms)) ))
-    (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-    (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (:iPreviousFrame i-uniforms))))
-    (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+    ;;                                     ;Unbind textures
+    ;; (doseq [x i-channels]
+    ;;   (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (x i-uniforms))))
+    ;;   (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
+    ;; (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:unit (:iPreviousFrame i-uniforms)) ))
+    ;; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+    ;; (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (:iPreviousFrame i-uniforms))))
+    ;; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
 
     ;;Copying the previous image to its own texture
     (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
@@ -682,6 +683,10 @@
     (GL30/glBindVertexArray vao-id)
     (GL20/glDisableVertexAttribArray 0)
     (GL20/glDisableVertexAttribArray 1)
+    (GL20/glDisableVertexAttribArray 2)
+    (GL20/glDisableVertexAttribArray 3)
+    (GL20/glDisableVertexAttribArray 4)
+
     ;; Delete the vertex VBO
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
     (GL15/glDeleteBuffers ^Integer vbo-id)
@@ -698,6 +703,13 @@
   (try-reload-shader locals)
   (let [startTime               (atom (System/nanoTime))]
     (println "Start thread")
+    (GL30/glBindVertexArray (:vao-id @locals))
+    (GL20/glEnableVertexAttribArray 0)
+    (GL20/glEnableVertexAttribArray 1)
+    (GL20/glEnableVertexAttribArray 2)
+    (GL20/glEnableVertexAttribArray 3)
+    (GL20/glEnableVertexAttribArray 4)
+
     (while (and (= :yes (:active @locals))
                 (not (org.lwjgl.glfw.GLFW/glfwWindowShouldClose (:window @locals))))
       (reset! startTime (System/nanoTime))
