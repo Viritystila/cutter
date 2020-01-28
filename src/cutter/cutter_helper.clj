@@ -95,7 +95,7 @@
                               ;_ (println data)
           dataArray     (if haskey (assoc dataArray :datavec data))
           i-dataArrays  (if haskey (assoc i-dataArrays arraykey dataArray))]
-        (swap! the-window-state assoc :i-dataArrays i-dataArrays)
+      (if haskey (swap! the-window-state assoc :i-dataArrays i-dataArrays))
         nil))
 
 ;
@@ -115,7 +115,7 @@
           floatVal      (floatKey i-floats)
           floatVal      (if haskey (assoc floatVal :data  val) nil)
           i-floats      (if haskey (assoc i-floats floatKey floatVal))]
-        (swap! the-window-state assoc :i-floats i-floats)
+      (if haskey (swap! the-window-state assoc :i-floats i-floats))
         nil))
 
 (defn get-float [floatKey ]

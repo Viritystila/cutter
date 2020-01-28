@@ -159,7 +159,7 @@
         video-key                (keyword filename)
         video                    (video-key videos)
         start-video?             (or (nil? video) (not (:running video)))
-        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 1000)  )
+        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 100)  )
         _                        (Thread/sleep 100)
         videos                   (:videos @the-window-state)
         video                    (video-key videos)

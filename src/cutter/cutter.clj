@@ -108,7 +108,7 @@
                                                                                                                                               (.put (float-array
                                                                                                                                                      (vec (make-array Float/TYPE 256))))
                                                                                                                                               (.flip))} } ) (range 1 16 1)))
-   :i-floats                   (into {} (mapv (fn [x] {(keyword (str "iFloat" x)) {:data 0 }}) (range 1 16 1)))
+   :i-floats                   (into {} (mapv (fn [x] {(keyword (str "iFloat" x)) {:data 0 }}) (range 1 17 1)))
    :i-uniforms                 {:iResolution   {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
                                 :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
                                 :iRandom        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},

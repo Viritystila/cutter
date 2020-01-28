@@ -74,9 +74,10 @@
                                                     (max index (min start-index buffer-length))))]
                       (reset! startTime (System/nanoTime))
                       (reset! internal-index cur-index)
+                      ;(println cur-index)
                       (async/offer!
                         queue
-                        (nth source  (mod cur-index (min stop-index buffer-length)) ))
+                        (nth source  (mod  cur-index (min (+ 1 stop-index) buffer-length)) ))
                       (case mode
                         :fw  (do (swap! internal-index inc))
                         :bw  (do (swap! internal-index dec))
@@ -93,6 +94,8 @@
                                                               :stop-index stop-index
                                                               :source source)))
                       (Thread/sleep (cutter.general/sleepTime @startTime (System/nanoTime) fps))))))))))
+
+
 
 (defn copy-buffer [src tgt]
   (let [texture-arrays            (:texture-arrays @cutter.cutter/the-window-state)
