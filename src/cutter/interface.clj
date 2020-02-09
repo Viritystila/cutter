@@ -404,6 +404,18 @@
                        (overtone.core/remove-event-handler dest)
                       )
                     nil
+                    )))
+         (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/connect"
+    (fn [msg] (let [input                   (:args msg)
+                   input                   (vec input)
+                   ic                      (count input)
+                   ;trig-id                 (first input)
+                   port                    (keyword (first input))]
+               ;(println trig-id "as" dest)
+                    (if (and (= 1 ic) (int? (nth input 0)) )
+                       (overtone.core/connect-external-server port)
+                      )
+                    nil
                     ))))
     (println "Not connected to server"))
   nil)
