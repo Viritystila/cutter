@@ -376,9 +376,43 @@
                       (set-float (keyword (nth input 0))  (nth input 1) )))))
 )
 
+(defn set-direct-supercollider-handlers []
+  (if (overtone.core/server-connected?)
+    (do
+      (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-trigger"
+                  (fn [msg] (let [input                   (:args msg)
+                                 input                   (vec input)
+                                 ic                      (count input)
+                                 trig-id                 (first input)
+                                 dest                    (keyword (last input))]
+                             ;(println trig-id "as" dest)
+                             (if (and (= 2 ic) (string? (nth input 1)) )
+                               (overtone.core/on-trigger (int trig-id) (fn [msg] (set-float dest (float msg))) dest)
+                                        ;(set-float (keyword (nth input 0))  (nth input 1) )
+                               )
+                             nil
+                             )))
+
+        (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/unset-trigger"
+    (fn [msg] (let [input                   (:args msg)
+                   input                   (vec input)
+                   ic                      (count input)
+                   ;trig-id                 (first input)
+                   dest                    (keyword (first input))]
+               ;(println trig-id "as" dest)
+                    (if (and (= 1 ic) (string? (nth input 0)) )
+                       (overtone.core/remove-event-handler dest)
+                      )
+                    nil
+                    ))))
+    (println "Not connected to server"))
+  nil)
+
+
 (set-camera-interface-handlers)
 (set-video-interface-handlers)
 (set-buffer-interface-handlers)
 (set-v4l2-interface-handlers)
 (set-arrays-interface-handlers)
 (set-float-interface-handlers)
+(set-direct-supercollider-handlers)

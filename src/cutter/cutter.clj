@@ -11,6 +11,7 @@
    [cutter.gl_init :refer :all]
    [cutter.opencv :refer :all]
    [clojure.edn :as edn]
+   [overtone.core]
                                         ;[clojure.java.io :as io]
    [clojure.core.async
     :as async
@@ -716,7 +717,8 @@
       (update-and-draw locals)
       (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
       (org.lwjgl.glfw.GLFW/glfwPollEvents)
-      (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz)))
+      (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz))
+      )
     (destroy-gl locals)
     (.free (:keyCallback @locals))
     (org.lwjgl.glfw.GLFW/glfwPollEvents)
