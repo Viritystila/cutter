@@ -172,6 +172,13 @@
   (cutter.cutter_helper/add-from-dir dir buffername))
 
 ;;;;;;;;;;
+;;;Text;;;
+;;;;;;;;;;
+;; \"cutter\" 0 220 10 100 0.2 0.4 20 10 true
+(defn write [text x y size r g b thickness linetype clear]
+  (cutter.cutter_helper/write-text text x y size r g b thickness linetype clear))
+
+;;;;;;;;;;
 ;;;Misc;;;
 ;;;;;;;;;;
 (defn list-cameras [] (println (:cameras @the-window-state)))
@@ -377,7 +384,7 @@
 )
 
 (defn set-direct-supercollider-handlers []
-  (if (overtone.core/server-connected?)
+  (if true ;(overtone.core/server-connected?)
     (do
       (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-trigger"
                   (fn [msg] (let [input                   (:args msg)
@@ -393,8 +400,8 @@
                              nil
                              )))
 
-        (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/unset-trigger"
-    (fn [msg] (let [input                   (:args msg)
+      (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/unset-trigger"
+                    (fn [msg] (let [input                   (:args msg)
                    input                   (vec input)
                    ic                      (count input)
                    ;trig-id                 (first input)
@@ -406,11 +413,11 @@
                     nil
                     )))
          (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/connect"
-    (fn [msg] (let [input                   (:args msg)
+                     (fn [msg] (let [input                   (:args msg)
                    input                   (vec input)
                    ic                      (count input)
                    ;trig-id                 (first input)
-                   port                    (keyword (first input))]
+                   port                    (int (first input))]
                ;(println trig-id "as" dest)
                     (if (and (= 1 ic) (int? (nth input 0)) )
                        (overtone.core/connect-external-server port)
@@ -420,6 +427,36 @@
     (println "Not connected to server"))
   nil)
 
+;; ;
+;; (defn write [text x y size r g b thickness linetype clear]
+;;   (cutter.cutter_helper/write-text text x y size r g b thickness linetype clear))
+
+
+(defn set-text-handlers []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/write"
+               (fn [msg] (let [input                   (:args msg)
+                              input                   (vec input)
+                              ic                      (count input)
+                              text                    (str (nth input 0))
+                              x                       (float (nth input 1))
+                              y                       (float (nth input 2))
+                              size                    (float (nth input 3))
+                              r                       (float (nth input 4))
+                              g                       (float (nth input 5))
+                              b                       (float (nth input 6))
+                              thickness               (float (nth input 7))
+                              linetype                (float (nth input 8))
+                              clear                   (nth input 9)
+                              clear                   (if (= 1 clear) true false)]
+                                        ;(println trig-id "as" dest)
+                          (if (and (= 10 ic))
+                       (cutter.interface/write text x y size r g b thickness linetype clear)
+                      )
+                    nil
+                    )))
+  )
+
+
 
 (set-camera-interface-handlers)
 (set-video-interface-handlers)
@@ -428,3 +465,4 @@
 (set-arrays-interface-handlers)
 (set-float-interface-handlers)
 (set-direct-supercollider-handlers)
+(set-text-handlers)

@@ -151,7 +151,7 @@
 
 ;Text
 (defn write-text
-  "(cutter.cutter_helper/write-text \"cutter\" 0 220 10 100 0.2 0.4 20 10 true)"
+  " (cutter.cutter_helper/write-text \"cutter\" 0 220 10 100 0.2 0.4 20 10 true) "
     [text x y size r g b thickness linetype clear]
         (let [  i-textures          (:i-textures @the-window-state)
                 texture             (:iText i-textures)
