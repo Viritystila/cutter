@@ -104,6 +104,7 @@
    :bff                        (atom 0)
    :isInitialized              (atom false)
    ;; shader uniforms
+   :no-i-channels              16
    :i-channels                 (mapv (fn [x] (keyword (str "iChannel" x))) (range 1 16 1))
    :i-dataArrays               (into {} (mapv (fn [x] {(keyword (str "iDataArray" x)) {:datavec (vec (make-array Float/TYPE 256)), :buffer (-> (BufferUtils/createFloatBuffer 256)
                                                                                                                                               (.put (float-array
@@ -186,7 +187,28 @@
                     }
    })
 ;; GLOBAL STATE ATOMS
+
+
 (defonce the-window-state (atom default-state-values))
+
+;(cutter.cutter/set-default-state cutter.cutter/the-window-state :c 2 :e 3)
+(defn set-default-state [state & {:as all-specified}]
+  ;(println (keys all-specified))
+  (doseq [x (keys all-specified)]
+    (case x
+      :maxDataArraysLength       (swap! state assoc x
+                                        (x all-specified))
+      :i-channels                (swap! state assoc x
+                                        (mapv
+                                         (fn [x] (keyword (str "iChannel" x)))
+                                         (range 1 (+ 1 (x all-specified)) 1)))
+      :i-dataArrays              (swap! state assoc x
+                                        (into {}
+                                              (mapv (fn [x] {(keyword (str "iDataArray" x))
+                                                            {:datavec (vec (make-array Float/TYPE (:maxDataArraysLength @state) )),
+                                                             :buffer (-> (BufferUtils/createFloatBuffer  (:maxDataArraysLength @state)) (.put (float-array  (vec (make-array Float/TYPE  (:maxDataArraysLength @state)))))(.flip))} } ) (range 1  (+ 1 (x all-specified)) 1))))
+      "default"))
+  )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
