@@ -40,7 +40,7 @@
    [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40]))
 
 (defonce default-state-values
-  { :active                     :no  ;; :yes/:stopping/:no
+  {:active                     :no  ;; :yes/:stopping/:no
    :width                      0
    :height                     0
    :title                      ""
@@ -106,6 +106,16 @@
    ;; shader uniforms
    :no-i-channels              16
    :i-channels                 (mapv (fn [x] (keyword (str "iChannel" x))) (range 1 16 1))
+   :i-extra-texture-names      [:iPreviousFrame :iText :iChannelNull]
+   :i-extra-uniform-names      {:iResolution       {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
+                                :iGlobalTime       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)), :extra "", :layout "", :unit -1}
+                                :iRandom           {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)), :extra "", :layout "", :unit -1},
+                                :iPreviousFrame    {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 1},
+                                :iText             {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 2},
+                                :iChannelNull      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 2},
+                                :iChannelX         {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 2},
+                                :iDataArrayX       {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+                                 :iFloatX          {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),:extra "", :layout "", :unit -1}}
    :i-dataArrays               (into {} (mapv (fn [x] {(keyword (str "iDataArray" x)) {:datavec (vec (make-array Float/TYPE 256)), :buffer (-> (BufferUtils/createFloatBuffer 256)
                                                                                                                                               (.put (float-array
                                                                                                                                                      (vec (make-array Float/TYPE 256))))
@@ -188,26 +198,28 @@
    })
 ;; GLOBAL STATE ATOMS
 
-
 (defonce the-window-state (atom default-state-values))
 
 ;(cutter.cutter/set-default-state cutter.cutter/the-window-state :c 2 :e 3)
-(defn set-default-state [state & {:as all-specified}]
-  ;(println (keys all-specified))
-  (doseq [x (keys all-specified)]
-    (case x
-      :maxDataArraysLength       (swap! state assoc x
-                                        (x all-specified))
-      :i-channels                (swap! state assoc x
-                                        (mapv
-                                         (fn [x] (keyword (str "iChannel" x)))
-                                         (range 1 (+ 1 (x all-specified)) 1)))
-      :i-dataArrays              (swap! state assoc x
-                                        (into {}
-                                              (mapv (fn [x] {(keyword (str "iDataArray" x))
-                                                            {:datavec (vec (make-array Float/TYPE (:maxDataArraysLength @state) )),
-                                                             :buffer (-> (BufferUtils/createFloatBuffer  (:maxDataArraysLength @state)) (.put (float-array  (vec (make-array Float/TYPE  (:maxDataArraysLength @state)))))(.flip))} } ) (range 1  (+ 1 (x all-specified)) 1))))
-      "default"))
+(defn set-default-state [state & {:keys  [maxDataArraysLength]
+                                  :or    {maxDataArraysLength 265}
+                                  :as    all-specified}]
+                                        (println all-specified)
+  (let []
+    (doseq [x (keys all-specified)]
+      (case x
+        :maxDataArraysLength       (swap! state assoc x
+                                          (x all-specified))
+        :i-channels                (swap! state assoc x
+                                          (mapv
+                                           (fn [x] (keyword (str "iChannel" x)))
+                                           (range 1 (+ 1 (x all-specified)) 1)))
+        :i-dataArrays              (swap! state assoc x
+                                          (into {}
+                                                (mapv (fn [x] {(keyword (str "iDataArray" x))
+                                                              {:datavec (vec (make-array Float/TYPE (:maxDataArraysLength @state) )), :buffer (-> (BufferUtils/createFloatBuffer  (:maxDataArraysLength @state)) (.put (float-array  (vec (make-array Float/TYPE  (:maxDataArraysLength @state)))))(.flip))} } ) (range 1  (+ 1 (x all-specified)) 1))))
+        :i-floats                  (swap! state assoc x (into {} (mapv (fn [x] {(keyword (str "iFloat" x)) {:data 0 }}) (range 1 (+ 1 (x all-specified)) 1))))
+        "default")))
   )
 
 
