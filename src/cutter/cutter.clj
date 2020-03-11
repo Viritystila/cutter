@@ -107,7 +107,8 @@
    :no-i-channels              16
    :i-channels                 (mapv (fn [x] (keyword (str "iChannel" x))) (range 1 16 1))
    :i-extra-texture-names      [:iPreviousFrame :iText :iChannelNull]
-   :i-extra-uniform-names      {:iResolution       {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
+   :i-extra-uniform-names      [:iResolution :iGlobalTime :iRandom :iPreviousFrame :iText]
+   :i-extra-uniform-types      {:iResolution       {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
                                 :iGlobalTime       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)), :extra "", :layout "", :unit -1}
                                 :iRandom           {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)), :extra "", :layout "", :unit -1},
                                 :iPreviousFrame    {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 1},
@@ -200,7 +201,8 @@
 
 (defonce the-window-state (atom default-state-values))
 
-;(cutter.cutter/set-default-state cutter.cutter/the-window-state :c 2 :e 3)
+;;(cutter.cutter/set-default-state cutter.cutter/the-window-state :maxDataArraysLength 256 :i-channels 16 :i-dataArrays 16 :i-floats 16)
+;;(:i-extra-uniform-types @cutter.cutter/the-window-state)
 (defn set-default-state [state & {:keys  [maxDataArraysLength]
                                   :or    {maxDataArraysLength 265}
                                   :as    all-specified}]
@@ -219,7 +221,26 @@
                                                 (mapv (fn [x] {(keyword (str "iDataArray" x))
                                                               {:datavec (vec (make-array Float/TYPE (:maxDataArraysLength @state) )), :buffer (-> (BufferUtils/createFloatBuffer  (:maxDataArraysLength @state)) (.put (float-array  (vec (make-array Float/TYPE  (:maxDataArraysLength @state)))))(.flip))} } ) (range 1  (+ 1 (x all-specified)) 1))))
         :i-floats                  (swap! state assoc x (into {} (mapv (fn [x] {(keyword (str "iFloat" x)) {:data 0 }}) (range 1 (+ 1 (x all-specified)) 1))))
-        "default")))
+        "default"))
+    (swap! state assoc :i-uniforms {})
+    (merge
+     (into {}
+           (map (fn [x] [x (x (:i-extra-uniform-types @state))]) (:i-extra-uniform-names @state)))
+     (into {}
+           (map (fn [x] [x (:iChannelX (:i-extra-uniform-types @state))]) (:i-channels @state)))
+     (into {}
+           (map (fn [x] [(first x) (:iDataArrayX (:i-extra-uniform-types @state))]) (:i-dataArrays @state)))
+     (into {}
+           (map (fn [x] [(first x) (:iFloatX (:i-extra-uniform-types @state))]) (:i-floats @state))))
+    ;; (map (fn [x]
+    ;;        [x (x (:i-extra-uniform-types @state))])
+    ;;      (concat (:i-extra-uniform-names @state)
+    ;;              (:i-channels @state)
+    ;;              (keys (:i-dataArrays @state))
+    ;;              (keys (:i-floats @state))))
+                                        ;(swap! state assoc x (x (:i-extra-uniform-types @state)))
+    )
+
   )
 
 
