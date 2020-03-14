@@ -113,8 +113,8 @@
                                 :iRandom           {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)), :extra "", :layout "", :unit -1},
                                 :iPreviousFrame    {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 1},
                                 :iText             {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 2},
-                                :iChannelNull      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 2},
-                                :iChannelX         {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 2},
+                                :iChannelNull      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit -1},
+                                :iChannelX         {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 3},
                                 :iDataArrayX       {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
                                  :iFloatX          {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),:extra "", :layout "", :unit -1}}
    :i-dataArrays               (into {} (mapv (fn [x] {(keyword (str "iDataArray" x)) {:datavec (vec (make-array Float/TYPE 256)), :buffer (-> (BufferUtils/createFloatBuffer 256)
@@ -207,7 +207,8 @@
                                   :or    {maxDataArraysLength 265}
                                   :as    all-specified}]
                                         (println all-specified)
-  (let []
+  (let [texture_map    {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}
+        unit_no        (atom 2)]
     (doseq [x (keys all-specified)]
       (case x
         :maxDataArraysLength       (swap! state assoc x
@@ -222,27 +223,26 @@
                                                               {:datavec (vec (make-array Float/TYPE (:maxDataArraysLength @state) )), :buffer (-> (BufferUtils/createFloatBuffer  (:maxDataArraysLength @state)) (.put (float-array  (vec (make-array Float/TYPE  (:maxDataArraysLength @state)))))(.flip))} } ) (range 1  (+ 1 (x all-specified)) 1))))
         :i-floats                  (swap! state assoc x (into {} (mapv (fn [x] {(keyword (str "iFloat" x)) {:data 0 }}) (range 1 (+ 1 (x all-specified)) 1))))
         "default"))
-    (swap! state assoc :i-uniforms {})
-    (merge
-     (into {}
-           (map (fn [x] [x (x (:i-extra-uniform-types @state))]) (:i-extra-uniform-names @state)))
-     (into {}
-           (map (fn [x] [x (:iChannelX (:i-extra-uniform-types @state))]) (:i-channels @state)))
-     (into {}
-           (map (fn [x] [(first x) (:iDataArrayX (:i-extra-uniform-types @state))]) (:i-dataArrays @state)))
-     (into {}
-           (map (fn [x] [(first x) (:iFloatX (:i-extra-uniform-types @state))]) (:i-floats @state))))
-    ;; (map (fn [x]
-    ;;        [x (x (:i-extra-uniform-types @state))])
-    ;;      (concat (:i-extra-uniform-names @state)
-    ;;              (:i-channels @state)
-    ;;              (keys (:i-dataArrays @state))
-    ;;              (keys (:i-floats @state))))
-                                        ;(swap! state assoc x (x (:i-extra-uniform-types @state)))
-    )
+    (swap! state assoc :i-uniforms
+           (merge
+            (into {}
+                  (map (fn [x] [x (x (:i-extra-uniform-types @state))]) (:i-extra-uniform-names @state)))
+            (into {}
+                  (map (fn [x] (swap! unit_no inc) [x (assoc (:iChannelX (:i-extra-uniform-types @state)) :unit @unit_no)]) (:i-channels @state)))
+            (into {}
+                  (map (fn [x] [(first x) (:iDataArrayX (:i-extra-uniform-types @state))]) (:i-dataArrays @state)))
+            (into {}
+                  (map (fn [x] [(first x) (:iFloatX (:i-extra-uniform-types @state))]) (:i-floats @state)))))
 
+    (swap! state assoc :i-textures
+           (merge
+            (into {} (map (fn [x] [x  texture_map]) (:i-extra-texture-names @state) ))
+            (into {} (map (fn [x] [x  texture_map]) (:i-channels @state)))))
+    )
+  nil
   )
 
+ (cutter.cutter/set-default-state cutter.cutter/the-window-state :maxDataArraysLength 256 :i-channels 16 :i-dataArrays 16 :i-floats 16)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;Init window and opengl;;;;;;
