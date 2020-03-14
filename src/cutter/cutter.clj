@@ -37,7 +37,7 @@
                                         ;     [java.lang.reflect Field]
    [org.lwjgl BufferUtils]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
-   [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40]))
+   [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40]))
 
 (defonce default-state-values
   {:active                     :no  ;; :yes/:stopping/:no
@@ -65,6 +65,8 @@
 
    :buffer-objects             {} ;{:plane {:vao 0, :verticex-count 0, :indices-count 0,  :vbo-id, 0 :vbo-buffer 0, :vboc-id 0, :color-buffer 0, :vboi-id 0, :index-buffer 0, :vbot-id 0, :uv-buffer 0, :vbon-id 0, :normal-buffer 0 }
    ;; shader program
+   ;; Pixel buffers
+   :outputPBOs                 0
    :shader-ver                 "#version 460 core"
    :shader-good                true ;; false in error condition
    :shader-filename            nil
@@ -396,24 +398,6 @@
 (defn- init-buffers
   [locals]
   (let [vertices_and_indices     (cutter.cutter/load-plane)
-        ;;    vertices  (float-array   [-1.0 -1.0 0.0 ;1.0
-        ;;                                1.0  1.0 -1.0 ;1.0
-        ;;                                0.0  1.0 -1.0 ;1.0
-        ;;                                1.0  0.0 1.0 ;1.0
-        ;;                                -1.0 1.0 0.0 ;1.0
-        ;;                                1.0  1.0 -1.0 ;1.0
-        ;;                                0.0  1.0 1.0 ;1.0
-        ;;                                1.0  0.0 1.0 ;1.0
-        ;;                              ;-1.0 -1.0 0.0
-        ;;                              ])
-        ;; vertices (float-array
-        ;;           [-1.0    -1.0       0.0
-        ;;            1.0      -1.0      0.0
-        ;;            1.0        1.0     0.0
-        ;;            -1.0        1.0    0.0
-        ;;             ])
-                                        ; vertices  (float-array  [-1.0 -1.0 0.0 -1.0 -1.0 0.0 -1.0 1.0 0.0 -1.0 1.0 0.0 1.0 -1.0 0.0 1.0 -1.0 0.0 1.0 1.0 0.0 1.0 1.0 0.0
-                                        ;                          ])
         ;;Vertices
         vertices   (float-array (vec (nth vertices_and_indices 0)))
         vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
@@ -427,11 +411,6 @@
         colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
                           (.put colors)
                           (.flip))
-                                        ;
-        ;; indices (byte-array (map byte  [0 3 1
-        ;;                                 1 3 2
-        ;;                                 ;2 3 0
-        ;;                                 0 1 2]))
         ;;Indices
         indices (byte-array (nth vertices_and_indices 3))
         indices-count (count indices)
@@ -487,7 +466,15 @@
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
         _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-        ;; deselect the VAO
+        ;; Output Pixel buffers    :outputPBOs tex-buf  (:buffer (:iPreviousFrame i-textures))
+        pbo_size            (* 3 (:width @locals) (:height @locals) )
+        pboi_1_id           (GL15/glGenBuffers)
+        pboi_2_id           (GL15/glGenBuffers)
+        _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pboi_1_id)
+        _                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER pbo_size GL30/GL_STREAM_READ )
+        _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pboi_2_id)
+        _                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER pbo_size GL30/GL_STREAM_READ )
+        _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
                                         ;_                   (GL30/glBindVertexArray 0)
         _ (except-gl-errors "@ end of init-buffers")]
     (swap! locals
@@ -499,7 +486,8 @@
            :vbot-id vbot-id
            :vbon-id vbon-id
            :vertices-count vertices-count
-           :indices-count indices-count)))
+           :indices-count indices-count
+           :outputPBOs    [pboi_1_id pboi_2_id])))
 
 (defn- init-gl
   [locals]
@@ -595,8 +583,7 @@
 (defn- draw [locals]
   (let [{:keys [width height
                 start-time last-time i-global-time-loc
-                                        ;i-date-loc
-                pgm-id vbo-id vao-id vboi-id vboc-id vbot-id vbon-id
+                pgm-id vbo-id vao-id vboi-id vboc-id vbot-id vbon-id outputPBOs
                 vertices-count
                 indices-count
                 i-uniforms
@@ -633,14 +620,6 @@
     (doseq [x i-channels]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:unit (x i-uniforms)))
       (get-textures locals x i-uniforms))
-
-    ;; get vertex array ready
-    ;; (GL30/glBindVertexArray vao-id)
-    ;; (GL20/glEnableVertexAttribArray 0)
-    ;; (GL20/glEnableVertexAttribArray 1)
-    ;; (GL20/glEnableVertexAttribArray 2)
-    ;; (GL20/glEnableVertexAttribArray 3)
-    ;; (GL20/glEnableVertexAttribArray 4)
 
                                         ;Vertices
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
@@ -692,12 +671,19 @@
 
     (if @save-frames
       (do ; download it and copy the previous image to its own texture
+        (GL11/glReadBuffer GL11/GL_FRONT)
+        (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (first outputPBOs))
         (let [tex-buf  (:buffer (:iPreviousFrame i-textures))
               bb       (new org.bytedeco.javacpp.BytePointer tex-buf)
               minsize   (long  @(:minsize @the-window-state))]
+          ;;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (first (outputPBOs)))
           (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
-          (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer tex-buf)
-          (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) bb minsize )
+          (GL11/glReadPixels 0 0 width height GL11/GL_RGB GL11/GL_UNSIGNED_BYTE, 0)
+          ;;(GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer tex-buf)
+          (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (last outputPBOs))
+          ;;(org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) bb minsize )
+          (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state)  (new org.bytedeco.javacpp.BytePointer (GL15/glMapBuffer GL21/GL_PIXEL_PACK_BUFFER, GL15/GL_READ_ONLY tex-buf))  minsize )
+          (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
           )
         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0) )
       nil)
