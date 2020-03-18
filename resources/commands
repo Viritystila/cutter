@@ -16,7 +16,7 @@ kitty/launcher/kitty --v4l2_res 3200x1800 --v4l2_dev /dev/video3
 
 sudo rmmod
 
-sudo v4l2loopback-ctl set-caps "video/x-raw,format=RGB,width=1920,height=1080" /dev/video4
+sudo v4l2loopback-ctl set-caps "video/x-raw,format=RGB,width=1280,height=800" /dev/video4
 
 v4l2loopback-ctl set-fps 30 /dev/video4
 
