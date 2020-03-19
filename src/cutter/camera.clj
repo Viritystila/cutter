@@ -62,10 +62,7 @@
                                         ; org.opencv.videoio.Videoio/CAP_V4L2
         (.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
         (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
-                                        ;(println  (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS) )
         (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
-                                        ;(println (.get capture org.opencv.videoio.Videoio/CAP_PROP_FPS))
-                                        ;(println (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G )))
         (swap! cutter.cutter/the-window-state assoc :cameras
                (assoc cameras
                       camera-key (assoc camera :running true,
@@ -74,7 +71,8 @@
           (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
             (let [fps                 (:fps (camera-key (:cameras @cutter.cutter/the-window-state)))
                   camera-destination  (:destination (camera-key (:cameras @cutter.cutter/the-window-state)))
-                  queue               (:queue ( camera-destination (:i-textures @cutter.cutter/the-window-state)))]
+                  queue               (:queue ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
+                 ]
               (reset! startTime (System/nanoTime))
               (oc-query-frame capture mat)
               (async/offer!

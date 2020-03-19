@@ -209,7 +209,7 @@
                                   :or    {maxDataArraysLength 265}
                                   :as    all-specified}]
                                         (println all-specified)
-  (let [texture_map    {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}
+  (let [texture_map    {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0 :pbo -1}
         unit_no        (atom 2)]
     (doseq [x (keys all-specified)]
       (case x
@@ -513,6 +513,63 @@
                           GL11/GL_UNSIGNED_BYTE
                           buffer)))
 
+
+(defn- set-texture-pbo [tex-image-target internal-format width height format buffer pbo nbytes]
+  (try
+    ;(println "aaaa" pbo)
+    (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
+    (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
+                          ^Integer width  ^Integer height
+                          ^Integer format
+                          GL11/GL_UNSIGNED_BYTE
+                          0)
+    ;(GL15/glBufferData GL21/GL_PIXEL_UNPACK_BUFFER nbytes GL30/GL_STREAM_DRAW)
+    (let [address        (.getDeclaredField java.nio.Buffer "address")
+          capacity       (.getDeclaredField java.nio.Buffer "capacity")
+          _              (.setAccessible address true)
+          _              (.setAccessible capacity true)
+          ;buffer_addr    (.getLong address buffer)
+          ;buffer_cap     (.getInt capacity buffer)
+          _              (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
+          _              (GL15/glBufferData GL21/GL_PIXEL_UNPACK_BUFFER nbytes GL30/GL_STREAM_DRAW)
+          ptr            (GL15/glMapBuffer GL21/GL_PIXEL_UNPACK_BUFFER GL15/GL_WRITE_ONLY)
+          ;_ (.rewind buffer)                          ; _              (.rewind)
+                                        ;_   (println (.capacity buffer))
+                                        ;_ (println (.capacity ptr))
+          _ (.limit buffer nbytes)
+          data           (byte-array (.remaining buffer))
+          buffer_addr    (.getLong address buffer)
+          buffer_cap     (.getInt capacity buffer)
+          mm  (new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 ptr 0)
+          ]
+      ;(println (.getLong address ptr))
+      ;(.setLong address  ptr buffer_addr)
+      ;(println (.getLong address ptr))
+      ;(.getLong address ptr)
+      ;(println (.limit buffer))
+                                        ;(println (.remaining buffer))
+      ;(println  (.dataAddr mm))
+                                        ;(.position buffer 0)
+      ;(new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 ptr 0)
+      (.get buffer data)
+      ;(.flip buffer)
+      ;(println pbo)
+      ;(println "ptr" (type ptr))
+                                        ;(println "buffer" (type buffer))
+                                        ;(.rewind buffer)
+      ;(.array buffer)
+      (.put ptr data)
+      ;(.rewind buffer)
+      ;(.flip ptr)
+      (GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER))
+     ;; (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
+     ;;                      ^Integer width  ^Integer height
+     ;;                      ^Integer format
+     ;;                      GL11/GL_UNSIGNED_BYTE
+     ;;                      0)
+    (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)))
+
+
 (defn- set-opengl-texture [locals texture-key buffer width height image-bytes img-addr]
   (let[  i-textures          (:i-textures @locals )
        texture             (texture-key i-textures)
@@ -525,26 +582,39 @@
        init?               (:init-opengl texture)
        tex-id              (:tex-id texture)
        queue               (:queue texture)
+       pbo                 (:pbo texture)
+       ;mat                 (:mat texture)
+       ; mat_step            (.step1 mat)
+       ; mat_rows            (.rows mat)
+       ; mat_size            (* mat_step mat_rows)
        height              height ;(nth image 4)
        width               width ;(nth image 5)
        image-bytes         image-bytes; (nth image 6)
        setnbytes           (* wset hset bset)
        tex-image-target    ^Integer (+ 0 target)
        nbytes              (* width height image-bytes)
+       ;_ (println nbytes)
+       ;_ (println mat_size)
        buffer              buffer]
     (if (or init? (not= setnbytes nbytes))
       (do
+        ;(println "INIT TEXTURE")
         (set-texture tex-image-target internal-format width height format buffer)
         (let [queue               (:queue texture)
               out1                (:out1 texture)
               mlt                 (:mult texture)
-              texture     (init-texture width height target tex-id queue out1 mlt)
+              pbo                 (:pbo texture)
+              ;_                   (GL30/glDeleteBuffers pbo)
+              ;pbo                 (GL15/glGenBuffers)
+              texture     (init-texture width height target tex-id queue out1 mlt pbo)
               texture     (assoc texture :init-opengl false)
               i-textures  (assoc i-textures texture-key texture)]
           (swap! locals assoc :i-textures i-textures)))
       (do
         (if (< 0 img-addr)
-          (set-texture tex-image-target internal-format width height format buffer))))
+          (set-texture tex-image-target internal-format width height format buffer)
+          ;;(cutter.cutter/set-texture-pbo tex-image-target internal-format width height format buffer pbo nbytes)
+          )))
     (except-gl-errors "@ end of load-texture if-stmt")))
 
                                         ;
@@ -721,7 +791,7 @@
 
 (defn- destroy-gl
   [locals]
-  (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn cams]} @locals]
+  (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn cams  outputPBOs]} @locals]
     ;; Delete the shaders
     (GL20/glUseProgram 0)
     (GL20/glDetachShader pgm-id vs-id)
@@ -742,7 +812,11 @@
     (GL15/glDeleteBuffers ^Integer vbo-id)
     ;; Delete the VAO
     (GL30/glBindVertexArray 0)
-    (GL30/glDeleteVertexArrays vao-id)))
+    (GL30/glDeleteVertexArrays vao-id)
+    ;; Delete pbo
+    (GL30/glDeleteBuffers   (first outputPBOs))
+    (GL30/glDeleteBuffers   (last outputPBOs))
+    ))
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
