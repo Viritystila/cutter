@@ -513,10 +513,17 @@
                           GL11/GL_UNSIGNED_BYTE
                           buffer)))
 
-
+;;Lets keep this here for future optimization
+;; Idea:
+;; Map persisten buffer
+;; Creat mat from that pointer
+;; Use that Mat to get data from camera/video
+;; => no extra copies
+;; Cons: Needs heavy modifications to the program
 (defn- set-texture-pbo [tex-image-target internal-format width height format buffer pbo nbytes]
   (try
-    ;(println "aaaa" pbo)
+                                        ;(println "aaaa" pbo)
+    ;;
     (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
     (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
                           ^Integer width  ^Integer height
