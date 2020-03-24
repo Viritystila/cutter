@@ -109,8 +109,9 @@
         capture                  (:source video)
         video                    (assoc video :running false)
         videos                   (assoc videos video-key video)]
-        (swap! cutter.cutter/the-window-state assoc :videos videos)
-        (.release capture))
+    (swap! cutter.cutter/the-window-state assoc :videos videos)
+    (Thread/sleep 100)
+    (.release capture))
   nil)
 
 

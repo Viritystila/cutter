@@ -769,6 +769,7 @@
                                         ;(org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state)  (new org.bytedeco.javacpp.BytePointer (GL15/glMapBuffer GL21/GL_PIXEL_PACK_BUFFER, GL15/GL_READ_ONLY tex-buf) )  minsize )
           (GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
           (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
+          (.deallocate bb)
           )
         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0) )
       nil)
