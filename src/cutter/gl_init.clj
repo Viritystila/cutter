@@ -30,7 +30,7 @@
                                         ; (java.lang.reflect Field)
                                         ;(org.lwjgl BufferUtils)
                                         ;(org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
-   (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40)
+   (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45)
    )
   )
 
@@ -52,8 +52,15 @@
         mat_step            (.step1 mat)
         mat_rows            (.rows mat)
         mat_size            (* mat_step mat_rows)
+        ;_ (println pbo "pbo")
+        flags               (bit-or GL30/GL_MAP_WRITE_BIT GL45/GL_MAP_PERSISTENT_BIT GL44/GL_MAP_COHERENT_BIT )
+        _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
+        _                   (GL44/glBufferStorage GL21/GL_PIXEL_UNPACK_BUFFER (long mat_size) flags)
+        gl_buffer           (GL44/glMapBufferRange GL21/GL_PIXEL_UNPACK_BUFFER 0 mat_size flags)
+        ;_ (println gl_buffer)
         ;_                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pbo)
         ;_                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER buffer GL30/GL_STREAM_DRAW)
+        _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
         texture             { :tex-id           tex-id,
                              :target           target,
                              :height           height,
@@ -67,15 +74,17 @@
                              :queue            queue
                              :mult             mlt
                              :out1             out1
-                             :pbo              pbo}]
+                             :pbo              pbo
+                             :gl_buffer        gl_buffer}]
     (GL11/glBindTexture target tex-id)
     (GL11/glTexParameteri target GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri target GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri target GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
     (GL11/glTexParameteri target GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
-    (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pbo)
-    (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER mat_size GL30/GL_STREAM_DRAW)
-    (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
+    (GL11/glBindTexture target 0)
+    ;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pbo)
+    ;(GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER mat_size GL30/GL_STREAM_DRAW)
+    ;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
     texture))
 
 (defn initialize-texture [locals uniform-key width height]

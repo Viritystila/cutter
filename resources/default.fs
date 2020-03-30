@@ -4,5 +4,6 @@ void main(void) {
   uv.y=-2.0-uv.y;
   vec4 iChannel1_texture=texture2D(iChannel1, uv);
   vec4 iChannel2_texture=texture2D(iChannel2, uv);
-  op =mix(iChannel1_texture, iChannel2_texture, 0.5);
+  vec4 text=texture2D(iText, uv);
+  op =mix(iChannel1_texture, iChannel2_texture+text*100, 0.5);
 }

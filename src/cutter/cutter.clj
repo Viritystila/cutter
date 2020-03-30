@@ -209,7 +209,21 @@
                                   :or    {maxDataArraysLength 265}
                                   :as    all-specified}]
                                         (println all-specified)
-  (let [texture_map    {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0 :pbo -1}
+  (let [texture_map    {:tex-id 0,
+                        :target 0,
+                        :height 1,
+                        :width 1,
+                        :mat 0,
+                        :buffer 0,
+                        :internal-format -1,
+                        :format -1,
+                        :channels 3,
+                        :init-opengl true,
+                        :queue 0,
+                        :mult 0,
+                        :out1 0,
+                        :pbo -1,
+                        :gl_buffer -1}
         unit_no        (atom 2)]
     (doseq [x (keys all-specified)]
       (case x
@@ -379,18 +393,18 @@
   )
 
 (defn load-plane []
-  (let [path      (.getPath (clojure.java.io/resource "plane3.obj"))
+  (let [path      (clojure.java.io/resource "plane3.obj")
         output    (cutter.cutter/load-obj path) ]
     output))  ;
 
 (defn load-cube []
-  (let [path      (.getPath (clojure.java.io/resource "cube.obj"))
+  (let [path      (clojure.java.io/resource "cube.obj")
         output    (cutter.cutter/load-obj path) ]
     output))
 
 
 (defn load-sphere []
-  (let [path      (.getPath (clojure.java.io/resource "sphere.obj"))
+  (let [path      (clojure.java.io/resource "sphere.obj")
         output    (cutter.cutter/load-obj path) ]
     output))
 
@@ -520,7 +534,7 @@
 ;; Use that Mat to get data from camera/video
 ;; => no extra copies
 ;; Cons: Needs heavy modifications to the program
-(defn- set-texture-pbo [tex-image-target internal-format width height format buffer pbo nbytes]
+(defn- set-texture-pbo [tex-image-target internal-format width height format buffer pbo nbytes gl_buffer]
   (try
                                         ;(println "aaaa" pbo)
     ;;
@@ -530,24 +544,26 @@
                           ^Integer format
                           GL11/GL_UNSIGNED_BYTE
                           0)
+    ;(println buffer)
     ;(GL15/glBufferData GL21/GL_PIXEL_UNPACK_BUFFER nbytes GL30/GL_STREAM_DRAW)
-    (let [address        (.getDeclaredField java.nio.Buffer "address")
-          capacity       (.getDeclaredField java.nio.Buffer "capacity")
-          _              (.setAccessible address true)
-          _              (.setAccessible capacity true)
+    (let [;address        (.getDeclaredField java.nio.Buffer "address")
+          ;capacity       (.getDeclaredField java.nio.Buffer "capacity")
+          ;_              (.setAccessible address true)
+          ;_              (.setAccessible capacity true)
           ;buffer_addr    (.getLong address buffer)
+          ;_ (println buffer_addr)
           ;buffer_cap     (.getInt capacity buffer)
           _              (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
-          _              (GL15/glBufferData GL21/GL_PIXEL_UNPACK_BUFFER nbytes GL30/GL_STREAM_DRAW)
-          ptr            (GL15/glMapBuffer GL21/GL_PIXEL_UNPACK_BUFFER GL15/GL_WRITE_ONLY)
+          ;_              (GL15/glBufferData GL21/GL_PIXEL_UNPACK_BUFFER nbytes GL30/GL_STREAM_DRAW)
+          ;;ptr            (GL15/glMapBuffer GL21/GL_PIXEL_UNPACK_BUFFER GL15/GL_WRITE_ONLY)
           ;_ (.rewind buffer)                          ; _              (.rewind)
                                         ;_   (println (.capacity buffer))
                                         ;_ (println (.capacity ptr))
-          _ (.limit buffer nbytes)
-          data           (byte-array (.remaining buffer))
-          buffer_addr    (.getLong address buffer)
-          buffer_cap     (.getInt capacity buffer)
-          mm  (new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 ptr 0)
+          ;_ (.limit buffer nbytes)
+          ;data           (byte-array (.remaining buffer))
+          ;buffer_addr    (.getLong address buffer)
+          ;buffer_cap     (.getInt capacity buffer)
+          ;mm  (new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 ptr 0)
           ]
       ;(println (.getLong address ptr))
       ;(.setLong address  ptr buffer_addr)
@@ -558,17 +574,18 @@
       ;(println  (.dataAddr mm))
                                         ;(.position buffer 0)
       ;(new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 ptr 0)
-      (.get buffer data)
+      ;(.get buffer data)
       ;(.flip buffer)
       ;(println pbo)
       ;(println "ptr" (type ptr))
                                         ;(println "buffer" (type buffer))
                                         ;(.rewind buffer)
       ;(.array buffer)
-      (.put ptr data)
+      ;(.put ptr data)
       ;(.rewind buffer)
       ;(.flip ptr)
-      (GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER))
+      ;(GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER)
+      )
      ;; (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
      ;;                      ^Integer width  ^Integer height
      ;;                      ^Integer format
@@ -590,6 +607,7 @@
        tex-id              (:tex-id texture)
        queue               (:queue texture)
        pbo                 (:pbo texture)
+       gl_buffer           (:gl_buffer texture)
        ;mat                 (:mat texture)
        ; mat_step            (.step1 mat)
        ; mat_rows            (.rows mat)
@@ -611,16 +629,20 @@
               out1                (:out1 texture)
               mlt                 (:mult texture)
               pbo                 (:pbo texture)
-              ;_                   (GL30/glDeleteBuffers pbo)
-              ;pbo                 (GL15/glGenBuffers)
+              gl_buffer           (:gl_buffer texture)
+              _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
+              _                   (GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER)
+              _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
+              _                   (GL30/glDeleteBuffers pbo)
+              pbo                 (GL15/glGenBuffers)
               texture     (init-texture width height target tex-id queue out1 mlt pbo)
               texture     (assoc texture :init-opengl false)
               i-textures  (assoc i-textures texture-key texture)]
           (swap! locals assoc :i-textures i-textures)))
       (do
         (if (< 0 img-addr)
-          (set-texture tex-image-target internal-format width height format buffer)
-          ;;(cutter.cutter/set-texture-pbo tex-image-target internal-format width height format buffer pbo nbytes)
+          ;;(set-texture tex-image-target internal-format width height format buffer)
+          (cutter.cutter/set-texture-pbo tex-image-target internal-format width height format buffer pbo nbytes gl_buffer)
           )))
     (except-gl-errors "@ end of load-texture if-stmt")))
 
@@ -1165,8 +1187,14 @@
                              inputkeys       (map keyword (keys inputmap))
                              inputvals       (vals inputmap)
                              input           (zipmap inputkeys inputvals)
-                             fs              (if (nil? (:fs input))     (.getPath (clojure.java.io/resource "default.fs")) (:fs input))
-                             vs              (if (nil? (:vs input))     (.getPath (clojure.java.io/resource "default.vs")) (:vs input))
+                             fs              (if (nil? (:fs input))
+                                              ;; (.getPath (clojure.java.io/resource "default.fs"))
+                                               "default.fs"
+                                               (:fs input))
+                             vs              (if (nil? (:vs input))
+                                               ;; (.getPath (clojure.java.io/resource "default.vs"))
+                                               "default.vs"
+                                               (:vs input))
                              width           (if (nil? (:width input))  1280 (:width input))
                              height          (if (nil? (:height input)) 800 (:height input))
                              title           (if (nil? (:title input))  "cutter" (:title input))
@@ -1178,8 +1206,14 @@
                              inputkeys       (map keyword (keys inputmap))
                              inputvals       (vals inputmap)
                              input           (zipmap inputkeys inputvals)
-                             fs              (if (nil? (:fs input))     (.getPath (clojure.java.io/resource "default.fs")) (:fs input))
-                             vs              (if (nil? (:vs input))     (.getPath (clojure.java.io/resource "default.vs")) (:vs input))
+                             fs              (if (nil? (:fs input))
+                                               ;;(.getPath (clojure.java.io/resource "default.fs"))
+                                               "default.fs"
+                                                 (:fs input))
+                             vs              (if (nil? (:vs input))
+                                               ;;(.getPath (clojure.java.io/resource "default.vs"))
+                                               "default.vs"
+                                               (:vs input))
                              width           (if (nil? (:width input))  1280 (:width input))
                              height          (if (nil? (:height input)) 800 (:height input))
                              title           (if (nil? (:title input))  "cutter" (:title input))

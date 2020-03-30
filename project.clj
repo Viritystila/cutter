@@ -63,6 +63,7 @@
                   ["Viritystila v4l2javacpp" "https://github.com/Viritystila/v4l2javacpp/raw/master"]]
     :dependencies ~all-dependencies
     ;:java-source-paths ["src/java"]
+    :resource-paths ["resources"]
     :main ^{:skip-aot true} cutter.core
     :jvm-opts ^:replace ~(jvm-opts)
     )

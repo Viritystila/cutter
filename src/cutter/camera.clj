@@ -46,7 +46,11 @@
         capture                   (:source camera)
         running?                  (:running camera)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
-        mat                       (oc-new-mat)
+        ;mat                       (oc-new-mat)
+        gl_buffer           (:gl_buffer (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
+        width               (:width (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
+        height              (:height (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
+        mat                 (new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 gl_buffer 0)
         fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
 
         camera                    {:idx device-id,
@@ -59,7 +63,6 @@
     (swap! cutter.cutter/the-window-state assoc :cameras cameras)
     (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
       (do
-                                        ; org.opencv.videoio.Videoio/CAP_V4L2
         (.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
         (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
         (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
@@ -72,7 +75,11 @@
             (let [fps                 (:fps (camera-key (:cameras @cutter.cutter/the-window-state)))
                   camera-destination  (:destination (camera-key (:cameras @cutter.cutter/the-window-state)))
                   queue               (:queue ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
-                 ]
+                  ;gl_buffer           (:gl_buffer ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
+                  ;width               (:width ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
+                  ;height              (:height ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
+                  ;mat                 (new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 gl_buffer 0)
+                  ]
               (reset! startTime (System/nanoTime))
               (oc-query-frame capture mat)
               (async/offer!
