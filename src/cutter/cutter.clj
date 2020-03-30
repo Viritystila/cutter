@@ -534,10 +534,11 @@
 ;; Use that Mat to get data from camera/video
 ;; => no extra copies
 ;; Cons: Needs heavy modifications to the program
-(defn- set-texture-pbo [tex-image-target internal-format width height format buffer pbo nbytes gl_buffer]
+(defn- set-texture-pbo [tex-image-target internal-format width height format buffer pbo nbytes]
+  ;(println buffer)
   (try
                                         ;(println "aaaa" pbo)
-    ;;
+    ;(println buffer)
     (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
     (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
                           ^Integer width  ^Integer height
@@ -553,7 +554,7 @@
           ;buffer_addr    (.getLong address buffer)
           ;_ (println buffer_addr)
           ;buffer_cap     (.getInt capacity buffer)
-          _              (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
+         ; _              (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
           ;_              (GL15/glBufferData GL21/GL_PIXEL_UNPACK_BUFFER nbytes GL30/GL_STREAM_DRAW)
           ;;ptr            (GL15/glMapBuffer GL21/GL_PIXEL_UNPACK_BUFFER GL15/GL_WRITE_ONLY)
           ;_ (.rewind buffer)                          ; _              (.rewind)
@@ -630,19 +631,26 @@
               mlt                 (:mult texture)
               pbo                 (:pbo texture)
               gl_buffer           (:gl_buffer texture)
+              _                   (println "aaa, update texture")
+              ;_                   (Thread/sleep 500)
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
               _                   (GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER)
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
               _                   (GL30/glDeleteBuffers pbo)
               pbo                 (GL15/glGenBuffers)
+              ;_ (println "Make it here?")
+              ;_                   (Thread/sleep 500)
               texture     (init-texture width height target tex-id queue out1 mlt pbo)
+              ;_  (println "is this the bad place?")
               texture     (assoc texture :init-opengl false)
-              i-textures  (assoc i-textures texture-key texture)]
+              i-textures  (assoc i-textures texture-key texture)
+              ;_ (println "Or here?")
+              ]
           (swap! locals assoc :i-textures i-textures)))
       (do
         (if (< 0 img-addr)
           ;;(set-texture tex-image-target internal-format width height format buffer)
-          (cutter.cutter/set-texture-pbo tex-image-target internal-format width height format buffer pbo nbytes gl_buffer)
+          (cutter.cutter/set-texture-pbo tex-image-target internal-format width height format buffer pbo nbytes)
           )))
     (except-gl-errors "@ end of load-texture if-stmt")))
 
