@@ -631,7 +631,7 @@
               mlt                 (:mult texture)
               pbo                 (:pbo texture)
               gl_buffer           (:gl_buffer texture)
-              _                   (println "aaa, update texture")
+              ;_                   (println "aaa, update texture")
               ;_                   (Thread/sleep 500)
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
               _                   (GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER)
