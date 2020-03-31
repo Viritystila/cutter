@@ -47,7 +47,7 @@
         running?                  (:running camera)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
         ;mat                       (oc-new-mat)
-        ;mat           (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))                               ;
+        mat           (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))                               ;
         ;gl_buffer           (:gl_buffer (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
         ;width               (:width (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
         ;height              (:height (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
@@ -104,7 +104,7 @@
         cameras                  (assoc cameras camera-key camera)]
     (swap! cutter.cutter/the-window-state assoc :cameras cameras)
     (println "Stopping camera " device)
-    (Thread/sleep 100)
+    (Thread/sleep 200)
     (.release capture))
   nil)
 
