@@ -34,7 +34,7 @@
                                         ;       [java.util Calendar]
                                         ;         [java.util List]
                                         ;           [javax.imageio ImageIO]
-                                        ;     [java.lang.reflect Field]
+                                        ;     [java.lang.reflect Field][<0;145;37M
    [org.lwjgl BufferUtils]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
    [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]))
@@ -91,8 +91,10 @@
    :maximum-cameras            1000
    :maximum-videos             1000
    :maximum-buffer-length      250  ;Frames
+   :request-buffers            (atom false)
+   :requested-buffer           (atom {})
    :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
-   :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0}
+   :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0, pbo_ids 0}
    :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0}}
    :videos                     {} ;{:filename, {:idx :destination :source "capture" :running false, :fps 30}}
                                         ;Data Arrays
@@ -540,69 +542,19 @@
 ;; Use that Mat to get data from camera/video
 ;; => no extra copies
 ;; Cons: Needs heavy modifications to the program
-(defn- set-texture-pbo [tex-image-target internal-format width height format buffer pbo nbytes]
-  ;(println buffer)
+(defn- set-texture-pbo [tex-image-target width height format pbo]
   (try
-                                        ;(println "aaaa" pbo)
-    ;(println buffer)
     (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
     (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
                           ^Integer width  ^Integer height
                           ^Integer format
                           GL11/GL_UNSIGNED_BYTE
                           0)
-    ;(println buffer)
-    ;(GL15/glBufferData GL21/GL_PIXEL_UNPACK_BUFFER nbytes GL30/GL_STREAM_DRAW)
-    (let [;address        (.getDeclaredField java.nio.Buffer "address")
-          ;capacity       (.getDeclaredField java.nio.Buffer "capacity")
-          ;_              (.setAccessible address true)
-          ;_              (.setAccessible capacity true)
-          ;buffer_addr    (.getLong address buffer)
-          ;_ (println buffer_addr)
-          ;buffer_cap     (.getInt capacity buffer)
-         ; _              (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
-          ;_              (GL15/glBufferData GL21/GL_PIXEL_UNPACK_BUFFER nbytes GL30/GL_STREAM_DRAW)
-          ;;ptr            (GL15/glMapBuffer GL21/GL_PIXEL_UNPACK_BUFFER GL15/GL_WRITE_ONLY)
-          ;_ (.rewind buffer)                          ; _              (.rewind)
-                                        ;_   (println (.capacity buffer))
-                                        ;_ (println (.capacity ptr))
-          ;_ (.limit buffer nbytes)
-          ;data           (byte-array (.remaining buffer))
-          ;buffer_addr    (.getLong address buffer)
-          ;buffer_cap     (.getInt capacity buffer)
-          ;mm  (new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 ptr 0)
-          ]
-      ;(println (.getLong address ptr))
-      ;(.setLong address  ptr buffer_addr)
-      ;(println (.getLong address ptr))
-      ;(.getLong address ptr)
-      ;(println (.limit buffer))
-                                        ;(println (.remaining buffer))
-      ;(println  (.dataAddr mm))
-                                        ;(.position buffer 0)
-      ;(new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 ptr 0)
-      ;(.get buffer data)
-      ;(.flip buffer)
-      ;(println pbo)
-      ;(println "ptr" (type ptr))
-                                        ;(println "buffer" (type buffer))
-                                        ;(.rewind buffer)
-      ;(.array buffer)
-      ;(.put ptr data)
-      ;(.rewind buffer)
-      ;(.flip ptr)
-      ;(GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER)
-      )
-     ;; (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
-     ;;                      ^Integer width  ^Integer height
-     ;;                      ^Integer format
-     ;;                      GL11/GL_UNSIGNED_BYTE
-     ;;                      0)
     (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)))
 
 
-(defn- set-opengl-texture [locals texture-key buffer width height image-bytes img-addr]
-  (let[  i-textures          (:i-textures @locals )
+(defn- set-opengl-texture [locals texture-key buffer width height image-bytes img-addr pbo_id]
+  (let[i-textures          (:i-textures @locals )
        texture             (texture-key i-textures)
        target              (:target texture)
        internal-format     (:internal-format texture)
@@ -615,48 +567,33 @@
        queue               (:queue texture)
        pbo                 (:pbo texture)
        gl_buffer           (:gl_buffer texture)
-       ;mat                 (:mat texture)
-       ; mat_step            (.step1 mat)
-       ; mat_rows            (.rows mat)
-       ; mat_size            (* mat_step mat_rows)
        height              height ;(nth image 4)
        width               width ;(nth image 5)
        image-bytes         image-bytes; (nth image 6)
        setnbytes           (* wset hset bset)
        tex-image-target    ^Integer (+ 0 target)
        nbytes              (* width height image-bytes)
-       ;_ (println nbytes)
-       ;_ (println mat_size)
        buffer              buffer]
     (if (or init? (not= setnbytes nbytes))
       (do
-        ;(println "INIT TEXTURE")
         (set-texture tex-image-target internal-format width height format buffer)
         (let [queue               (:queue texture)
               out1                (:out1 texture)
               mlt                 (:mult texture)
               pbo                 (:pbo texture)
               gl_buffer           (:gl_buffer texture)
-              ;_                   (println "aaa, update texture")
-              ;_                   (Thread/sleep 500)
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
               _                   (GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER)
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
               _                   (GL30/glDeleteBuffers pbo)
               pbo                 (GL15/glGenBuffers)
-              ;_ (println "Make it here?")
-              ;_                   (Thread/sleep 500)
               texture     (init-texture width height target tex-id queue out1 mlt pbo)
-              ;_  (println "is this the bad place?")
               texture     (assoc texture :init-opengl false)
-              i-textures  (assoc i-textures texture-key texture)
-              ;_ (println "Or here?")
-              ]
+              i-textures  (assoc i-textures texture-key texture)]
           (swap! locals assoc :i-textures i-textures)))
       (do
         (if (< 0 img-addr)
-          ;;(set-texture tex-image-target internal-format width height format buffer)
-          (cutter.cutter/set-texture-pbo tex-image-target internal-format width height format buffer pbo nbytes)
+          (cutter.cutter/set-texture-pbo tex-image-target width height format pbo_id)
           )))
     (except-gl-errors "@ end of load-texture if-stmt")))
 
@@ -676,14 +613,16 @@
     (if  (not (nil? image))
       (do
         (if
-            (instance? java.lang.Long (nth image 0)) (set-opengl-texture
-                                                      locals
-                                                      texture-key
-                                                      0 ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
-                                                      (nth image 5)
-                                                      (nth image 4)
-                                                      (nth image 6)
-                                                      (nth image 0))
+            (instance? java.lang.Long (nth image 0)) (do (set-opengl-texture
+                                                          locals
+                                                          texture-key
+                                                          0 ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                                                          (nth image 5)
+                                                          (nth image 4)
+                                                          (nth image 6)
+                                                          (nth image 0)
+                                                          (last image))
+                                                         )
             (do (set-opengl-texture
                  locals
                  texture-key
@@ -691,7 +630,9 @@
                  (nth image 5)
                  (nth image 4)
                  (nth image 6)
-                 1))))  nil)))
+                 1
+                 (last image))
+                )))  nil)))
 
 (defn- draw [locals]
   (let [{:keys [width height
@@ -872,6 +813,64 @@
     (GL30/glDeleteBuffers   (first outputPBOs))
     ;(GL30/glDeleteBuffers   (last outputPBOs))
     ))
+                                        ; ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0, pbo_ids 0}
+
+(defn create-PBO-buf [width height channels]
+  (let[flags     (bit-or GL30/GL_MAP_WRITE_BIT GL45/GL_MAP_PERSISTENT_BIT GL44/GL_MAP_COHERENT_BIT )
+       id        (GL15/glGenBuffers)
+       mat_size  (* width height channels)
+       _         (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER id)
+       _         (GL44/glBufferStorage GL21/GL_PIXEL_UNPACK_BUFFER (long mat_size) flags)
+       gl_buffer (GL44/glMapBufferRange GL21/GL_PIXEL_UNPACK_BUFFER 0 mat_size flags)]
+     (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
+    [id gl_buffer]))
+
+(defn delete-PBO-buf [id]
+  (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER id)
+  (GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
+  (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
+  (GL30/glDeleteBuffers   id))
+
+(defn reserve-buffer
+  [buf_name destination width height channels maxl]
+  (let [;_       (reset! (:request-buffers @cutter.cutter/the-window-state) true)
+        tas     (:texture-arrays  @cutter.cutter/the-window-state)
+        exists  (contains? tas buf_name)
+        _ (println "asad" exists tas buf_name)
+        ta      (if (not exists)
+                  (let [pb  (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl))
+                        ids (mapv first pb)
+                        buf (mapv last pb)]
+                    (swap! cutter.cutter/the-window-state assoc :texture-arrays
+                           (assoc tas buf_name {:idx         (name buf_name),
+                                                :destinate   destination,
+                                                :source      buf,
+                                                :running     false,
+                                                :fps         30
+                                                :index       0,
+                                                :mode        :fw,
+                                                :loop        true,
+                                                :start-index 0,
+                                                :stop-index  0,
+                                                :pbo_ids     ids})))
+                  (let [pb  (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl))
+                        ids (:pbo_ids (buf_name tas))
+                        buf (:source (buf_name tas))
+                        _   (map (fn [x] (delete-PBO-buf x)) ids)
+                        ids (mapv first pb)
+                        buf (mapv last pb)]
+                    (swap! cutter.cutter/the-window-state assoc :texture-arrays
+                           (assoc tas buf_name {:idx         (name buf_name),
+                                                :destinate   destination,
+                                                :source      buf,
+                                                :running     false,
+                                                :fps         30
+                                                :index       0,
+                                                :mode        :fw,
+                                                :loop        true,
+                                                :start-index 0,
+                                                :stop-index  0,
+                                                :pbo_ids     ids}))))]))
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
@@ -895,6 +894,26 @@
       (update-and-draw locals)
       (org.lwjgl.glfw.GLFW/glfwSwapBuffers (:window @locals))
       (org.lwjgl.glfw.GLFW/glfwPollEvents)
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;;Request buffers for texture-array;;
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;;   :request-buffers            (atom false)
+      ;;:requested-buffer           (atom {})
+      ;; (reset! (:request-buffers @cutter.cutter/the-window-state) true)
+      (let [req         @(:request-buffers @locals)
+            req-type    @(:requested-buffer @locals)
+            buf-name     (:buf-name req-type)
+            destination  (:destination req-type)
+            width        (:width req-type)
+            height       (:height req-type)
+            channels     (:channels req-type)
+            maxl         (:maximum-buffer-length @locals)] ;; {:buf-name :destination :width :height :channels}
+        (if req (do
+                  (println "requested buffer")
+                  (println (reserve-buffer :tst :tst 10 10 3 5))
+                  (reset! (:request-buffers @locals) false))))
+
+
       (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz))
       )
     (destroy-gl locals)

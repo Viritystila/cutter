@@ -47,11 +47,11 @@
         capture                   (:source video)
         running?                  (:running video)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
+        mat                       (:mat (destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
         index                     (if (nil? (:index video)) 0 (:index video))
         start-index               (if (nil? (:start-index video)) 0  (:start-index video))
         start-index               (if (= -1 start-frame) start-index start-frame)
         stop-index                (if (and (nil? (:stop-index video)) (not (nil? capture))) (oc-get-capture-property :frame-count  capture) (:stop-index video))
-        mat                       (oc-new-mat)
         fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
         video                     {:idx filename,
                                    :destination destination-texture-key,
@@ -82,7 +82,9 @@
                       frame-index           (oc-get-capture-property :pos-frames capture)
                       index                 (:index (video-key (:videos @cutter.cutter/the-window-state)))
                       start-index           (:start-index (video-key (:videos @cutter.cutter/the-window-state)))
-                      stop-index            (:stop-index (video-key (:videos @cutter.cutter/the-window-state)))]
+                      stop-index            (:stop-index (video-key (:videos @cutter.cutter/the-window-state)))
+                      mat                   (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
+                      pbo_id                (:pbo (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))]
                     (reset! startTime (System/nanoTime))
                     (if (< (oc-get-capture-property :pos-frames capture) stop-index )
                     (oc-query-frame capture mat)
@@ -90,14 +92,14 @@
                     )
                     (async/offer!
                       queue
-                      (matInfo mat))
+                      (conj (matInfo mat) pbo_id))
                     (Thread/sleep
                       (cutter.general/sleepTime @startTime
                         (System/nanoTime)
                         fps ))))
               (.release capture)))))
         nil)
-;
+
 (defn set-live-video-texture [filename destination-texture-key] (set-live-video filename destination-texture-key -1 -1))
 
 

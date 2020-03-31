@@ -46,12 +46,7 @@
         capture                   (:source camera)
         running?                  (:running camera)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
-        ;mat                       (oc-new-mat)
-        mat           (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))                               ;
-        ;gl_buffer           (:gl_buffer (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
-        ;width               (:width (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
-        ;height              (:height (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
-        ;mat                 (new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 gl_buffer 0)
+        mat                       (:mat (destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
         fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
 
         camera                    {:idx device-id,
@@ -64,9 +59,11 @@
     (swap! cutter.cutter/the-window-state assoc :cameras cameras)
     (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
       (do
+        ;(.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
+        ;(.open capture device-id  org.opencv.videoio.Videoio/CAP_GSTREAMER)
         (.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
         (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
-        (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
+         (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
         (swap! cutter.cutter/the-window-state assoc :cameras
                (assoc cameras
                       camera-key (assoc camera :running true,
@@ -76,17 +73,14 @@
             (let [fps                 (:fps (camera-key (:cameras @cutter.cutter/the-window-state)))
                   camera-destination  (:destination (camera-key (:cameras @cutter.cutter/the-window-state)))
                   queue               (:queue ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
-                   mat                (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
-                  ;gl_buffer           (:gl_buffer ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
-                  ;width               (:width ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
-                  ;height              (:height ( camera-destination (:i-textures @cutter.cutter/the-window-state)))
-                  ;mat                 (new org.opencv.core.Mat height width  org.opencv.core.CvType/CV_8UC3 gl_buffer 0)
+                  mat                 (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
+                  pbo_id              (:pbo (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
                   ]
               (reset! startTime (System/nanoTime))
               (oc-query-frame capture mat)
               (async/offer!
                queue
-               (matInfo mat))
+               (conj  (matInfo mat) pbo_id))
               (Thread/sleep
                (cutter.general/sleepTime @startTime
                                          (System/nanoTime)
@@ -149,7 +143,12 @@
         texture                  (destination i-textures)
         queue                    (:queue texture)
         mlt                      (:mult texture)
-        image-buffer             (atom [])
+        ib                       (:buffer texture-array)
+        ib                       (if (nil? ib) [] ib)
+        pb                       (:pbo_ids texture)
+        pb                       (if (nil? pb) [] pb)
+        image-buffer             (atom ib)
+        pbo_ids                  (atom pb)
         out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
         _                        (if start-camera? nil (clojure.core.async/tap mlt out) )]
     (println "Recording from: " device " to " buffername)
@@ -178,7 +177,8 @@
                                                            :mode mode
                                                            :loop loop?
                                                            :start-index 1
-                                                           :stop-index maximum-buffer-length ))))
+                                                           :stop-index maximum-buffer-length
+                                                           :pbo_ids pbo_ids))))
       (clojure.core.async/untap mlt out)
       (println "Finished recording from:" device "to" buffername)
       (if start-camera? (stop-camera (str device-id))))))
