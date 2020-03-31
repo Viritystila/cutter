@@ -540,3 +540,129 @@
               (cutter.camera/stop-all-cameras)
               (cutter.video/stop-all-videos)
               (refresh))
+
+
+(defn set-start-stop-handler []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start"
+              (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
+                             inputkeys       (map keyword (keys inputmap))
+                             inputvals       (vals inputmap)
+                             input           (zipmap inputkeys inputvals)
+                             fs              (if (nil? (:fs input))
+                                              ;; (.getPath (clojure.java.io/resource "default.fs"))
+                                               "default.fs"
+                                               (:fs input))
+                             vs              (if (nil? (:vs input))
+                                               ;; (.getPath (clojure.java.io/resource "default.vs"))
+                                               "default.vs"
+                                               (:vs input))
+                             width           (if (nil? (:width input))  1280 (:width input))
+                             height          (if (nil? (:height input)) 800 (:height input))
+                             title           (if (nil? (:title input))  "cutter" (:title input))
+                             display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
+                             fullscreen?     false]
+                         (start-cutter :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start-fullscreen"
+              (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
+                             inputkeys       (map keyword (keys inputmap))
+                             inputvals       (vals inputmap)
+                             input           (zipmap inputkeys inputvals)
+                             fs              (if (nil? (:fs input))
+                                               ;;(.getPath (clojure.java.io/resource "default.fs"))
+                                               "default.fs"
+                                                 (:fs input))
+                             vs              (if (nil? (:vs input))
+                                               ;;(.getPath (clojure.java.io/resource "default.vs"))
+                                               "default.vs"
+                                               (:vs input))
+                             width           (if (nil? (:width input))  1280 (:width input))
+                             height          (if (nil? (:height input)) 800 (:height input))
+                             title           (if (nil? (:title input))  "cutter" (:title input))
+                             display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
+                             window-idx      (if (nil? (:window-idx input)) 0 (:window-idx input))
+                             fullscreen?     true]
+                         (start-cutter-fullscreen :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz :window-idx window-idx))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop"
+              (fn [msg] (stop-cutter))))
+
+
+(set-start-stop-handler)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Shader update interface;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defn osc-set-fs-shader [input]
+  (let [MAX-OSC-SAMPLES   1838
+        split-input       (clojure.string/split-lines (clojure.string/trim input))
+        split-input       (map (fn [x] (str x "\n")) split-input)
+        split-input       (mapv (fn [x] (re-seq #".{1,1838}" x) ) split-input)
+                                        ;_     (println split-input)
+
+        split-input       (flatten split-input)
+        ]
+    (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/reset-fs-string")
+    (doseq [x split-input]  (if (not (nil? x)) (do (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/append-to-fs-string" x )
+                                                   (Thread/sleep 10))))
+    (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/save-fs-file" )
+    (Thread/sleep 10)
+    (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/set-fs-shader" )
+    ))
+
+;;External shader input osc handlers
+(defn set-shader-input-handlers []
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/reset-fs-string"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (reset-temp-string :fs))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/reset-vs-string"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (reset-temp-string :vs))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/create-fs-file"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (create-temp-shader-file "fs-shader" :fs))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/create-vs-file"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (create-temp-shader-file "vs-shader" :vs))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/append-to-fs-string"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (apped-to-temp-string (str (nth input 0)) :fs))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/append-to-vs-string"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (apped-to-temp-string (str (nth input 0)) :vs))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/save-fs-file"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (save-temp-shader "fs-shader" :fs))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/save-vs-file"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (save-temp-shader "vs-shader" :vs))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-fs-shader"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (if (nil? (:args msg))  (set-shader (:temp-fs-filename @cutter.cutter/the-window-state) :fs)
+                             (set-shader (nth input 0) :fs)))))
+  (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-vs-shader"
+              (fn [msg] (let [input                   (:args msg)
+                             input                   (vec input)
+                             ic                      (count input)]
+                         (if (nil? (:args msg)) (set-shader (:temp-vs-filename @cutter.cutter/the-window-state) :vs)
+                             (set-shader (nth input 0) :vs)))))
+  )
