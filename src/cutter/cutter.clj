@@ -836,11 +836,12 @@
   (let [;_       (reset! (:request-buffers @cutter.cutter/the-window-state) true)
         tas     (:texture-arrays  @cutter.cutter/the-window-state)
         exists  (contains? tas buf_name)
-        _ (println "asad" exists tas buf_name)
+        ;_ (println "asad" exists tas buf_name)
         ta      (if (not exists)
                   (let [pb  (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl))
                         ids (mapv first pb)
                         buf (mapv last pb)]
+                    ;(println "Key does not exitsts")
                     (swap! cutter.cutter/the-window-state assoc :texture-arrays
                            (assoc tas buf_name {:idx         (name buf_name),
                                                 :destinate   destination,
@@ -859,6 +860,7 @@
                         _   (map (fn [x] (delete-PBO-buf x)) ids)
                         ids (mapv first pb)
                         buf (mapv last pb)]
+                    ;(println "Key exists")
                     (swap! cutter.cutter/the-window-state assoc :texture-arrays
                            (assoc tas buf_name {:idx         (name buf_name),
                                                 :destinate   destination,
@@ -870,7 +872,19 @@
                                                 :loop        true,
                                                 :start-index 0,
                                                 :stop-index  0,
-                                                :pbo_ids     ids}))))]))
+                                                :pbo_ids     ids}))))])
+  nil)
+
+(defn set-request [buf-name destination width height channels maxl]
+   (reset! (:request-buffers @cutter.cutter/the-window-state) true)
+  (reset! (:requested-buffer @cutter.cutter/the-window-state)
+          {:buf-name       buf-name,
+           :destination    destination,
+           :width          width,
+           :height         height,
+           :channels       channels
+           :maxl           maxl} )
+  nil)
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
@@ -900,6 +914,7 @@
       ;;   :request-buffers            (atom false)
       ;;:requested-buffer           (atom {})
       ;; (reset! (:request-buffers @cutter.cutter/the-window-state) true)
+      ;; (cutter.cutter/set-request :tst1 :iChannel2 640 480 3 2)
       (let [req         @(:request-buffers @locals)
             req-type    @(:requested-buffer @locals)
             buf-name     (:buf-name req-type)
@@ -907,13 +922,14 @@
             width        (:width req-type)
             height       (:height req-type)
             channels     (:channels req-type)
-            maxl         (:maximum-buffer-length @locals)] ;; {:buf-name :destination :width :height :channels}
+            maxl         (:maxl req-type)] ;; {:buf-name :destination :width :height :channels}
+        ;(println "sdsa" req-type)
         (if req (do
-                  (println "requested buffer")
-                  (println (reserve-buffer :tst :tst 10 10 3 5))
-                  (reset! (:request-buffers @locals) false))))
-
-
+                  (println "requested buffer" req-type)
+                  (println (reserve-buffer buf-name destination width height channels maxl))
+                  (reset! (:request-buffers @locals) false)
+                  ;(reset! (:requested-buffer @cutter.cutter/the-window-state) {})
+                  )))
       (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz))
       )
     (destroy-gl locals)
