@@ -37,7 +37,7 @@
                                         ;     [java.lang.reflect Field]
    [org.lwjgl BufferUtils]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
-   [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40]))
+   [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]))
 
 (defonce default-state-values
   {:active                     :no  ;; :yes/:stopping/:no
@@ -105,6 +105,7 @@
    :minsize                    (atom 0)
    :bff                        (atom 0)
    :isInitialized              (atom false)
+   :v4l2_buffer                0
    ;; shader uniforms
    :no-i-channels              16
    :i-channels                 (mapv (fn [x] (keyword (str "iChannel" x))) (range 1 16 1))
@@ -483,11 +484,15 @@
         ;; Output Pixel buffers    :outputPBOs tex-buf  (:buffer (:iPreviousFrame i-textures))
         pbo_size            (* 3 (:width @locals) (:height @locals) )
         pboi_1_id           (GL15/glGenBuffers)
-        pboi_2_id           (GL15/glGenBuffers)
+        ;pboi_2_id           (GL15/glGenBuffers)
+        v4l2_buffer         1
+        flags               (bit-or GL30/GL_MAP_READ_BIT GL45/GL_MAP_PERSISTENT_BIT GL44/GL_MAP_COHERENT_BIT )
         _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pboi_1_id)
-        _                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER pbo_size GL30/GL_STREAM_READ )
-        _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pboi_2_id)
-        _                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER pbo_size GL30/GL_STREAM_READ )
+        ;_                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER pbo_size GL30/GL_STREAM_READ )
+        _                   (GL44/glBufferStorage  GL21/GL_PIXEL_PACK_BUFFER (long pbo_size) flags)
+        v4l2_buffer         (GL44/glMapBufferRange GL21/GL_PIXEL_PACK_BUFFER 0 pbo_size flags)
+        ;_                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pboi_2_id)
+        ;_                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER pbo_size GL30/GL_STREAM_READ )
         _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
                                         ;_                   (GL30/glBindVertexArray 0)
         _ (except-gl-errors "@ end of init-buffers")]
@@ -501,7 +506,8 @@
            :vbon-id vbon-id
            :vertices-count vertices-count
            :indices-count indices-count
-           :outputPBOs    [pboi_1_id pboi_2_id])))
+           :outputPBOs    [pboi_1_id pboi_1_id]
+           :v4l2_buffer   v4l2_buffer)))
 
 (defn- init-gl
   [locals]
@@ -783,10 +789,12 @@
         (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
         (GL11/glReadPixels 0 0 width height GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  0)
         ;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (last outputPBOs))
-        (let [tex-buf  (:buffer (:iPreviousFrame i-textures))
-              tex-buf  (GL15/glMapBuffer GL21/GL_PIXEL_PACK_BUFFER GL15/GL_READ_ONLY tex-buf)
-              bb       (new org.bytedeco.javacpp.BytePointer tex-buf)
-              minsize  (long  @(:minsize @the-window-state))]
+        (let [;tex-buf    (:buffer (:iPreviousFrame i-textures))
+              ;tex-buf    (GL15/glMapBuffer GL21/GL_PIXEL_PACK_BUFFER GL15/GL_READ_ONLY tex-buf)
+              v4l2_buffer (:v4l2_buffer @the-window-state)
+              ;bb          (new org.bytedeco.javacpp.BytePointer tex-buf)
+              bb          (new org.bytedeco.javacpp.BytePointer v4l2_buffer)
+              minsize     (long  @(:minsize @the-window-state))]
           ;;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (first (outputPBOs)))
           ;(GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
           ;(GL11/glReadPixels 0 0 width height GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  0)
@@ -797,7 +805,7 @@
           ;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (last outputPBOs))
           (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) bb minsize )
                                         ;(org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state)  (new org.bytedeco.javacpp.BytePointer (GL15/glMapBuffer GL21/GL_PIXEL_PACK_BUFFER, GL15/GL_READ_ONLY tex-buf) )  minsize )
-          (GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
+          ;(GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
           (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
           (.deallocate bb)
           )
@@ -852,8 +860,11 @@
     (GL30/glBindVertexArray 0)
     (GL30/glDeleteVertexArrays vao-id)
     ;; Delete pbo
+    (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER  (first outputPBOs))
+    (GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
+    (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER  0)
     (GL30/glDeleteBuffers   (first outputPBOs))
-    (GL30/glDeleteBuffers   (last outputPBOs))
+    ;(GL30/glDeleteBuffers   (last outputPBOs))
     ))
 
 (defn- run-thread
