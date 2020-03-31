@@ -1,7 +1,7 @@
 (ns #^{:author "Mikael Reponen"}
   cutter.interface
   (:use [overtone.osc])
-  (:require ;[clojure.tools.namespace.repl :refer [refresh]]
+  (:require [clojure.tools.namespace.repl :refer [refresh]]
             ;[watchtower.core :as watcher]
             ;[clojure.java.io :as io]
             ;[while-let.core :as while-let]
@@ -12,6 +12,7 @@
             [cutter.video :refer :all]
             [cutter.opencv :refer :all]
             [cutter.cutter_helper :refer :all]
+            [cutter.shader :refer :all]
             ; [clojure.core.async
             ;  :as async
             ;  :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
@@ -466,3 +467,76 @@
 (set-float-interface-handlers)
 (set-direct-supercollider-handlers)
 (set-text-handlers)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Stopping and Starting Cutter;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defn start-cutter
+  "Start a new shader display."
+  [&{:keys [fs vs width height title display-sync-hz fullscreen? window-idx]
+     :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
+          vs                (.getPath (clojure.java.io/resource "default.vs"))
+          width             1280
+          height            800
+          title             "cutter"
+          display-sync-hz   30
+          fullscreen?       false
+          window-idx        0}}]
+  (let [mode  [width height]
+        shader-filename-or-str-atom fs
+        vs-shader-filename-or-str-atom vs]
+    (cutter.camera/stop-all-cameras)
+    (cutter.video/stop-all-videos)
+    (cutter.texturearray/stop-all-buffers)
+    (cutter.cutter_helper/toggle-recording nil)
+    (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom  title false display-sync-hz window-idx)))
+
+(defn start-cutter-fullscreen
+  "Start a new shader display."
+  [&{:keys [fs vs width height title display-sync-hz  fullscreen? window-idx]
+     :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
+          vs                (.getPath (clojure.java.io/resource "default.vs"))
+          width           1280
+          height          800
+          title           "cutter"
+          display-sync-hz 30
+          fullscreen?     true
+          window-idx      0}}]
+  (let [mode  [width height]
+        shader-filename-or-str-atom fs
+        vs-shader-filename-or-str-atom vs]
+    (cutter.camera/stop-all-cameras)
+    (cutter.video/stop-all-videos)
+    (cutter.texturearray/stop-all-buffers)
+    (cutter.cutter_helper/toggle-recording nil)
+    (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
+
+
+
+(defn stop-cutter
+  "Stop and destroy the shader display. Blocks until completed."
+  []
+  (when (active?)
+    (cutter.camera/stop-all-cameras)
+    (cutter.video/stop-all-videos)
+    (cutter.texturearray/stop-all-buffers)
+    (cutter.cutter_helper/toggle-recording nil)
+    (swap! the-window-state assoc :active :stopping)
+    (while (not (inactive?))
+      (Thread/sleep 200)))
+  (remove-watch (:shader-str-atom @the-window-state) :shader-str-watch)
+  (remove-watch (:vs-shader-str-atom @the-window-state) :vs-shader-str-watch)
+  (cutter.shader/stop-watcher @vs-watcher-future)
+  (cutter.shader/stop-watcher @watcher-future))
+
+
+
+(defn rfs []  (overtone.osc/osc-close (:osc-server @cutter.cutter/the-window-state))
+              (overtone.osc/osc-close (:osc-client @cutter.cutter/the-window-state))
+              (stop-cutter)
+              (cutter.texturearray/stop-all-buffers)
+              (cutter.camera/stop-all-cameras)
+              (cutter.video/stop-all-videos)
+              (refresh))

@@ -70,15 +70,15 @@
 
 (defn toggle-recording [device]
   (let [  save    (:save-frames @the-window-state)]
-          (if (= false @save)
-            (do
-              (openV4L2output device)
-              (println "Start recording")
-              (reset! (:save-frames @the-window-state) true ))
-            (do (println "Stop recording")
-              (reset! (:save-frames @the-window-state) false )
-              (closeV4L2output)
-              (Thread/sleep 100)))))
+    (if (and (not (nil? device))  (= false @save))
+      (do
+        (openV4L2output device)
+        (println "Start recording")
+        (reset! (:save-frames @the-window-state) true ))
+      (do (println "Stop recording")
+          (reset! (:save-frames @the-window-state) false )
+          (closeV4L2output)
+          (Thread/sleep 100)))))
 
 ;Data array
 ;(apply assoc [1 2 3 4] (interleave (range (count [1 2 3 4])) [11 32 13 14] ))
@@ -217,10 +217,10 @@
        (doseq [x files ](add-to-buffer x buffername)   )))
 
 
-(defn rfs []  (overtone.osc/osc-close (:osc-server @cutter.cutter/the-window-state))
-              (overtone.osc/osc-close (:osc-client @cutter.cutter/the-window-state))
-              (stop-cutter)
-              (cutter.texturearray/stop-all-buffers)
-              (cutter.camera/stop-all-cameras)
-              (cutter.video/stop-all-videos)
-              (refresh))
+;; (defn rfs []  (overtone.osc/osc-close (:osc-server @cutter.cutter/the-window-state))
+;;               (overtone.osc/osc-close (:osc-client @cutter.cutter/the-window-state))
+;;               (stop-cutter-local)
+;;               (cutter.texturearray/stop-all-buffers)
+;;               (cutter.camera/stop-all-cameras)
+;;               (cutter.video/stop-all-videos)
+;;               (refresh))

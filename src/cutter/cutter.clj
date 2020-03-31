@@ -100,7 +100,7 @@
    :maxDataArraysLength        256
                                         ;v4l2
    :save-frames                (atom false)
-   :deviceName                 (atom "/dev/video3")
+   :deviceName                 (atom "/dev/video5")
    :deviceId                   (atom 0)
    :minsize                    (atom 0)
    :bff                        (atom 0)
@@ -837,7 +837,13 @@
 
 (defn- destroy-gl
   [locals]
-  (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn cams  outputPBOs]} @locals]
+  (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn cams  outputPBOs deviceName]} @locals]
+    ;;Stop loops
+    ;(cutter.camera)
+    ;(cutter.camera/stop-all-cameras)
+    ;(cutter.video/stop-all-videos)
+    ;(cutter.texturearray/stop-all-buffers)
+    ;(cutter.cutter_helper/toggle-recording deviceName)
     ;; Delete the shaders
     (GL20/glUseProgram 0)
     (GL20/glDetachShader pgm-id vs-id)
@@ -908,7 +914,7 @@
   []
   (= :no (:active @the-window-state)))
 
-(defn stop-cutter
+(defn- stop-cutter-local
   "Stop and destroy the shader display. Blocks until completed."
   []
   (when (active?)
@@ -951,7 +957,7 @@
     (when (and (cutter.general/sane-user-inputs shader-filename shader-str)
                (cutter.general/sane-user-inputs vs-shader-filename vs-shader-str))
       ;; stop the current shader
-      (stop-cutter)
+      (stop-cutter-local)
       ;; start the watchers
       (if is-filename
         (when-not (nil? shader-filename)
@@ -979,7 +985,7 @@
                                  display-sync-hz
                                  window-idx)))))))
 
-(defn start
+(defn- start-local
   "Start a new shader display."
   [&{:keys [fs vs width height title display-sync-hz fullscreen? window-idx]
      :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
@@ -995,7 +1001,7 @@
         vs-shader-filename-or-str-atom vs]
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom  title false display-sync-hz window-idx)))
 
-(defn start-fullscreen
+(defn- start-fullscreen-local
   "Start a new shader display."
   [&{:keys [fs vs width height title display-sync-hz  fullscreen? window-idx]
      :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
@@ -1011,7 +1017,9 @@
         vs-shader-filename-or-str-atom vs]
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;External shader input handling
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn set-shader [shader-filename-or-str-atom shader-type]
   (let [watcher-key                   (case shader-type :fs :shader-str-watch :vs :vs-shader-str-watch)
         watcher-future-atom           (case shader-type :fs watcher-future :vs vs-watcher-future)
@@ -1219,7 +1227,7 @@
                              title           (if (nil? (:title input))  "cutter" (:title input))
                              display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
                              fullscreen?     false]
-                         (start :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz))))
+                         (start-local :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz))))
   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start-fullscreen"
               (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
                              inputkeys       (map keyword (keys inputmap))
@@ -1239,9 +1247,9 @@
                              display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
                              window-idx      (if (nil? (:window-idx input)) 0 (:window-idx input))
                              fullscreen?     true]
-                         (start-fullscreen :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz :window-idx window-idx))))
+                         (start-fullscreen-local :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz :window-idx window-idx))))
   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop"
-              (fn [msg] (stop-cutter))))
+              (fn [msg] (stop-cutter-local))))
 
 
 (set-start-stop-handler)
