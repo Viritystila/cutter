@@ -840,12 +840,13 @@
         ta      (if (not exists)
                   (let [pb  (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl))
                         ids (mapv first pb)
-                        buf (mapv last pb)]
+                        buf (mapv last pb)
+                        source (mapv (fn [x y] [x nil nil nil nil nil nil nil y]) buf ids)]
                     ;(println "Key does not exitsts")
                     (swap! cutter.cutter/the-window-state assoc :texture-arrays
                            (assoc tas buf_name {:idx         (name buf_name),
                                                 :destinate   destination,
-                                                :source      buf,
+                                                :source      source,
                                                 :running     false,
                                                 :fps         30
                                                 :index       0,
@@ -859,12 +860,13 @@
                         buf (:source (buf_name tas))
                         _   (map (fn [x] (delete-PBO-buf x)) ids)
                         ids (mapv first pb)
-                        buf (mapv last pb)]
+                        buf (mapv last pb)
+                        source (mapv (fn [x y] [x nil nil nil nil nil nil nil y]) buf ids)]
                     ;(println "Key exists")
                     (swap! cutter.cutter/the-window-state assoc :texture-arrays
                            (assoc tas buf_name {:idx         (name buf_name),
                                                 :destinate   destination,
-                                                :source      buf,
+                                                :source      source,
                                                 :running     false,
                                                 :fps         30
                                                 :index       0,

@@ -120,10 +120,23 @@
         source                   (:source camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
-        texture-array            (buffername-key texture-arrays)
+        width                    (:width (destination (:i-textures @cutter.cutter/the-window-state)))
+        height                   (:height (destination (:i-textures @cutter.cutter/the-window-state)))
+        channels                 (:channels (destination (:i-textures @cutter.cutter/the-window-state)))
+        maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        _                        (cutter.cutter/set-request
+                                  buffername-key
+                                  destination
+                                  width
+                                  height
+                                  channels
+                                  maximum-buffer-length)
+        _ (while  @(:request-buffers @the-window-state) (Thread/sleep 100))
+        texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
         running?                 false
         idx                      buffername
-        maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        source-buf               (:source texture-array)
+        pbo_ids                  (:pbo_ids texture-array)
         bufdestination           (:destination texture-array)
         bufdestination           (if (nil? bufdestination) (:destination camera) bufdestination)
         running?                 (:running texture-array)
@@ -148,14 +161,17 @@
         pb                       (:pbo_ids texture)
         pb                       (if (nil? pb) [] pb)
         image-buffer             (atom ib)
-        pbo_ids                  (atom pb)
+        t-a-index                (atom 0)
         out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
         _                        (if start-camera? nil (clojure.core.async/tap mlt out) )]
     (println "Recording from: " device " to " buffername)
     (async/thread
       (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
         (do
-          (let [image               (async/<!! out)
+          (let [orig_source         (nth source-buf @t-a-index)
+                dest-buffer         (first orig_source)
+                pbo_id              (last orig_source)
+                image               (async/<!! out)
                 rows                (nth image 1)
                 step                (nth image 2)
                 h                   (nth image 4)
@@ -163,10 +179,12 @@
                 ib                  (nth image 6)
                 mat                 (nth image 7)
                 buffer_i            (nth image 0)
+                image               (assoc image 9 pbo_id)
                 copybuf             (oc-mat-to-bytebuffer mat)
                 buffer-capacity     (.capacity copybuf)
-                buffer-copy         (-> (BufferUtils/createByteBuffer buffer-capacity) (.put copybuf) (.flip) )  ]
-            (swap! image-buffer conj (assoc image 0 buffer-copy) )))
+                dest-buffer         (.flip (.put dest-buffer copybuf ))
+                ]
+            (swap! image-buffer conj (assoc image 0 dest-buffer)))) ;; buffer-copy
         (swap! cutter.cutter/the-window-state assoc :texture-arrays
                (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
                                                            :destination bufdestination
@@ -178,7 +196,8 @@
                                                            :loop loop?
                                                            :start-index 1
                                                            :stop-index maximum-buffer-length
-                                                           :pbo_ids pbo_ids))))
+                                                           :pbo_ids pbo_ids)))
+        (swap! t-a-index inc))
       (clojure.core.async/untap mlt out)
       (println "Finished recording from:" device "to" buffername)
       (if start-camera? (stop-camera (str device-id))))))
