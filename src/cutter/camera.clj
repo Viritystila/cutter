@@ -114,15 +114,16 @@
         camera                   (camera-key cameras)
         start-camera?            (or (nil? camera) (not (:running camera)))
         _                        (if start-camera? (set-live-camera-texture (str device-id) :iChannelNull)  )
+        _ (Thread/sleep 500)
         cameras                  (:cameras @the-window-state)
         camera                   (camera-key cameras)
         destination              (:destination camera)
         source                   (:source camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
-        width                    (:width (destination (:i-textures @cutter.cutter/the-window-state)))
-        height                   (:height (destination (:i-textures @cutter.cutter/the-window-state)))
-        channels                 (:channels (destination (:i-textures @cutter.cutter/the-window-state)))
+        width                    (.cols (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
+        height                   (.rows (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
+        channels                 (.channels (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         _                        (cutter.cutter/set-request
                                   buffername-key
@@ -166,7 +167,7 @@
         _                        (if start-camera? nil (clojure.core.async/tap mlt out) )]
     (println "Recording from: " device " to " buffername)
     (async/thread
-      (while (and (.isOpened source) (< (count @image-buffer) maximum-buffer-length))
+      (while (and (.isOpened source) (< @t-a-index maximum-buffer-length))
         (do
           (let [orig_source         (nth source-buf @t-a-index)
                 dest-buffer         (first orig_source)
@@ -182,9 +183,16 @@
                 image               (assoc image 9 pbo_id)
                 copybuf             (oc-mat-to-bytebuffer mat)
                 buffer-capacity     (.capacity copybuf)
-                dest-buffer         (.flip (.put dest-buffer copybuf ))
+                dest-capacity       (.capacity dest-buffer)
+                ;_                   (println "capa" buffer-capacity)
+                ;_                   (println "capccopt" (.capacity dest-buffer))
+                                        ;dest-buffer         (.flip (.put dest-buffer copybuf ))
+                _ (if (= buffer-capacity dest-capacity)
+                    (do
+                      (swap! image-buffer conj (assoc image 0 (.flip (.put dest-buffer copybuf )))) ))
                 ]
-            (swap! image-buffer conj (assoc image 0 dest-buffer)))) ;; buffer-copy
+            ;(swap! image-buffer conj (assoc image 0 dest-buffer))
+            )) ;; buffer-copy
         (swap! cutter.cutter/the-window-state assoc :texture-arrays
                (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
                                                            :destination bufdestination
@@ -197,7 +205,7 @@
                                                            :start-index 1
                                                            :stop-index maximum-buffer-length
                                                            :pbo_ids pbo_ids)))
-        (swap! t-a-index inc))
+        (swap! t-a-index inc) )
       (clojure.core.async/untap mlt out)
       (println "Finished recording from:" device "to" buffername)
       (if start-camera? (stop-camera (str device-id))))))
