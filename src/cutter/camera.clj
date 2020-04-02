@@ -61,8 +61,8 @@
       (do
         ;(.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
         (.open capture device-id  org.opencv.videoio.Videoio/CAP_GSTREAMER)
-        ;(.open capture device-id  org.opencv.videoio.Videoio/CAP_V4L2)
-        (.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
+        ;(.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
+        (Thread/sleep (+ 1000 (/ 1 (max 1 fps))))
          (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
         (swap! cutter.cutter/the-window-state assoc :cameras
                (assoc cameras
@@ -78,13 +78,18 @@
                   ]
               (reset! startTime (System/nanoTime))
               (oc-query-frame capture mat)
-              (async/offer!
-               queue
-               (conj  (matInfo mat) pbo_id))
+              ;(println   (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_WIDTH)" " (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_HEIGHT))
+              ;(println (matInfo mat))
+              ;(println (.rows (nth (matInfo mat) 7)) )
+              (if (not (= 0  (.rows (nth (matInfo mat) 7))))
+                (async/offer!
+                 queue
+                 (conj  (matInfo mat) pbo_id)))
+               ;(println @startTime fps)
               (Thread/sleep
                (cutter.general/sleepTime @startTime
                                          (System/nanoTime)
-                                         fps ))))
+                                         (max 1 fps) ))))
           (.release capture))))
     nil))
 
@@ -98,8 +103,9 @@
         cameras                  (assoc cameras camera-key camera)]
     (swap! cutter.cutter/the-window-state assoc :cameras cameras)
     (println "Stopping camera " device)
-    (Thread/sleep 200)
-    (.release capture))
+    (Thread/sleep 500)
+    ;(.release capture)[<2;49;32M
+    )
   nil)
 
 

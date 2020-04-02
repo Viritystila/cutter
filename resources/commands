@@ -14,7 +14,7 @@ kitty/launcher/kitty --v4l2_res 3200x1800 --v4l2_dev /dev/video3
 
 (Reduce FPS in the reading pgroam, othersie the CPU consumption wil be high at high resolutions)
 
-sudo rmmod
+sudo rmmod v4l2loopback
 
 sudo v4l2loopback-ctl set-caps "video/x-raw,format=RGB,width=1280,height=800" /dev/video4
 
