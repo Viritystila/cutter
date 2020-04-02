@@ -104,7 +104,7 @@
     (swap! cutter.cutter/the-window-state assoc :cameras cameras)
     (println "Stopping camera " device)
     (Thread/sleep 500)
-    ;(.release capture)[<2;49;32M
+    ;(.release capture)
     )
   nil)
 
