@@ -487,6 +487,9 @@
   (let [mode  [width height]
         shader-filename-or-str-atom fs
         vs-shader-filename-or-str-atom vs]
+    ;(println fs vs)
+    ;(println  shader-filename-or-str-atom)
+    ;(println  vs-shader-filename-or-str-atom )
     (cutter.camera/stop-all-cameras)
     (cutter.video/stop-all-videos)
     (cutter.texturearray/stop-all-buffers)

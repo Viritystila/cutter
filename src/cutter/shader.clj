@@ -263,6 +263,7 @@
     (reset! vs-watcher-just-started false)
     ;; otherwise do the reload check
     (doseq [f files]
+      ;(println f)
       (when (= (.getPath ^File f) shader-filename)
         ;; set a flag that the opengl thread will use
         (reset! vs-reload-shader true)))))
@@ -272,25 +273,26 @@
   future atom for that watcher"
   [shader-filename]
   (let [dir (.getParent (File. ^String shader-filename))
-        _   (println "dir" dir)]
+        _   (println "FS dir" dir)]
     (reset! watcher-just-started true)
+    (println "FS" shader-filename)
     (watcher/watcher
-      [dir]
+      [shader-filename]
       (watcher/rate 100)
       (watcher/file-filter watcher/ignore-dotfiles)
       (watcher/file-filter (watcher/extensions :fs))
       (watcher/on-change (partial if-match-reload-shader shader-filename)))))
 
-;
 (defn vs-start-watcher
   "create a watch for glsl shaders in the directory and return the global
   future atom for that watcher"
   [shader-filename]
   (let [dir (.getParent (File. ^String shader-filename))
-        _   (println "dir" dir)]
+        _   (println "VS dir" dir)]
     (reset! vs-watcher-just-started true)
+    (println "VS" shader-filename)
     (watcher/watcher
-      [dir]
+      [shader-filename]
       (watcher/rate 100)
       (watcher/file-filter watcher/ignore-dotfiles)
       (watcher/file-filter (watcher/extensions :vs))
