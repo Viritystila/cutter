@@ -278,7 +278,7 @@
     (println "FS" shader-filename)
     (watcher/watcher
       [shader-filename]
-      (watcher/rate 100)
+      (watcher/rate 200)
       (watcher/file-filter watcher/ignore-dotfiles)
       (watcher/file-filter (watcher/extensions :fs))
       (watcher/on-change (partial if-match-reload-shader shader-filename)))))
@@ -293,7 +293,7 @@
     (println "VS" shader-filename)
     (watcher/watcher
       [shader-filename]
-      (watcher/rate 100)
+      (watcher/rate 200)
       (watcher/file-filter watcher/ignore-dotfiles)
       (watcher/file-filter (watcher/extensions :vs))
       (watcher/on-change (partial vs-if-match-reload-shader shader-filename)))))

@@ -932,7 +932,7 @@
                   (reset! (:request-buffers @locals) false)
                   ;(reset! (:requested-buffer @cutter.cutter/the-window-state) {})
                   )))
-      (Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz))
+      ;(Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz))
       )
     (destroy-gl locals)
     (.free (:keyCallback @locals))
