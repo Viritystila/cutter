@@ -513,8 +513,6 @@
     (cutter.cutter_helper/toggle-recording nil)
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
 
-
-
 (defn stop-cutter
   "Stop and destroy the shader display. Blocks until completed."
   []
