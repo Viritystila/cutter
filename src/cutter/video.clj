@@ -76,7 +76,7 @@
             (async/thread
               (oc-set-capture-property :pos-frames capture start-frame)
               ;(if (= -1 start-frame) nil (oc-set-capture-property :pos-frames capture start-frame))
-              (while-let/while-let [running (:running (video-key (:videos @cutter.cutter/the-window-state)))]
+              (while-let/while-let [running (:running (video-key (:videos @cutter.cutter/the-window-state))) ]
                 (let [fps                   (:fps (video-key (:videos @cutter.cutter/the-window-state)))
                       video-destination     (:destination (video-key (:videos @cutter.cutter/the-window-state)))
                       queue                 (:queue ( video-destination (:i-textures @cutter.cutter/the-window-state)))
@@ -86,6 +86,7 @@
                       stop-index            (:stop-index (video-key (:videos @cutter.cutter/the-window-state)))
                       mat                   (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
                       pbo_id                (:pbo (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))]
+                    ;(println mat)
                     (reset! startTime (System/nanoTime))
                     (if (< (oc-get-capture-property :pos-frames capture) stop-index )
                     (oc-query-frame capture mat)
@@ -171,10 +172,12 @@
         source                   (:source video)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
-        width                    (.cols (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
+        mat                      (:mat (destination (:i-textures @cutter.cutter/the-window-state)))
+        width                    (.cols (:mat (destination (:i-textures @cutter.cutter/the-window-state))) )
         height                   (.rows (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
         channels                 (.channels (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 100))
         _                        (cutter.cutter/set-request
                                   buffername-key
                                   destination
@@ -215,39 +218,44 @@
         (println "Recording from: " filename " to " buffername)
         (async/thread
           (while (and (.isOpened source) (< @t-a-index maximum-buffer-length))
-            (do
-              (let [orig_source         (nth source-buf @t-a-index)
-                    dest-buffer         (first orig_source)
-                    pbo_id              (last orig_source)
-                    image               (async/<!! out)
-                    h                   (nth image 4)
-                    w                   (nth image 5)
-                    ib                  (nth image 6)
-                    mat                 (nth image 7)
-                    buffer_i            (nth image 0)
-                    image               (assoc image 9 pbo_id)
-                    copybuf             (oc-mat-to-bytebuffer mat)
-                    buffer-capacity     (.capacity copybuf)
-                    dest-capacity       (.capacity dest-buffer)
-                    ;_                   (println "capa" buffer-capacity)
-                    ;_                   (println "capccopt" (.capacity dest-buffer))
-                    _ (if (= buffer-capacity dest-capacity)
-                        (do
-                          (swap! image-buffer conj (assoc image 0 (.flip (.put dest-buffer copybuf )))) ))]))
+            (let [fps                 (cutter.opencv/oc-get-capture-property :fps source)
+                  orig_source         (nth source-buf @t-a-index)
+                  dest-buffer         (first orig_source)
+                  pbo_id              (last orig_source)
+                  image               (async/<!! out)
+                  h                   (nth image 4)
+                  w                   (nth image 5)
+                  ib                  (nth image 6)
+                  ;mat                 (nth image 7)
+                  buffer_i            (nth image 0)
+                  image               (assoc image 9 pbo_id)
+                  copybuf             (oc-mat-to-bytebuffer mat)
+                  buffer-capacity     (.capacity copybuf)
+                  dest-capacity       (.capacity dest-buffer)
+                  _                   (if (= buffer-capacity dest-capacity)
+                                        (do
+                                          (swap! image-buffer conj
+                                                 (assoc image 0
+                                                        (.flip (.put dest-buffer copybuf )))) ))])
             (swap! t-a-index inc)
             )
+          (clojure.core.async/untap mlt out)
+          (if start-video? (stop-video (str device-id)))
           (swap! cutter.cutter/the-window-state assoc :texture-arrays
-                 (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
-                                                             :destination bufdestination
-                                                             :source @image-buffer
-                                                             :running running?
-                                                             :fps (cutter.opencv/oc-get-capture-property :fps source)
-                                                             :index 0
-                                                             :mode mode
-                                                             :loop loop?
-                                                             :start-index 1
-                                                             :stop-index maximum-buffer-length
-                                                             :pbo_ids pbo_ids)))
-              (clojure.core.async/untap mlt out)
-              (println "Finished recording from:" filename "to" buffername)
-              (if start-video? (stop-video (str device-id))))))
+                 (assoc texture-arrays buffername-key
+                        (assoc texture-array :idx buffername
+                               :destination bufdestination
+                               :source @image-buffer
+                               :running running?
+                               :fps fps ;;(cutter.opencv/oc-get-capture-property :fps source)
+                               :index 0
+                               :mode mode
+                               :loop loop?
+                               :start-index 1
+                               :stop-index maximum-buffer-length
+                               :pbo_ids pbo_ids)))
+          ;;(clojure.core.async/untap mlt out)
+          (println "Finished recording from:" filename "to" buffername)
+          ;;(if start-video? (stop-video (str device-id)))
+          ))
+  )

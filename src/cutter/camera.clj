@@ -70,6 +70,7 @@
                       camera-key (assoc camera :running true,
                                         :fps (cutter.opencv/oc-get-capture-property :fps capture))))
         (async/thread
+           (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
           (while-let/while-let [running (:running (camera-key (:cameras @cutter.cutter/the-window-state)))]
             (let [fps                 (:fps (camera-key (:cameras @cutter.cutter/the-window-state)))
                   camera-destination  (:destination (camera-key (:cameras @cutter.cutter/the-window-state)))
@@ -82,7 +83,7 @@
               ;(println   (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_WIDTH)" " (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_HEIGHT))
               ;(println (matInfo mat))
               ;(println (.rows (nth (matInfo mat) 7)) )
-              (if (not (= 0  (.rows (nth (matInfo mat) 7))))
+              (if (not (= 0  (.rows mat)))
                 (async/offer!
                  queue
                  (conj  (matInfo mat) pbo_id)))
@@ -128,7 +129,8 @@
         source                   (:source camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
-        width                    (.cols (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
+        mat                      (:mat (destination (:i-textures @cutter.cutter/the-window-state)))
+        width                    (.cols (:mat (destination (:i-textures @cutter.cutter/the-window-state))) )
         height                   (.rows (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
         channels                 (.channels (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
@@ -185,7 +187,7 @@
                 h                   (nth image 4)
                 w                   (nth image 5)
                 ib                  (nth image 6)
-                mat                 (nth image 7)
+                ;mat                 (nth image 7)
                 buffer_i            (nth image 0)
                 image               (assoc image 9 pbo_id)
                 copybuf             (oc-mat-to-bytebuffer mat)

@@ -36,6 +36,8 @@
                                         ;           [javax.imageio ImageIO]
                                         ;     [java.lang.reflect Field]
    [org.lwjgl BufferUtils]
+   [java.lang.ref Cleaner]
+   [org.lwjgl.system MemoryUtil]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
    [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]))
 
@@ -93,6 +95,7 @@
    :maximum-buffer-length      250  ;Frames
    :request-buffers            (atom false)
    :requested-buffer           (atom {})
+   :request-reset              (atom "")
    :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
    :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0, pbo_ids 0}
    :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0}}
@@ -490,11 +493,8 @@
         v4l2_buffer         1
         flags               (bit-or GL30/GL_MAP_READ_BIT GL45/GL_MAP_PERSISTENT_BIT GL44/GL_MAP_COHERENT_BIT )
         _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pboi_1_id)
-        ;_                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER pbo_size GL30/GL_STREAM_READ )
         _                   (GL44/glBufferStorage  GL21/GL_PIXEL_PACK_BUFFER (long pbo_size) flags)
         v4l2_buffer         (GL44/glMapBufferRange GL21/GL_PIXEL_PACK_BUFFER 0 pbo_size flags)
-        ;_                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER pboi_2_id)
-        ;_                   (GL15/glBufferData GL21/GL_PIXEL_PACK_BUFFER pbo_size GL30/GL_STREAM_READ )
         _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
                                         ;_                   (GL30/glBindVertexArray 0)
         _ (except-gl-errors "@ end of init-buffers")]
@@ -535,22 +535,18 @@
                           GL11/GL_UNSIGNED_BYTE
                           buffer)))
 
-;;Lets keep this here for future optimization
-;; Idea:
-;; Map persisten buffer
-;; Creat mat from that pointer
-;; Use that Mat to get data from camera/video
-;; => no extra copies
-;; Cons: Needs heavy modifications to the program
 (defn- set-texture-pbo [tex-image-target width height format pbo]
   (try
-    (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
-    (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
-                          ^Integer width  ^Integer height
-                          ^Integer format
-                          GL11/GL_UNSIGNED_BYTE
-                          0)
-    (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)))
+    (if (GL15/glIsBuffer pbo)
+      (do
+        (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
+                                        ;(println pbo)
+        (GL11/glTexSubImage2D ^Integer tex-image-target 0 0 0
+                              ^Integer width  ^Integer height
+                              ^Integer format
+                              GL11/GL_UNSIGNED_BYTE
+                              0)
+        (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)))))
 
 
 (defn- set-opengl-texture [locals texture-key buffer width height image-bytes img-addr pbo_id]
@@ -702,22 +698,6 @@
     (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_BYTE 0)
     (except-gl-errors "@ draw after DrawArrays")
 
-    ;(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-    ;; (GL20/glDisableVertexAttribArray 0)
-    ;; (GL20/glDisableVertexAttribArray 1)
-    ;; (GL20/glDisableVertexAttribArray 2)
-    ;; (GL20/glDisableVertexAttribArray 3)
-    ;; (GL20/glDisableVertexAttribArray 4)
-
-    ;;                                     ;Unbind textures
-    ;; (doseq [x i-channels]
-    ;;   (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (x i-uniforms))))
-    ;;   (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
-    ;; (GL13/glActiveTexture (+ GL13/GL_TEXTURE0 (:unit (:iPreviousFrame i-uniforms)) ))
-    ;; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-    ;; (GL13/glActiveTexture (+ GL13/GL_TEXTURE0  (:unit (:iPreviousFrame i-uniforms))))
-    ;; (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-
     ;;Copying the previous image to its own texture
     (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
     (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB8 0 0 width height 0)
@@ -730,23 +710,10 @@
         (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
         (GL11/glReadPixels 0 0 width height GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  0)
         ;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (last outputPBOs))
-        (let [;tex-buf    (:buffer (:iPreviousFrame i-textures))
-              ;tex-buf    (GL15/glMapBuffer GL21/GL_PIXEL_PACK_BUFFER GL15/GL_READ_ONLY tex-buf)
-              v4l2_buffer (:v4l2_buffer @the-window-state)
-              ;bb          (new org.bytedeco.javacpp.BytePointer tex-buf)
+        (let [v4l2_buffer (:v4l2_buffer @the-window-state)
               bb          (new org.bytedeco.javacpp.BytePointer v4l2_buffer)
               minsize     (long  @(:minsize @the-window-state))]
-          ;;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (first (outputPBOs)))
-          ;(GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
-          ;(GL11/glReadPixels 0 0 width height GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  0)
-          ;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (last outputPBOs))
-
-          ;(GL15/glMapBuffer GL21/GL_PIXEL_PACK_BUFFER GL15/GL_READ_ONLY tex-buf)
-          ;;(GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  ^ByteBuffer tex-buf)
-          ;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (last outputPBOs))
           (org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state) bb minsize )
-                                        ;(org.bytedeco.javacpp.v4l2/v4l2_write @(:deviceId @the-window-state)  (new org.bytedeco.javacpp.BytePointer (GL15/glMapBuffer GL21/GL_PIXEL_PACK_BUFFER, GL15/GL_READ_ONLY tex-buf) )  minsize )
-          ;(GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
           (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
           (.deallocate bb)
           )
@@ -779,12 +746,6 @@
 (defn- destroy-gl
   [locals]
   (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn cams  outputPBOs deviceName]} @locals]
-    ;;Stop loops
-    ;(cutter.camera)
-    ;(cutter.camera/stop-all-cameras)
-    ;(cutter.video/stop-all-videos)
-    ;(cutter.texturearray/stop-all-buffers)
-    ;(cutter.cutter_helper/toggle-recording deviceName)
     ;; Delete the shaders
     (GL20/glUseProgram 0)
     (GL20/glDetachShader pgm-id vs-id)
@@ -799,7 +760,6 @@
     (GL20/glDisableVertexAttribArray 2)
     (GL20/glDisableVertexAttribArray 3)
     (GL20/glDisableVertexAttribArray 4)
-
     ;; Delete the vertex VBO
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
     (GL15/glDeleteBuffers ^Integer vbo-id)
@@ -815,21 +775,33 @@
     ))
                                         ; ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0, pbo_ids 0}
 
-(defn create-PBO-buf [width height channels]
-  (let[flags     (bit-or GL30/GL_MAP_WRITE_BIT GL45/GL_MAP_PERSISTENT_BIT GL44/GL_MAP_COHERENT_BIT )
-       id        (GL15/glGenBuffers)
-       mat_size  (* width height channels)
-       _         (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER id)
-       _         (GL44/glBufferStorage GL21/GL_PIXEL_UNPACK_BUFFER (long mat_size) flags)
-       gl_buffer (GL44/glMapBufferRange GL21/GL_PIXEL_UNPACK_BUFFER 0 mat_size flags)]
+(defn create-PBO-buf ([width height channels]
+                      (let[flags     (bit-or GL30/GL_MAP_WRITE_BIT GL45/GL_MAP_PERSISTENT_BIT GL44/GL_MAP_COHERENT_BIT )
+                           id        (GL15/glGenBuffers)
+                           mat_size  (* width height channels)
+                           _         (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER id)
+                           _         (GL44/glBufferStorage GL21/GL_PIXEL_UNPACK_BUFFER (long mat_size) flags)
+                           gl_buffer (GL44/glMapBufferRange GL21/GL_PIXEL_UNPACK_BUFFER 0 mat_size flags)]
+                        (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
+                        [id gl_buffer]))
+  ([width height channels old_buf]
+   (println old_buf)
+   (let[flags     (bit-or GL30/GL_MAP_WRITE_BIT GL45/GL_MAP_PERSISTENT_BIT GL44/GL_MAP_COHERENT_BIT )
+        id        (GL15/glGenBuffers)
+        mat_size  (* width height channels)
+        _         (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER id)
+        _         (GL44/glBufferStorage GL21/GL_PIXEL_UNPACK_BUFFER (long mat_size) flags)
+        gl_buffer (GL44/glMapBufferRange GL21/GL_PIXEL_UNPACK_BUFFER 0 mat_size flags old_buf)]
      (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
-    [id gl_buffer]))
+     [id gl_buffer])))
 
 (defn delete-PBO-buf [id]
+  ;(println (GL15/glIsBuffer id))
   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER id)
-  (GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
+  (GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER)
+  (GL30/glDeleteBuffers  id)
   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
-  (GL30/glDeleteBuffers   id))
+  )
 
 (defn reserve-buffer
   [buf_name destination width height channels maxl]
@@ -855,12 +827,13 @@
                                                 :start-index 0,
                                                 :stop-index  0,
                                                 :pbo_ids     ids})))
-                  (let [pb  (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl))
-                        ids (:pbo_ids (buf_name tas))
-                        buf (:source (buf_name tas))
-                        _   (map (fn [x] (delete-PBO-buf x)) ids)
-                        ids (mapv first pb)
-                        buf (mapv last pb)
+                  (let [buf  (:source (buf_name tas))
+                        ids  (:pbo_ids (buf_name tas))
+                         _   (doall (map (fn [x] (delete-PBO-buf x)) ids))
+                        bufs (doall (map (fn [x] (first x)) buf))
+                        pb   (doall (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl)))
+                        ids  (doall (mapv first pb))
+                        buf  (doall (mapv last pb))
                         source (mapv (fn [x y] [x nil nil nil nil nil nil nil y]) buf ids)]
                     ;(println "Key exists")
                     (swap! cutter.cutter/the-window-state assoc :texture-arrays
@@ -888,6 +861,31 @@
            :maxl           maxl} )
   nil)
 
+
+(defn clear-buffer [buffername]
+  ;
+  ;
+   (println buffername)
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+                                        ;_ (println texture-array)
+        texture-array            (assoc texture-array :running false)
+        source                   (:source texture-array)
+        buffers                  (doall (map (fn [x] (first x)) source))
+        mats                     (doall (map (fn [x] (nth x 7)) source))
+        pbo_ids                  (:pbo_ids texture-array)
+        _                                (println (first pbo_ids))
+        _                        (doall (map (fn [x] (delete-PBO-buf x)) pbo_ids))
+        ;_                        (doall (map (fn [x] (org.lwjgl.system.MemoryUtil/memFree x)) buffers))
+        ;_                        (doall (map (fn [x] (.release x)) mats))
+        texture-arrays           (dissoc texture-arrays buffername-key)]
+       (swap! cutter.cutter/the-window-state assoc :texture-arrays texture-arrays)
+    ) nil)
+
+(defn set-clear [buffername]
+   (reset! (:request-reset @cutter.cutter/the-window-state) buffername))
+
 (defn- run-thread
   [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
   (println "init-window")
@@ -913,12 +911,9 @@
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;;Request buffers for texture-array;;
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      ;;   :request-buffers            (atom false)
-      ;;:requested-buffer           (atom {})
-      ;; (reset! (:request-buffers @cutter.cutter/the-window-state) true)
-      ;; (cutter.cutter/set-request :tst1 :iChannel2 640 480 3 2)
       (let [req         @(:request-buffers @locals)
             req-type    @(:requested-buffer @locals)
+            req-reset   @(:request-reset @locals)
             buf-name     (:buf-name req-type)
             destination  (:destination req-type)
             width        (:width req-type)
@@ -930,8 +925,12 @@
                   (println "requested buffer" req-type)
                   (println (reserve-buffer buf-name destination width height channels maxl))
                   (reset! (:request-buffers @locals) false)
-                  ;(reset! (:requested-buffer @cutter.cutter/the-window-state) {})
-                  )))
+                  (reset! (:requested-buffer @cutter.cutter/the-window-state) {})
+                  ))
+        (if (and (not (clojure.string/blank? req-reset)) (contains? (:texture-arrays @locals) (keyword req-reset)))
+          (do
+            (clear-buffer req-reset)
+            (reset! (:request-reset @locals) ""))))
       ;(Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz))
       )
     (destroy-gl locals)
@@ -1129,166 +1128,3 @@
         split-string        (clojure.string/split-lines temp-shader-string)]
                                         ;(println split-string)
     (write-file path split-string )))
-
-;; (def tmp-str "out vec4 op;
-;;   void main(void) {
-;;   vec2 uv = (gl_FragCoord.xy/ iResolution.xy);
-;;   uv.y=1.0-uv.y*1;
-;;   //uv.x = uv.x + 5.5*sin(0.015*iGlobalTime);
-;;   //uv.y = uv.y + 2.5*cos(0.03*iGlobalTime);
-;;   float data1_0=iDataArray1[0];
-;;   float data1_1=iDataArray1[1];
-;;   float data2_0=iDataArray2[0];
-;;   uv=floor(uv * (100+iRandom*iFloat2 )) / ( 100+iRandom*iFloat2 + data1_0);
-;;   //uv=gl_FragCoord.xy*texCoordV/ iResolution.xy;
-
-;;   vec4 iChannel1_texture=texture2D(iChannel1, uv);
-;;   vec4 iChannel2_texture=texture2D(iChannel2, uv);
-;;   vec4 iChannel3_texture=texture2D(iChannel3, uv);
-;;   vec4 iChannel4_texture=texture2D(iChannel4, uv);
-;;   vec4 iChannel5_texture=texture2D(iChannel5, uv);
-;;   vec4 iChannel6_texture=texture2D(iChannel6, uv);
-;;   vec4 iChannel7_texture=texture2D(iChannel7, uv);
-
-;;   vec4 ich[6];
-;;   ich[0]=iChannel1_texture;
-;;   ich[1]=iChannel2_texture;
-;;   ich[2]=iChannel3_texture;
-;;   ich[3]=iChannel4_texture;
-;;   ich[4]=iChannel5_texture;
-;;   ich[5]=iChannel6_texture;
-
-;;   int timefloor=min(int(floor( 6* (1+(sin(iGlobalTime*10.41))))), 5);
-
-;;   vec4 pf1=texture2D(iPreviousFrame, uv);
-;;   vec4 text=texture2D(iText, uv);
-;;   vec4 ccc=vec4(cos(iGlobalTime*10.41)+data2_0, data1_0, sin(iGlobalTime*3.14+data1_1), 1);
-;;   vec4 ppp=mix(iChannel2_texture, ccc, 0.5);
-;;   float fade_size=2;
-;;   float p1= mix(fade_size, 0.0-fade_size, uv.x-0.125);
-;;   vec4 mixxx =mix(iChannel7_texture, iChannel6_texture, smoothstep(1.0, 0.0+iFloat1, p1));
-;;   op =mixxx;// ich[timefloor];//mixxx;//mix(text, ppp, cos(iGlobalTime*1.41)+data2_0);//ppp;//text;//iChannel1_texture;//iChannel1_texture;
-;;   }")
-
-;; (defn osc-set-fs-shader [input]
-;;   (let [MAX-OSC-SAMPLES   1838
-;;         split-input       (clojure.string/split-lines (clojure.string/trim input))
-;;         split-input       (map (fn [x] (str x "\n")) split-input)
-;;         split-input       (mapv (fn [x] (re-seq #".{1,1838}" x) ) split-input)
-;;                                         ;_     (println split-input)
-
-;;         split-input       (flatten split-input)
-;;         ]
-;;     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/reset-fs-string")
-;;     (doseq [x split-input]  (if (not (nil? x)) (do (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/append-to-fs-string" x )
-;;                                                    (Thread/sleep 10))))
-;;     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/save-fs-file" )
-;;     (Thread/sleep 10)
-;;     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/set-fs-shader" )
-;;     ))
-
-;; ;;External shader input osc handlers
-;; (defn set-shader-input-handlers []
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/reset-fs-string"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (reset-temp-string :fs))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/reset-vs-string"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (reset-temp-string :vs))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/create-fs-file"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (create-temp-shader-file "fs-shader" :fs))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/create-vs-file"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (create-temp-shader-file "vs-shader" :vs))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/append-to-fs-string"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (apped-to-temp-string (str (nth input 0)) :fs))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/append-to-vs-string"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (apped-to-temp-string (str (nth input 0)) :vs))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/save-fs-file"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (save-temp-shader "fs-shader" :fs))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/save-vs-file"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (save-temp-shader "vs-shader" :vs))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-fs-shader"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (if (nil? (:args msg))  (set-shader (:temp-fs-filename @cutter.cutter/the-window-state) :fs)
-;;                              (set-shader (nth input 0) :fs)))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-vs-shader"
-;;               (fn [msg] (let [input                   (:args msg)
-;;                              input                   (vec input)
-;;                              ic                      (count input)]
-;;                          (if (nil? (:args msg)) (set-shader (:temp-vs-filename @cutter.cutter/the-window-state) :vs)
-;;                              (set-shader (nth input 0) :vs)))))
-;;   )
-
-;;Cutter startup osc handlers
-                                        ;(overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/start" "fs" "./test/test.fs" "vs" "./test/test.vs"  "width" 1920 "height" 1080 )
-
-;; (defn set-start-stop-handler []
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start"
-;;               (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
-;;                              inputkeys       (map keyword (keys inputmap))
-;;                              inputvals       (vals inputmap)
-;;                              input           (zipmap inputkeys inputvals)
-;;                              fs              (if (nil? (:fs input))
-;;                                               ;; (.getPath (clojure.java.io/resource "default.fs"))
-;;                                                "default.fs"
-;;                                                (:fs input))
-;;                              vs              (if (nil? (:vs input))
-;;                                                ;; (.getPath (clojure.java.io/resource "default.vs"))
-;;                                                "default.vs"
-;;                                                (:vs input))
-;;                              width           (if (nil? (:width input))  1280 (:width input))
-;;                              height          (if (nil? (:height input)) 800 (:height input))
-;;                              title           (if (nil? (:title input))  "cutter" (:title input))
-;;                              display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
-;;                              fullscreen?     false]
-;;                          (start-local :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/start-fullscreen"
-;;               (fn [msg] (let [inputmap       (into {} (mapv vec (partition 2 (:args msg))))
-;;                              inputkeys       (map keyword (keys inputmap))
-;;                              inputvals       (vals inputmap)
-;;                              input           (zipmap inputkeys inputvals)
-;;                              fs              (if (nil? (:fs input))
-;;                                                ;;(.getPath (clojure.java.io/resource "default.fs"))
-;;                                                "default.fs"
-;;                                                  (:fs input))
-;;                              vs              (if (nil? (:vs input))
-;;                                                ;;(.getPath (clojure.java.io/resource "default.vs"))
-;;                                                "default.vs"
-;;                                                (:vs input))
-;;                              width           (if (nil? (:width input))  1280 (:width input))
-;;                              height          (if (nil? (:height input)) 800 (:height input))
-;;                              title           (if (nil? (:title input))  "cutter" (:title input))
-;;                              display-sync-hz (if (nil? (:display-sync-hz input)) 30 (:display-sync-hz input))
-;;                              window-idx      (if (nil? (:window-idx input)) 0 (:window-idx input))
-;;                              fullscreen?     true]
-;;                          (start-fullscreen-local :fs fs :vs vs :width width :height height :title title :display-sync-hz display-sync-hz :window-idx window-idx))))
-;;   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/stop"
-;;               (fn [msg] (stop-cutter-local))))
-
-
-;; (set-start-stop-handler)
-;;(set-shader-input-handlers)

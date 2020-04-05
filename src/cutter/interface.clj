@@ -32,6 +32,7 @@
 
 (defn rec [device buffername]
   "Record camera, example (rec \"0\" \"a \" )"
+  (cutter.texturearray/stop-buffer buffername)
   (cutter.camera/rec-camera device buffername))
 
 (defn set-cam [device property val]
@@ -71,6 +72,7 @@
 
 (defn cut [filename buffername start-frame]
   "Cut a video segment to buffer, example (cut \"./test1.mp4\" \"a\" 0)"
+  (cutter.texturearray/stop-buffer buffername)
   (cutter.video/cut-video filename buffername start-frame))
 
 (defn sav []
