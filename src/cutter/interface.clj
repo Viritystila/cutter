@@ -130,6 +130,11 @@
   "Stop all buffers"
   (cutter.texturearray/stop-all-buffers))
 
+(defn d-buf [buffername]
+  "delete buffer"
+  (cutter.texturearray/stop-buffer buffername)
+  (cutter.cutter/set-clear buffername))
+
 ;;;;;;;;;;
 ;;;V4l2;;;
 ;;;;;;;;;;
