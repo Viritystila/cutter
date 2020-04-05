@@ -221,7 +221,7 @@
         (async/thread
           (while (and (.isOpened source) (< @t-a-index maximum-buffer-length))
             (let [fps                 (cutter.opencv/oc-get-capture-property :fps source)
-                  orig_source         (nth  (:source  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))) @t-a-index)
+                  orig_source         (nth  (:source  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state)) ) @t-a-index)
                   dest-buffer         (first orig_source)
                   pbo_id              (last orig_source)
                   image               (async/<!! out)
@@ -256,5 +256,5 @@
                                :loop loop?
                                :start-index 1
                                :stop-index maximum-buffer-length
-                               :pbo_ids  (:pbo_ids texture-array))))
+                               :pbo_ids  (:pbo_ids  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))))))
           (println "Finished recording from:" filename "to" buffername))))

@@ -866,7 +866,7 @@
 (defn clear-buffer [buffername]
   ;
   ;
-   (println buffername)
+   (println "clear buffer" buffername)
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
         texture-array            (buffername-key texture-arrays)
@@ -874,9 +874,9 @@
         texture-array            (assoc texture-array :running false)
         source                   (:source texture-array)
         buffers                  (doall (map (fn [x] (first x)) source))
-        mats                     (doall (map (fn [x] (nth x 7)) source))
+        ;mats                     (doall (map (fn [x] (nth x 7)) source))
         pbo_ids                  (:pbo_ids texture-array)
-        _                                (println (first pbo_ids))
+        _                                (println "first pbo:" (first pbo_ids))
         _                        (doall (map (fn [x] (delete-PBO-buf x)) pbo_ids))
         ;_                        (doall (map (fn [x] (org.lwjgl.system.MemoryUtil/memFree x)) buffers))
         ;_                        (doall (map (fn [x] (.release x)) mats))

@@ -209,7 +209,7 @@
                                                          :loop loop?
                                                          :start-index 1
                                                          :stop-index maximum-buffer-length
-                                                         :pbo_ids  (:pbo_ids texture-array))))
+                                                         :pbo_ids  (:pbo_ids  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))))))
         ;(swap! t-a-index inc)
 
       (clojure.core.async/untap mlt out)
