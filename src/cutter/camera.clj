@@ -80,9 +80,6 @@
                   ]
               (reset! startTime (System/nanoTime))
               (oc-query-frame capture mat)
-              ;(println   (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_WIDTH)" " (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_HEIGHT))
-              ;(println (matInfo mat))
-              ;(println (.rows (nth (matInfo mat) 7)) )
               (if (not (= 0  (.rows mat)))
                 (async/offer!
                  queue
@@ -129,24 +126,25 @@
         source                   (:source camera)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
+        current-frame            @(:current-frame @the-window-state)
         mat                      (:mat (destination (:i-textures @cutter.cutter/the-window-state)))
-        width                    (.cols (:mat (destination (:i-textures @cutter.cutter/the-window-state))) )
-        height                   (.rows (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
-        channels                 (.channels (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
+        ;; width                    (.cols (:mat (destination (:i-textures @cutter.cutter/the-window-state))) )
+        ;; height                   (.rows (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
+        ;; channels                 (.channels (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
-        _                        (cutter.cutter/set-request
-                                  buffername-key
-                                  destination
-                                  width
-                                  height
-                                  channels
-                                  maximum-buffer-length)
-        _ (while  @(:request-buffers @the-window-state) (Thread/sleep 100))
+        ;; _                        (cutter.cutter/set-request
+        ;;                           buffername-key
+        ;;                           destination
+        ;;                           width
+        ;;                           height
+        ;;                           channels
+        ;;                           maximum-buffer-length)
+        ;; _ (while  @(:request-buffers @the-window-state) (Thread/sleep 100))
         texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
         running?                 false
         idx                      buffername
-        source-buf               (:source texture-array)
-        pbo_ids                  (:pbo_ids texture-array)
+        ;source-buf               (:source texture-array)
+        ;pbo_ids                  (:pbo_ids texture-array)
         bufdestination           (:destination texture-array)
         bufdestination           (if (nil? bufdestination) (:destination camera) bufdestination)
         running?                 (:running texture-array)
@@ -173,12 +171,28 @@
         image-buffer             (atom ib)
         t-a-index                (atom 0)
         out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
-        _                        (if start-camera? nil (clojure.core.async/tap mlt out) )]
+        _                        (if start-camera? nil (clojure.core.async/tap mlt out))
+        _                        (while (not  (:running (camera-key (:cameras @cutter.cutter/the-window-state)))) (Thread/sleep 500))
+        init_image               (async/poll! out)
+        init_image               (async/<!! out)
+        h                        (nth init_image 4)
+        w                        (nth init_image 5)
+        c                        (nth init_image 6)]
+     (cutter.cutter/set-request
+      buffername-key
+      destination
+      w
+      h
+      c
+      maximum-buffer-length)
+     (Thread/sleep 500)
+     (println "asdasd" (count (:source (:e (:texture-arrays @the-window-state)))))
+     (while  @(:request-buffers @the-window-state) (Thread/sleep 500))
     (println "Recording from: " device " to " buffername)
     (async/thread
       (while (and (.isOpened source) (< @t-a-index maximum-buffer-length))
         (do
-          (let [orig_source         (nth source-buf @t-a-index)
+          (let [orig_source         (nth  (:source  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))) @t-a-index)
                 dest-buffer         (first orig_source)
                 pbo_id              (last orig_source)
                 image               (async/<!! out)
@@ -213,7 +227,7 @@
                                                            :loop loop?
                                                            :start-index 1
                                                            :stop-index maximum-buffer-length
-                                                           :pbo_ids pbo_ids)))
+                                                           :pbo_ids  (:pbo_ids texture-array))))
         (swap! t-a-index inc) )
       (clojure.core.async/untap mlt out)
       (println "Finished recording from:" device "to" buffername)

@@ -51,9 +51,10 @@
    :last-time                  0
    :window                     nil
    :keyCallback                nil
+   :current-frame              (atom 1)
                                         ;OSC
-   :osc-server                (overtone.osc/osc-server 44100 "cutter-osc")
-   :osc-client                (overtone.osc/osc-client "localhost" 44100)
+   :osc-server                 (overtone.osc/osc-server 44100 "cutter-osc")
+   :osc-client                 (overtone.osc/osc-client "localhost" 44100)
    :osc-port                   44100
    ;; geom ids
    :vbo-id                     0
@@ -931,6 +932,7 @@
           (do
             (clear-buffer req-reset)
             (reset! (:request-reset @locals) ""))))
+      (swap! (:current-frame @locals) inc)
       ;(Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz))
       )
     (destroy-gl locals)
