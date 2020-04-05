@@ -63,7 +63,7 @@
         (.open capture device-id  org.opencv.videoio.Videoio/CAP_GSTREAMER)
         ;;(.open capture device-id  org.opencv.videoio.Videoio/CAP_FFMPEG)
         ;;(.set capture org.opencv.videoio.Videoio/CAP_PROP_FOURCC (org.opencv.videoio.VideoWriter/fourcc \M \J \P \G ))
-        (Thread/sleep (+ 1000 (/ 1 (max 1 fps))))
+        ;(Thread/sleep (+ 1000 (/ 1 (max 1 fps))))
          (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 30)
         (swap! cutter.cutter/the-window-state assoc :cameras
                (assoc cameras
@@ -128,23 +128,10 @@
         buffername-key           (keyword buffername)
         current-frame            @(:current-frame @the-window-state)
         mat                      (:mat (destination (:i-textures @cutter.cutter/the-window-state)))
-        ;; width                    (.cols (:mat (destination (:i-textures @cutter.cutter/the-window-state))) )
-        ;; height                   (.rows (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
-        ;; channels                 (.channels (:mat (destination (:i-textures @cutter.cutter/the-window-state))))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
-        ;; _                        (cutter.cutter/set-request
-        ;;                           buffername-key
-        ;;                           destination
-        ;;                           width
-        ;;                           height
-        ;;                           channels
-        ;;                           maximum-buffer-length)
-        ;; _ (while  @(:request-buffers @the-window-state) (Thread/sleep 100))
         texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
         running?                 false
         idx                      buffername
-        ;source-buf               (:source texture-array)
-        ;pbo_ids                  (:pbo_ids texture-array)
         bufdestination           (:destination texture-array)
         bufdestination           (if (nil? bufdestination) (:destination camera) bufdestination)
         running?                 (:running texture-array)
@@ -178,6 +165,7 @@
         h                        (nth init_image 4)
         w                        (nth init_image 5)
         c                        (nth init_image 6)]
+    (Thread/sleep 2000)
      (cutter.cutter/set-request
       buffername-key
       destination
@@ -185,12 +173,10 @@
       h
       c
       maximum-buffer-length)
-     (Thread/sleep 500)
-     (println "asdasd" (count (:source (:e (:texture-arrays @the-window-state)))))
      (while  @(:request-buffers @the-window-state) (Thread/sleep 500))
-    (println "Recording from: " device " to " buffername)
-    (async/thread
-      (while (and (.isOpened source) (< @t-a-index maximum-buffer-length))
+     (println "Recording from: " device " to " buffername)
+     (async/thread
+       ( while (and (.isOpened source) (< @t-a-index maximum-buffer-length))
         (do
           (let [orig_source         (nth  (:source  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))) @t-a-index)
                 dest-buffer         (first orig_source)
@@ -207,28 +193,25 @@
                 copybuf             (oc-mat-to-bytebuffer mat)
                 buffer-capacity     (.capacity copybuf)
                 dest-capacity       (.capacity dest-buffer)
-                ;_                   (println "capa" buffer-capacity)
-                ;_                   (println "capccopt" (.capacity dest-buffer))
-                                        ;dest-buffer         (.flip (.put dest-buffer copybuf ))
                 _ (if (= buffer-capacity dest-capacity)
                     (do
                       (swap! image-buffer conj (assoc image 0 (.flip (.put dest-buffer copybuf )))) ))
-                ]
-            ;(swap! image-buffer conj (assoc image 0 dest-buffer))
-            )) ;; buffer-copy
-        (swap! cutter.cutter/the-window-state assoc :texture-arrays
-               (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
-                                                           :destination bufdestination
-                                                           :source @image-buffer
-                                                           :running running?
-                                                           :fps fps
-                                                           :index 0
-                                                           :mode mode
-                                                           :loop loop?
-                                                           :start-index 1
-                                                           :stop-index maximum-buffer-length
-                                                           :pbo_ids  (:pbo_ids texture-array))))
-        (swap! t-a-index inc) )
+                ] (swap! t-a-index inc)
+            )))
+      (swap! cutter.cutter/the-window-state assoc :texture-arrays
+             (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+                                                         :destination bufdestination
+                                                         :source @image-buffer
+                                                         :running running?
+                                                         :fps fps
+                                                         :index 0
+                                                         :mode mode
+                                                         :loop loop?
+                                                         :start-index 1
+                                                         :stop-index maximum-buffer-length
+                                                         :pbo_ids  (:pbo_ids texture-array))))
+        ;(swap! t-a-index inc)
+
       (clojure.core.async/untap mlt out)
       (println "Finished recording from:" device "to" buffername)
       (if start-camera? (stop-camera (str device-id))))))
