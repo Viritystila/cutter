@@ -77,7 +77,8 @@
                                                     (max index (min start-index buffer-length))))]
                       (reset! startTime (System/nanoTime))
                       (reset! internal-index cur-index)
-                      ;(println cur-index)
+                                        ;(println cur-index)
+                      ;(println fps)
                       (async/offer!
                         queue
                         (nth source  (mod  cur-index (min (+ 1 stop-index) buffer-length)) ))

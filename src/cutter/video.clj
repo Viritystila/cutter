@@ -67,6 +67,7 @@
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
           (do
             (.open capture filename org.opencv.videoio.Videoio/CAP_FFMPEG)
+            ;;(.open capture filename org.opencv.videoio.Videoio/CAP_GSTREAMER)
             (swap! cutter.cutter/the-window-state assoc :videos
               (assoc videos
                 video-key (assoc video :running true

@@ -697,7 +697,7 @@
                                         ; // stride
                                         ;// array buffer offset
     (except-gl-errors "@ draw prior to DrawArrays")
-
+   ;(Thread/sleep 30)
     ;; Draw the vertices
     (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_BYTE 0)
     (except-gl-errors "@ draw after DrawArrays")
