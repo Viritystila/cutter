@@ -97,6 +97,7 @@
    :request-buffers            (atom false)
    :requested-buffer           (atom {})
    :request-reset              (atom "")
+   :request-queue              (async/chan (async/buffer 1))
    :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
    :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0, pbo_ids 0}
    :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0}}
@@ -229,6 +230,7 @@
                         :queue 0,
                         :mult 0,
                         :out1 0,
+                        :req  0,
                         :pbo -1,
                         :gl_buffer -1}
         unit_no        (atom 2)]
@@ -577,6 +579,7 @@
         (let [queue               (:queue texture)
               out1                (:out1 texture)
               mlt                 (:mult texture)
+              req                 (:req texture)
               pbo                 (:pbo texture)
               gl_buffer           (:gl_buffer texture)
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
@@ -584,7 +587,7 @@
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
               _                   (GL30/glDeleteBuffers pbo)
               pbo                 (GL15/glGenBuffers)
-              texture     (init-texture width height target tex-id queue out1 mlt pbo)
+              texture     (init-texture width height target tex-id queue out1 mlt req pbo)
               texture     (assoc texture :init-opengl false)
               i-textures  (assoc i-textures texture-key texture)]
           (swap! locals assoc :i-textures i-textures)))
@@ -865,7 +868,7 @@
 
 (defn clear-buffer [buffername]
   ;
-  ;
+ ;; (do (clojure.core.async/offer! (:request-queue @the-window-state) {:destination :iChannel1 :buf_name "a" :req [[100 100  3 2] [100 200 3 10]] } ) nil)
    (println "clear buffer" buffername)
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
         buffername-key           (keyword buffername)
@@ -920,8 +923,15 @@
             width        (:width req-type)
             height       (:height req-type)
             channels     (:channels req-type)
-            maxl         (:maxl req-type)] ;; {:buf-name :destination :width :height :channels}
-        ;(println "sdsa" req-type)
+            maxl         (:maxl req-type)
+            req-queue    (:request-queue @locals)
+            r-req        (if (not (= nil req-queue)) (async/poll! req-queue))] ;; {:buf-name :destination :width :height :channels}
+
+        (if (not (nil? r-req))
+          (let [reply-queue      (:req ((:destination r-req) (:i-textures @locals)))]
+                (async/offer! reply-queue "OK")
+            (println r-req)  ) )
+
         (if req (do
                   (println "requested buffer" req-type)
                   (println (reserve-buffer buf-name destination width height channels maxl))
