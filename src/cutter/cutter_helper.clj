@@ -152,26 +152,25 @@
 ;Text
 (defn write-text
   " (cutter.cutter_helper/write-text \"cutter\" 0 220 10 100 0.2 0.4 20 10 true) "
-    [text x y size r g b thickness linetype clear]
-        (let [  i-textures          (:i-textures @the-window-state)
-                texture             (:iText i-textures)
-                width               (:width texture)
-                height              (:height texture)
-                oldmat              (:mat texture)
-                queue               (:queue texture)
-                mat                 (if clear (org.opencv.core.Mat/zeros  height width org.opencv.core.CvType/CV_8UC3) oldmat)
-                corner              (new org.opencv.core.Point x y)
-                style               (org.opencv.imgproc.Imgproc/FONT_HERSHEY_TRIPLEX)
-                colScal             (new org.opencv.core.Scalar (float r) (float g) (float b))
-                _                   (org.opencv.imgproc.Imgproc/putText mat text corner style size colScal thickness linetype)
-                buffer              (oc-mat-to-bytebuffer mat)
-                texture             (assoc texture :mat mat)
-                texture             (assoc texture :buffer buffer)
-                texture             (assoc texture :init-opengl true)
-                i-textures          (assoc i-textures :iText texture)]
-                (async/offer! queue (matInfo mat))
-                (swap! the-window-state assoc :i-textures i-textures))
-                nil)
+  [text x y size r g b thickness linetype clear]
+  (let  [i-textures          (:i-textures @the-window-state)
+         texture             (:iText i-textures)
+         width               (:width texture)
+         height              (:height texture)
+         mat                 (:mat texture)
+         queue               (:queue texture)
+         pbo                 (:pbo texture)
+         gl_buffer           (:gl_buffer texture)
+         _                   (if clear (.setTo mat  (new org.opencv.core.Scalar 0 0 0 0)))
+         corner              (new org.opencv.core.Point x y)
+         style               (org.opencv.imgproc.Imgproc/FONT_HERSHEY_TRIPLEX)
+         colScal             (new org.opencv.core.Scalar (float r) (float g) (float b))
+         _                   (org.opencv.imgproc.Imgproc/putText mat text corner style size colScal thickness linetype)
+         texture             (assoc texture :mat mat)
+         i-textures          (assoc i-textures :iText texture)]
+    (async/offer! queue (conj (matInfo mat) pbo))
+    (swap! the-window-state assoc :i-textures i-textures))
+  nil)
 
 ;Add Texture from file to texture-array
 (defn add-to-buffer [filename buffername]
