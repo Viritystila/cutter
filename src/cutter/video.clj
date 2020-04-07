@@ -200,6 +200,9 @@
         queue                    (:queue texture)
         mlt                      (:mult texture)
         image-buffer             (atom [])
+        pbo_ids                  (atom [])
+        rejected-images          (atom [])
+        rejected-pbos            (atom [])
         t-a-index                (atom 0)
         out                      (if start-video? queue (clojure.core.async/chan (async/buffer 1)))
         _                        (if start-video? nil (clojure.core.async/tap mlt out))
@@ -230,16 +233,15 @@
                   ib                  (nth image 6)
                   ;mat                 (nth image 7)
                   buffer_i            (nth image 0)
-                  image               (assoc image 9 pbo_id)
+                  ;image               (assoc image 9 pbo_id)
                   ;pbo_ids             (:pbo_ids texture-array)
                   copybuf             (oc-mat-to-bytebuffer mat)
                   buffer-capacity     (.capacity copybuf)
                   dest-capacity       (.capacity dest-buffer)
                   _                   (if (= buffer-capacity dest-capacity)
-                                        (do
-                                          (swap! image-buffer conj
-                                                 (assoc image 0
-                                                        (.flip (.put dest-buffer copybuf )))) ))])
+                                        (do (let [image           (assoc image 9 pbo_id)
+                                                  _               (swap! pbo_ids conj pbo_id)
+                                                  _               (swap! image-buffer conj (assoc image 0  (.flip (.put dest-buffer copybuf ))))]) ))])
             (swap! t-a-index inc)
             )
           (clojure.core.async/untap mlt out)
@@ -256,5 +258,5 @@
                                :loop loop?
                                :start-index 1
                                :stop-index maximum-buffer-length
-                               :pbo_ids  (:pbo_ids  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))))))
+                               :pbo_ids  @pbo_ids)))
           (println "Finished recording from:" filename "to" buffername))))
