@@ -888,7 +888,31 @@
     ) nil)
 
 (defn set-clear [buffername]
-   (reset! (:request-reset @cutter.cutter/the-window-state) buffername))
+  (let [buf-name (if (not (keyword? buffername)) (keyword buffername) )]
+      (clojure.core.async/offer! (:request-queue @the-window-state) {:type :del-buf :destination :nil :buf-name buf-name :data [[-1 -1 -1 -1]]}))
+                                        ;(reset! (:request-reset @cutter.cutter/the-window-state) buffername)
+)
+
+;;Request format {:type :XX, :destination :xx, :buf-name :xx, :data [[w h c amount]]}
+;;request types; and data
+;; :new; [[amount w h c n]] ; return: [[bufferpointers] [pbi_id]
+;; :del; [pbo_ids],; return: none
+;; :del-buf ["buf-name"], return: none
+;; (clojure.core.async/offer! (:request-queue @the-window-state) {:type :new :destination :iChannel1 :buf-name :a :data [[100 00 3 250]]})
+
+;;del-buf  (clojure.core.async/offer! (:request-queue @the-window-state) {:type :del-buf :destination :iChannel1 :buf-name :a :data [[100 00 3 250]]})
+(defn request-handler [req reply-queue locals]
+  (let [type          (:type req)
+        destination   (:destination req)
+        buf-name      (:buf-name req)
+        data          (:data req)]
+    (case type
+          :new     (do (println req 1) 1)
+          :del     (do (println req 2) 2)
+          :del-buf (if  (contains? (:texture-arrays @locals) buf-name)
+                     (clear-buffer buf-name)
+                     (println "No such buffer "  buf-name))
+          (println "Not a valid request type"))))
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
@@ -929,8 +953,10 @@
 
         (if (not (nil? r-req))
           (let [reply-queue      (:req ((:destination r-req) (:i-textures @locals)))]
-                (async/offer! reply-queue "OK")
-            (println r-req)  ) )
+            (request-handler r-req reply-queue locals)
+            ;;(async/offer! reply-queue "OK")
+            ;;(println r-req)
+            ) )
 
         (if req (do
                   (println "requested buffer" req-type)
@@ -938,12 +964,8 @@
                   (reset! (:request-buffers @locals) false)
                   (reset! (:requested-buffer @cutter.cutter/the-window-state) {})
                   ))
-        (if (and (not (clojure.string/blank? req-reset)) (contains? (:texture-arrays @locals) (keyword req-reset)))
-          (do
-            (clear-buffer req-reset)
-            (reset! (:request-reset @locals) ""))))
+        )
       (swap! (:current-frame @locals) inc)
-      ;(Thread/sleep  (cutter.general/sleepTime @startTime (System/nanoTime) display-sync-hz))
       )
     (destroy-gl locals)
     (.free (:keyCallback @locals))
