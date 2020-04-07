@@ -5,7 +5,7 @@
   (:require ;[clojure.tools.namespace.repl :refer [refresh]]
                                         ;[watchtower.core :as watcher]
                                         ;[clojure.java.io :as io]
-                                        ;[while-let.core :as while-let]
+   [while-let.core :as while-let]
    [cutter.shader :refer :all]
    [cutter.general :refer :all]
    [cutter.gl_init :refer :all]
@@ -895,19 +895,31 @@
 
 ;;Request format {:type :XX, :destination :xx, :buf-name :xx, :data [[w h c amount]]}
 ;;request types; and data
-;; :new; [[amount w h c n]] ; return: [[bufferpointers] [pbi_id]
+;; :new; [[amount w h c n]] ; return: [[pbo_ids][bufferpointers]]
 ;; :del; [pbo_ids],; return: none
 ;; :del-buf ["buf-name"], return: none
 ;; (clojure.core.async/offer! (:request-queue @the-window-state) {:type :new :destination :iChannel1 :buf-name :a :data [[100 00 3 250]]})
 
+;;new   (clojure.core.async/offer! (:request-queue @the-window-state) {:type :new :destination :iChannel1 :buf-name :a :data [[100 100 3 250]]})
+
 ;;del-buf  (clojure.core.async/offer! (:request-queue @the-window-state) {:type :del-buf :destination :iChannel1 :buf-name :a :data [[100 00 3 250]]})
+
+;; [x nil nil nil nil nil nil nil y]
 (defn request-handler [req reply-queue locals]
   (let [type          (:type req)
         destination   (:destination req)
         buf-name      (:buf-name req)
         data          (:data req)]
     (case type
-          :new     (do (println req 1) 1)
+      :new     (let [widths    (mapv (fn [x] (nth x 0)) data)
+                     heights   (mapv (fn [x] (nth x 1)) data)
+                     channels  (mapv (fn [x] (nth x 2)) data)
+                     amounts   (mapv (fn [x] (nth x 3)) data)
+                     pbo-data  (mapv (fn [w h c amount]
+                                       (mapv (fn [am]  (create-PBO-buf w h c)) (range amount))) widths heights channels amounts )
+                     pbo_ids  (mapv first (partition 2 (flatten pbo-data)))
+                     buffers   (mapv last (partition 2 (flatten pbo-data)))]
+                 (clojure.core.async/offer! reply-queue [buffers pbo_ids]))
           :del     (do (println req 2) 2)
           :del-buf (if  (contains? (:texture-arrays @locals) buf-name)
                      (clear-buffer buf-name)
@@ -948,15 +960,20 @@
             height       (:height req-type)
             channels     (:channels req-type)
             maxl         (:maxl req-type)
-            req-queue    (:request-queue @locals)
-            r-req        (if (not (= nil req-queue)) (async/poll! req-queue))] ;; {:buf-name :destination :width :height :channels}
-
-        (if (not (nil? r-req))
+            ;req-queue    (:request-queue @locals)
+            ;r-req        (if (not (= nil req-queue)) (async/poll! req-queue))
+            ] ;; {:buf-name :destination :width :height :channels}
+        (while-let.core/while-let  [r-req (async/poll!  (:request-queue @locals))]
           (let [reply-queue      (:req ((:destination r-req) (:i-textures @locals)))]
+            ;(println reply-queue)
             (request-handler r-req reply-queue locals)
-            ;;(async/offer! reply-queue "OK")
-            ;;(println r-req)
-            ) )
+            ))
+        ;; (if (not (nil? r-req))
+        ;;   (let [reply-queue      (:req ((:destination r-req) (:i-textures @locals)))]
+        ;;     (request-handler r-req reply-queue locals)
+        ;;     ;;(async/offer! reply-queue "OK")
+        ;;     ;;(println r-req)
+        ;;     ) )
 
         (if req (do
                   (println "requested buffer" req-type)

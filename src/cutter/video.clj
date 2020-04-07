@@ -199,6 +199,7 @@
         texture                  (destination i-textures)
         queue                    (:queue texture)
         mlt                      (:mult texture)
+        req                      (:req texture)
         image-buffer             (atom [])
         pbo_ids                  (atom [])
         rejected-images          (atom [])
@@ -211,22 +212,33 @@
         init_image               (async/<!! out)
         h                        (nth init_image 4)
         w                        (nth init_image 5)
-        c                        (nth init_image 6)]
-    (cutter.cutter/set-request
-     buffername-key
-     destination
-     w
-     h
-     c
-     maximum-buffer-length)
+        c                        (nth init_image 6)
+        req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data [[w h c maximum-buffer-length]]})
+        orig_source_dat          (clojure.core.async/<!! req)
+        req-buffers              (first orig_source_dat)
+        req-pbo_ids              (last orig_source_dat)
+        ]
+    ;(println (first orig_source_dat))
+    ;; (cutter.cutter/set-request
+    ;;  buffername-key
+    ;;  destination
+    ;;  w
+    ;;  h
+    ;;  c
+    ;;  maximum-buffer-length)
     (while  @(:request-buffers @the-window-state) (Thread/sleep 500))
         (println "Recording from: " filename " to " buffername)
         (async/thread
           (while (and (.isOpened source) (< @t-a-index maximum-buffer-length))
             (let [fps                 (cutter.opencv/oc-get-capture-property :fps source)
-                  orig_source         (nth  (:source  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state)) ) @t-a-index)
-                  dest-buffer         (first orig_source)
-                  pbo_id              (last orig_source)
+                                        ;orig_source         (nth  (:source  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state)) ) @t-a-index)
+                  ;orig_source         (nth orig_source_dat  @t-a-index)
+                  ;dest-buffer         (first orig_source)
+                  ;pbo_id              (last orig_source)
+                  dest-buffer         (nth req-buffers @t-a-index)
+                  pbo_id              (nth req-pbo_ids @t-a-index)
+                  ;_ (println dest-buffer)
+                  ;_ (println pbo_id)
                   image               (async/<!! out)
                   h                   (nth image 4)
                   w                   (nth image 5)
