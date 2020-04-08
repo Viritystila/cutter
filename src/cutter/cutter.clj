@@ -93,7 +93,7 @@
    :maximum-texture-folders    1000
    :maximum-cameras            1000
    :maximum-videos             1000
-   :maximum-buffer-length      250  ;Frames
+   :maximum-buffer-length      2500  ;Frames
    :request-buffers            (atom false)
    :requested-buffer           (atom {})
    :request-reset              (atom "")
@@ -807,52 +807,52 @@
   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
   )
 
-(defn reserve-buffer
-  [buf_name destination width height channels maxl]
-  (let [;_       (reset! (:request-buffers @cutter.cutter/the-window-state) true)
-        tas     (:texture-arrays  @cutter.cutter/the-window-state)
-        exists  (contains? tas buf_name)
-        ;_ (println "asad" exists tas buf_name)
-        ta      (if (not exists)
-                  (let [pb  (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl))
-                        ids (mapv first pb)
-                        buf (mapv last pb)
-                        source (mapv (fn [x y] [x nil nil nil nil nil nil nil y]) buf ids)]
-                    ;(println "Key does not exitsts")
-                    (swap! cutter.cutter/the-window-state assoc :texture-arrays
-                           (assoc tas buf_name {:idx         (name buf_name),
-                                                :destinate   destination,
-                                                :source      source,
-                                                :running     false,
-                                                :fps         30
-                                                :index       0,
-                                                :mode        :fw,
-                                                :loop        true,
-                                                :start-index 0,
-                                                :stop-index  0,
-                                                :pbo_ids     ids})))
-                  (let [buf  (:source (buf_name tas))
-                        ids  (:pbo_ids (buf_name tas))
-                         _   (doall (map (fn [x] (delete-PBO-buf x)) ids))
-                        bufs (doall (map (fn [x] (first x)) buf))
-                        pb   (doall (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl)))
-                        ids  (doall (mapv first pb))
-                        buf  (doall (mapv last pb))
-                        source (mapv (fn [x y] [x nil nil nil nil nil nil nil y]) buf ids)]
-                    ;(println "Key exists")
-                    (swap! cutter.cutter/the-window-state assoc :texture-arrays
-                           (assoc tas buf_name {:idx         (name buf_name),
-                                                :destinate   destination,
-                                                :source      source,
-                                                :running     false,
-                                                :fps         30
-                                                :index       0,
-                                                :mode        :fw,
-                                                :loop        true,
-                                                :start-index 0,
-                                                :stop-index  0,
-                                                :pbo_ids     ids}))))])
-  nil)
+;; (defn reserve-buffer
+;;   [buf_name destination width height channels maxl]
+;;   (let [;_       (reset! (:request-buffers @cutter.cutter/the-window-state) true)
+;;         tas     (:texture-arrays  @cutter.cutter/the-window-state)
+;;         exists  (contains? tas buf_name)
+;;         ;_ (println "asad" exists tas buf_name)
+;;         ta      (if (not exists)
+;;                   (let [pb  (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl))
+;;                         ids (mapv first pb)
+;;                         buf (mapv last pb)
+;;                         source (mapv (fn [x y] [x nil nil nil nil nil nil nil y]) buf ids)]
+;;                     ;(println "Key does not exitsts")
+;;                     (swap! cutter.cutter/the-window-state assoc :texture-arrays
+;;                            (assoc tas buf_name {:idx         (name buf_name),
+;;                                                 :destinate   destination,
+;;                                                 :source      source,
+;;                                                 :running     false,
+;;                                                 :fps         30
+;;                                                 :index       0,
+;;                                                 :mode        :fw,
+;;                                                 :loop        true,
+;;                                                 :start-index 0,
+;;                                                 :stop-index  0,
+;;                                                 :pbo_ids     ids})))
+;;                   (let [buf  (:source (buf_name tas))
+;;                         ids  (:pbo_ids (buf_name tas))
+;;                          _   (doall (map (fn [x] (delete-PBO-buf x)) ids))
+;;                         bufs (doall (map (fn [x] (first x)) buf))
+;;                         pb   (doall (map (fn [x] (create-PBO-buf width height channels)) (range 0 maxl)))
+;;                         ids  (doall (mapv first pb))
+;;                         buf  (doall (mapv last pb))
+;;                         source (mapv (fn [x y] [x nil nil nil nil nil nil nil y]) buf ids)]
+;;                     ;(println "Key exists")
+;;                     (swap! cutter.cutter/the-window-state assoc :texture-arrays
+;;                            (assoc tas buf_name {:idx         (name buf_name),
+;;                                                 :destinate   destination,
+;;                                                 :source      source,
+;;                                                 :running     false,
+;;                                                 :fps         30
+;;                                                 :index       0,
+;;                                                 :mode        :fw,
+;;                                                 :loop        true,
+;;                                                 :start-index 0,
+;;                                                 :stop-index  0,
+;;                                                 :pbo_ids     ids}))))])
+;;   nil)
 
 (defn set-request [buf-name destination width height channels maxl]
    (reset! (:request-buffers @cutter.cutter/the-window-state) true)
@@ -888,16 +888,17 @@
     ) nil)
 
 (defn set-clear [buffername]
-  (let [buf-name (if (not (keyword? buffername)) (keyword buffername) )]
-      (clojure.core.async/offer! (:request-queue @the-window-state) {:type :del-buf :destination :nil :buf-name buf-name :data [[-1 -1 -1 -1]]}))
+  (let [buf-name    (if (not (keyword? buffername)) (keyword buffername))
+        destination (:destination (buf-name (:texture-arrays @the-window-state)))]
+      (clojure.core.async/offer! (:request-queue @the-window-state) {:type :del-buf :destination destination :buf-name buf-name :data [[-1 -1 -1 -1]]}))
                                         ;(reset! (:request-reset @cutter.cutter/the-window-state) buffername)
 )
 
 ;;Request format {:type :XX, :destination :xx, :buf-name :xx, :data [[w h c amount]]}
 ;;request types; and data
 ;; :new; [[amount w h c n]] ; return: [[pbo_ids][bufferpointers]]
-;; :del; [pbo_ids],; return: none
-;; :del-buf ["buf-name"], return: none
+;; :del; [pbo_ids],; return: true
+;; :del-buf ["buf-name"], return: true/false
 ;; (clojure.core.async/offer! (:request-queue @the-window-state) {:type :new :destination :iChannel1 :buf-name :a :data [[100 00 3 250]]})
 
 ;;new   (clojure.core.async/offer! (:request-queue @the-window-state) {:type :new :destination :iChannel1 :buf-name :a :data [[100 100 3 250]]})
@@ -920,11 +921,15 @@
                      pbo_ids  (mapv first (partition 2 (flatten pbo-data)))
                      buffers   (mapv last (partition 2 (flatten pbo-data)))]
                  (clojure.core.async/offer! reply-queue [buffers pbo_ids]))
-          :del     (do (println req 2) 2)
-          :del-buf (if  (contains? (:texture-arrays @locals) buf-name)
-                     (clear-buffer buf-name)
-                     (println "No such buffer "  buf-name))
-          (println "Not a valid request type"))))
+      :del     (let [pbo_ids   data]
+                 (mapv (fn [x] (delete-PBO-buf) x) pbo_ids)
+                  (clojure.core.async/offer! reply-queue true))
+      :del-buf (if  (contains? (:texture-arrays @locals) buf-name)
+                 (do (clear-buffer buf-name)
+                     (clojure.core.async/offer! reply-queue true))
+                 (do (println "No such buffer "  buf-name)
+                     (clojure.core.async/offer! reply-queue false)))
+      (println "Not a valid request type"))))
 
 (defn- run-thread
   [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
@@ -965,7 +970,8 @@
             ] ;; {:buf-name :destination :width :height :channels}
         (while-let.core/while-let  [r-req (async/poll!  (:request-queue @locals))]
           (let [reply-queue      (:req ((:destination r-req) (:i-textures @locals)))]
-            ;(println reply-queue)
+            ;(println "(:destination r-req)" (:destination r-req))
+            ;(println "reply queue" reply-queue)
             (request-handler r-req reply-queue locals)
             ))
         ;; (if (not (nil? r-req))
@@ -975,12 +981,12 @@
         ;;     ;;(println r-req)
         ;;     ) )
 
-        (if req (do
-                  (println "requested buffer" req-type)
-                  (println (reserve-buffer buf-name destination width height channels maxl))
-                  (reset! (:request-buffers @locals) false)
-                  (reset! (:requested-buffer @cutter.cutter/the-window-state) {})
-                  ))
+        ;; (if req (do
+        ;;           (println "requested buffer" req-type)
+        ;;           (println (reserve-buffer buf-name destination width height channels maxl))
+        ;;           (reset! (:request-buffers @locals) false)
+        ;;           (reset! (:requested-buffer @cutter.cutter/the-window-state) {})
+        ;;           ))
         )
       (swap! (:current-frame @locals) inc)
       )

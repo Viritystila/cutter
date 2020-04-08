@@ -147,15 +147,22 @@
         stop-index               (:stop-index texture-array)
         stop-index               (if (nil? stop-index) maximum-buffer-length stop-index)
         texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
+        old-pbo-ids              (:pbo_ids texture-array)
+        old-pbo-ids              (if (nil? old-pbo-ids) [] old-pbo-ids)
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
         queue                    (:queue texture)
         mlt                      (:mult texture)
-        ib                       (:buffer texture-array)
-        ib                       (if (nil? ib) [] ib)
-        pb                       (:pbo_ids texture)
-        pb                       (if (nil? pb) [] pb)
-        image-buffer             (atom ib)
+        req                      (:req texture)
+        image-buffer             (atom [])
+        pbo_ids                  (atom [])
+        rejected-buffers         (atom [])
+        rejected-pbos            (atom [])
+        ;ib                       (:buffer texture-array)
+        ;ib                       (if (nil? ib) [] ib)
+        ;pb                       (:pbo_ids texture)
+        ;pb                       (if (nil? pb) [] pb)
+        ;image-buffer             (atom ib)
         t-a-index                (atom 0)
         out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
         _                        (if start-camera? nil (clojure.core.async/tap mlt out))
@@ -164,40 +171,40 @@
         init_image               (async/<!! out)
         h                        (nth init_image 4)
         w                        (nth init_image 5)
-        c                        (nth init_image 6)]
-    (Thread/sleep 2000)
-     (cutter.cutter/set-request
-      buffername-key
-      destination
-      w
-      h
-      c
-      maximum-buffer-length)
+        c                        (nth init_image 6)
+        _                        (async/poll! req)
+        req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
+        req-delete-reply         (clojure.core.async/<!! req)
+        req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data [[w h c maximum-buffer-length]]})
+        orig_source_dat          (clojure.core.async/<!! req)
+        is_good_dat              (vector? orig_source_dat)
+        req-buffers              (if is_good_dat (first orig_source_dat) nil)
+        req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)]
      (while  @(:request-buffers @the-window-state) (Thread/sleep 500))
      (println "Recording from: " device " to " buffername)
      (async/thread
-       ( while (and (.isOpened source) (< @t-a-index maximum-buffer-length))
-        (do
-          (let [orig_source         (nth  (:source  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))) @t-a-index)
-                dest-buffer         (first orig_source)
-                pbo_id              (last orig_source)
-                image               (async/<!! out)
-                rows                (nth image 1)
-                step                (nth image 2)
-                h                   (nth image 4)
-                w                   (nth image 5)
-                ib                  (nth image 6)
-                ;mat                 (nth image 7)
-                buffer_i            (nth image 0)
-                image               (assoc image 9 pbo_id)
-                copybuf             (oc-mat-to-bytebuffer mat)
-                buffer-capacity     (.capacity copybuf)
-                dest-capacity       (.capacity dest-buffer)
-                _ (if (= buffer-capacity dest-capacity)
-                    (do
-                      (swap! image-buffer conj (assoc image 0 (.flip (.put dest-buffer copybuf )))) ))
-                ] (swap! t-a-index inc)
-            )))
+       ( while (and (.isOpened source) (< @t-a-index maximum-buffer-length)  is_good_dat )
+        (let [dest-buffer         (nth req-buffers @t-a-index)
+              pbo_id              (nth req-pbo_ids @t-a-index)
+              image               (async/<!! out)
+              rows                (nth image 1)
+              step                (nth image 2)
+              h                   (nth image 4)
+              w                   (nth image 5)
+              ib                  (nth image 6)
+              buffer_i            (nth image 0)
+              image               (assoc image 9 pbo_id)
+              copybuf             (oc-mat-to-bytebuffer mat)
+              buffer-capacity     (.capacity copybuf)
+              dest-capacity       (.capacity dest-buffer)
+              _                   (if (= buffer-capacity dest-capacity)
+                                    (do (let [image           (assoc image 9 pbo_id)
+                                              _               (swap! pbo_ids conj pbo_id)
+                                              _               (swap! image-buffer conj (assoc image 0  (.flip (.put dest-buffer copybuf ))))]) )
+                                    (do (swap! rejected-pbos conj pbo_id)
+                                        (swap! rejected-buffers conj dest-buffer)))
+              ] (swap! t-a-index inc)
+             ))
       (swap! cutter.cutter/the-window-state assoc :texture-arrays
              (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
                                                          :destination bufdestination
@@ -209,9 +216,9 @@
                                                          :loop loop?
                                                          :start-index 1
                                                          :stop-index maximum-buffer-length
-                                                         :pbo_ids  (:pbo_ids  (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))))))
+                                                         :pbo_ids   @pbo_ids)))
         ;(swap! t-a-index inc)
-
+      (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data @rejected-pbos})
       (clojure.core.async/untap mlt out)
       (println "Finished recording from:" device "to" buffername)
       (if start-camera? (stop-camera (str device-id))))))
