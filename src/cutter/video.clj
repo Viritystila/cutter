@@ -157,7 +157,7 @@
           fps
           (cutter.opencv/oc-get-capture-property property source))))
 
-(defn cut-video [filename buffername start-frame]
+(defn cut-video [filename buffername start-frame length]
   "Cut a segment from a video with a length of :maximum-buffer-length startin from start-frame. If thr video is already running, the recording is from the running video"
   (let [device-id                filename
         videos                   (:videos @the-window-state)
@@ -176,6 +176,7 @@
         buffername-key           (keyword buffername)
         mat                      (:mat (destination (:i-textures @cutter.cutter/the-window-state)))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        maximum-buffer-length    (min length maximum-buffer-length)
         texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
         running?                 false
         idx                      buffername

@@ -70,10 +70,10 @@
   "Set video play limits in frames, example (svl \"./test1.mp4\" 0 100)"
   (cutter.video/set-video-limits filename start-index stop-index))
 
-(defn cut [filename buffername start-frame]
+(defn cut [filename buffername  &{:keys [start-frame length] :or {start-frame 0 length 250}}]
   "Cut a video segment to buffer, example (cut \"./test1.mp4\" \"a\" 0)"
   (cutter.texturearray/stop-buffer buffername)
-  (cutter.video/cut-video filename buffername start-frame))
+  (cutter.video/cut-video filename buffername start-frame length))
 
 (defn sav []
   "Stop all videos"
@@ -260,8 +260,8 @@
     (fn [msg] (let [input                   (:args msg)
                     input                   (vec input)
                     ic                      (count input)]
-                    (if (and (= 3 ic) (string? (nth input 0)) (string? (nth input 1))  )
-                      (cut (nth input 0) (nth input 1) (int (nth input 2)) )))))
+                    (if (and (= 5 ic) (string? (nth input 0)) (string? (nth input 1))  )
+                      (cut (nth input 0) (nth input 1) (int (nth input 2)) :start-frame (int (nth input 3)) :length  (int (nth input 4))  )))))
   (osc-handle (:osc-server @cutter.cutter/the-window-state) "/cutter/set-vid"
     (fn [msg] (let [input                   (:args msg)
                     input                   (vec input)
