@@ -758,7 +758,7 @@
 
 (defn- destroy-gl
   [locals]
-  (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn  outputPBOs i-textures]} @locals]
+  (let [{:keys [pgm-id vs-id fs-id vbo-id vao-id user-fn  outputPBOs i-textures texture-arrays]} @locals]
     ;; Delete the shaders
     (GL20/glUseProgram 0)
     (GL20/glDetachShader pgm-id vs-id)
@@ -784,6 +784,9 @@
     (GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
     (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER  0)
     (GL30/glDeleteBuffers   (first outputPBOs))
+    ;;Delete buffers
+    (doseq [x (keys texture-arrays)] (let [pbos   (:pbo_ids (x texture-arrays))]
+                                       (doseq [y pbos] (delete-PBO-buf y))))
     ;;Delete texture pbos
     (doseq [x (keys i-textures)] (delete-PBO-buf (:pbo (x i-textures))))
     ))
