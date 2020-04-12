@@ -126,28 +126,32 @@
         val))
 
 
-(defn set-texture-by-filename [filename destination-texture-key]
-  "Set texture by filename and adds the filename to the list"
-  (let [  textures            (:textures @cutter.cutter/the-window-state)
-          i-textures          (:i-textures @cutter.cutter/the-window-state)
-          texture             (destination-texture-key i-textures)
-          mat                 (cutter.opencv/oc_load_image filename)
-          height              (.height mat)
-          width               (.width mat)
-          channels            (.channels mat)
-          internal-format     (cutter.opencv/oc-tex-internal-format mat)
-          format              (cutter.opencv/oc-tex-format mat)
-          queue               (:queue texture)
-          texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
-          i-textures          (assoc i-textures destination-texture-key texture)
-          textures            (assoc textures (keyword filename) {:idx filename,
-                                                                  :destination destination-texture-key,
-                                                                  :source mat,
-                                                                  :running true})]
-          (swap! cutter.cutter/the-window-state assoc :textures textures)
-          (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
-          (async/offer! queue (matInfo mat)))
-          nil)
+;; (defn set-texture-by-filename [filename destination-texture-key]
+;;   "Set texture by filename and adds the filename to the list"
+;;   (let [textures            (:textures @cutter.cutter/the-window-state)
+;;         i-textures          (:i-textures @cutter.cutter/the-window-state)
+;;         texture             (destination-texture-key i-textures)
+;;         mat                 (:mat texture)
+;;         ;;mat                 (cutter.opencv/oc_load_image filename)
+;;         _                  (cutter.opencv/oc_load_image_2 filename [mat])
+;;         height              (.height mat)
+;;         width               (.width mat)
+;;         channels            (.channels mat)
+;;         internal-format     (cutter.opencv/oc-tex-internal-format mat)
+;;         format              (cutter.opencv/oc-tex-format mat)
+;;         queue               (:queue texture)
+;;         pbo                 (:pbo texture)
+;;         gl_buffer           (:gl_buffer texture)
+;;         texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
+;;         i-textures          (assoc i-textures destination-texture-key texture)
+;;         textures            (assoc textures (keyword filename) {:idx filename,
+;;                                                                 :destination destination-texture-key,
+;;                                                                 :source mat,
+;;                                                                 :running true})]
+;;     (swap! cutter.cutter/the-window-state assoc :textures textures)
+;;     (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
+;;     (async/offer! queue  (conj (matInfo mat) pbo)))
+;;   nil)
 
 ;Text
 (defn write-text
@@ -172,41 +176,87 @@
     (swap! the-window-state assoc :i-textures i-textures))
   nil)
 
+
+(defn load-images-to-queue [filenames queue pbo]
+  (let [ filenames  (filter (apply every-pred [string? #(.exists (clojure.java.io/as-file %))]) filenames)
+        no-files    (count filenames)
+        mat-info    (atom [])]
+    (doseq [x filenames]
+      (if (and (string? x) (.exists (clojure.java.io/as-file x)))
+        (let [mi  (conj  (matInfo (cutter.opencv/oc_load_image x)) pbo)]
+          (clojure.core.async/>!! queue  mi)
+          (swap! mat-info conj mi )  ))) @mat-info ))
+
+
+
 ;Add Texture from file to texture-array
-(defn add-to-buffer [filename buffername]
-  (let [  texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
-          buffername-key           (keyword buffername)
-          texture-array            (buffername-key texture-arrays)
-          running?                 false
-          idx                      buffername
-          maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
-          bufdestination           (:destination texture-array)
-          bufdestination           (if (nil? bufdestination) :iChannelNull bufdestination)
-          running?                 (:running texture-array)
-          running?                 (if (nil? running?) false running?)
-          mode                     (:mode texture-array)
-          mode                     (if (nil? mode) :fw mode)
-          fps                      (:fps texture-array)
-          fps                      (if (nil? fps) 30 fps)
-          start-index              (:start-index texture-array)
-          start-index              (if (nil? start-index) 0 start-index)
-          stop-index               (:stop-index texture-array)
-          stop-index               (if (nil? stop-index) maximum-buffer-length stop-index)
-          source                   (:source texture-array)
-          source                   (if (nil? source) [] source)
-          mat                      (cutter.opencv/oc_load_image filename)
-          source                   (if (< (count source) maximum-buffer-length) (conj source (matInfo mat)) source )
-          newcount                 (count source)]
-      (swap! cutter.cutter/the-window-state assoc :texture-arrays
-        (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
-                                                                  :destination bufdestination
-                                                                  :source source
-                                                                  :running running?
-                                                                  :fps fps
-                                                                  :index 0
-                                                                  :mode :fw
-                                                                  :start-index start-index
-                                                                  :stop-index (min maximum-buffer-length newcount))))) nil)
+(defn add-to-buffer [filenames buffername destination]
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)
+        running?                 false
+        idx                      buffername
+        maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        bufdestination           (:destination texture-array)
+        bufdestination           (if (nil? bufdestination) :iChannelNull bufdestination)
+        running?                 (:running texture-array)
+        running?                 (if (nil? running?) false running?)
+        mode                     (:mode texture-array)
+        mode                     (if (nil? mode) :fw mode)
+        fps                      (:fps texture-array)
+        fps                      (if (nil? fps) 30 fps)
+        start-index              (:start-index texture-array)
+        start-index              (if (nil? start-index) 0 start-index)
+        stop-index               (:stop-index texture-array)
+        stop-index               (if (nil? stop-index) maximum-buffer-length stop-index)
+        source                   (:source texture-array)
+        source                   (if (nil? source) [] source)
+        old-pbo-ids              (:pbo_ids texture-array)
+        old-pbo-ids              (if (nil? old-pbo-ids) [] old-pbo-ids)
+        i-textures               (:i-textures @cutter.cutter/the-window-state)
+        texture                  (destination i-textures)
+        queue                    (:queue texture)
+        mlt                      (:mult texture)
+        req                      (:req texture)
+        pbo                      (:pbo texture)
+        image-buffer             (atom [])
+        pbo_ids                  (atom [])
+        rejected-buffers         (atom [])
+        rejected-pbos            (atom [])
+        t-a-index                (atom 0)
+        filenames                (filter (apply every-pred [string? #(.exists (clojure.java.io/as-file %))]) filenames)
+        ;is_filename-str          (str filename)
+        no_files                 (count filenames)
+        out                      (clojure.core.async/chan (async/buffer no_files))
+        ;mat                      (cutter.opencv/oc_load_image filename)
+        ;h                        (.height mat)
+        ;w                        (.width mat)
+        ;c                        (.channels mat)
+        ;mat_info                 (matInfo mat )
+        ;_                        (async/poll! req)
+        mat-info                 (cutter.cutter_helper/load-images-to-queue filenames out pbo)
+        ;req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
+        ;req-delete-reply         (clojure.core.async/<!! req)
+        ;req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data [[w h c no_files]]})
+        ;orig_source_dat          (clojure.core.async/<!! req)
+        ;is_good_dat              (vector? orig_source_dat)
+        ;req-buffers              (if is_good_dat (first orig_source_dat) nil)
+        ;req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
+
+        ;source                   (if (< (count source) maximum-buffer-length) (conj source (matInfo mat)) source )
+        ;newcount                 (count source)
+        ]
+    ;; (swap! cutter.cutter/the-window-state assoc :texture-arrays
+    ;;        (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+    ;;                                                    :destination bufdestination
+    ;;                                                    :source source
+    ;;                                                    :running running?
+    ;;                                                    :fps fps
+    ;;                                                    :index 0
+    ;;                                                    :mode :fw
+    ;;                                                    :start-index start-index
+    ;;                                                    :stop-index (min maximum-buffer-length newcount))))
+    out))
 
 (defn add-from-dir [dir buffername]
   (let [dir    (clojure.java.io/file dir)

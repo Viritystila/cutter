@@ -167,17 +167,19 @@
 ;;;;;;;;;;;;
 ;;;Images;;;
 ;;;;;;;;;;;;
-(defn img [filename destination-texture-key]
-  "Set image by filename, example (img \"./test1.png\" :iChannel1)"
-  (cutter.cutter_helper/set-texture-by-filename filename destination-texture-key))
+;; (defn img [filename destination-texture-key]
+;;   "Set image by filename, example (img \"./test1.png\" :iChannel1)"
+;;   (println "deprecated, use add-img or add-dir")
+;;   ;;(cutter.cutter_helper/set-texture-by-filename filename destination-texture-key)
+;;   )
 
-(defn add-img [filename buffername]
-  "Add an image to a buffer index by filename, example (add-img \"./test1.png\" \"a\" )"
-  (cutter.cutter_helper/add-to-buffer filename buffername))
+;; (defn add-img [filename buffername]
+;;   "Add an image to a buffer index by filename, example (add-img \"./test1.png\" \"a\" )"
+;;   (cutter.cutter_helper/add-to-buffer filename buffername))
 
-(defn add-dir [dir buffername]
-  "Add an images from a directory to a buffer, example (add-dir \"./test/\" \"a\" )"
-  (cutter.cutter_helper/add-from-dir dir buffername))
+;; (defn add-dir [dir buffername]
+;;   "Add an images from a directory to a buffer, example (add-dir \"./test/\" \"a\" )"
+;;   (cutter.cutter_helper/add-from-dir dir buffername))
 
 ;;;;;;;;;;
 ;;;Text;;;

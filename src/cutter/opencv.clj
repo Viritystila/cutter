@@ -124,6 +124,11 @@
     mat))
 
 
+(defn oc_load_image_2 [filename mat]
+  (let [mat   (org.opencv.imgcodecs.Imgcodecs/imreadmulti filename mat org.opencv.imgcodecs.Imgcodecs/IMREAD_COLOR)]
+    mat))
+
+
 ;;camera
 (defn oc-set-capture-property [dispatch capture val]
   (let []
