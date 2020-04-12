@@ -2,9 +2,7 @@
        :doc " Core library derived from Shadertone (Roger Allen https://github.com/overtone/shadertone)."}
   cutter.cutter
   (:use [overtone.osc])
-  (:require ;[clojure.tools.namespace.repl :refer [refresh]]
-                                        ;[watchtower.core :as watcher]
-                                        ;[clojure.java.io :as io]
+  (:require
    [while-let.core :as while-let]
    [cutter.shader :refer :all]
    [cutter.general :refer :all]
@@ -12,29 +10,14 @@
    [cutter.opencv :refer :all]
    [clojure.edn :as edn]
    [overtone.core]
-                                        ;[clojure.java.io :as io]
    [clojure.core.async
     :as async
     :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
             alts! alts!! timeout]]
-                                        ;clojure.string
    )
   (:import
-                                        ;[org.bytedeco.javacpp Pointer]
-                                        ;[org.bytedeco.javacpp BytePointer]
-                                        ;[org.bytedeco.javacpp v4l2]
-                                        ;[org.opencv.core Mat Core CvType]
-                                        ;[org.opencv.videoio Videoio VideoCapture]
-                                        ;[org.opencv.video Video]
-                                        ;[org.opencv.imgproc Imgproc]
-                                        ;[org.opencv.imgcodecs Imgcodecs]
-                                        ;[java.awt.image BufferedImage DataBuffer DataBufferByte WritableRaster]
    [java.io File FileInputStream]
    [java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder]
-                                        ;       [java.util Calendar]
-                                        ;         [java.util List]
-                                        ;           [javax.imageio ImageIO]
-                                        ;     [java.lang.reflect Field]
    [org.lwjgl BufferUtils]
    [java.lang.ref Cleaner]
    [org.lwjgl.system MemoryUtil]
@@ -94,6 +77,7 @@
    :maximum-cameras            1000
    :maximum-videos             1000
    :maximum-buffer-length      2500  ;Frames
+   :default-buffer-length      250
    :request-buffers            (atom false)
    :requested-buffer           (atom {})
    :request-reset              (atom "")

@@ -30,10 +30,10 @@
   "Stop camera, example (stop-cam \"0\")"
   (cutter.camera/stop-camera device))
 
-(defn rec [device buffername]
+(defn rec [device buffername  &{:keys [length] :or {length (:default-buffer-length @the-window-state)}}]
   "Record camera, example (rec \"0\" \"a \" )"
   (cutter.texturearray/stop-buffer buffername)
-  (cutter.camera/rec-camera device buffername))
+  (cutter.camera/rec-camera device buffername length))
 
 (defn set-cam [device property val]
   "Set camera property, example (cam \"0\" :fps 30)"
@@ -70,7 +70,7 @@
   "Set video play limits in frames, example (svl \"./test1.mp4\" 0 100)"
   (cutter.video/set-video-limits filename start-index stop-index))
 
-(defn cut [filename buffername  &{:keys [start-frame length] :or {start-frame 0 length 250}}]
+(defn cut [filename buffername  &{:keys [start-frame length] :or {start-frame 0 length (:default-buffer-length @the-window-state)}}]
   "Cut a video segment to buffer, example (cut \"./test1.mp4\" \"a\" 0)"
   (cutter.texturearray/stop-buffer buffername)
   (cutter.video/cut-video filename buffername start-frame length))

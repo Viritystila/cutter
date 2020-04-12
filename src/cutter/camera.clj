@@ -112,7 +112,7 @@
   (mapv (fn [x]  (stop-camera (clojure.string/join (rest (str x)))))(vec (keys (:cameras @cutter.cutter/the-window-state)))))
 
 
-(defn rec-camera [device buffername]
+(defn rec-camera [device buffername length]
   (let [device-id                (read-string (str (last device)))
         cameras                  (:cameras @the-window-state)
         camera-key               (keyword device)
@@ -129,6 +129,7 @@
         current-frame            @(:current-frame @the-window-state)
         mat                      (:mat (destination (:i-textures @cutter.cutter/the-window-state)))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        maximum-buffer-length    (min length maximum-buffer-length)
         texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
         running?                 false
         idx                      buffername
