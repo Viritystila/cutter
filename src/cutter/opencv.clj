@@ -65,7 +65,7 @@
                       (.height mat)
                       (.width mat)
                       (.channels mat)
-                      -1;  mat
+                      mat
                       0])
 
 

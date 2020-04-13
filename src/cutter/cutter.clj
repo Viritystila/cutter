@@ -338,6 +338,7 @@
                (when (and (= key org.lwjgl.glfw.GLFW/GLFW_KEY_ESCAPE)
                           (= action org.lwjgl.glfw.GLFW/GLFW_RELEASE))
                  (org.lwjgl.glfw.GLFW/glfwSetWindowShouldClose (:window @locals) true)))))
+    ;(println "aaaa" (:window @locals))
     (org.lwjgl.glfw.GLFW/glfwSetKeyCallback       (:window @locals) (:keyCallback @locals))
     (org.lwjgl.glfw.GLFW/glfwMakeContextCurrent   (:window @locals))
     (org.lwjgl.glfw.GLFW/glfwSwapInterval         2)
@@ -830,6 +831,7 @@
         destination   (:destination req)
         buf-name      (:buf-name req)
         data          (:data req)]
+    (println data)
     (case type
       :new     (let [widths    (mapv (fn [x] (nth x 0)) data)
                      heights   (mapv (fn [x] (nth x 1)) data)

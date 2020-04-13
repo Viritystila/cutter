@@ -188,6 +188,13 @@
           (swap! mat-info conj mi )  ))) @mat-info ))
 
 
+(defn map-to-request-format [m-i a]
+  (let [ws     (mapv (fn [x] (nth x 5)) m-i )
+        hs     (mapv (fn [x] (nth x 4)) m-i )
+        cs     (mapv (fn [x] (nth x 6)) m-i )
+        as     (mapv (fn [x] a) m-i )]
+    (mapv (fn [w h c a] [w h c a]) ws hs cs as )))
+
 
 ;Add Texture from file to texture-array
 (defn add-to-buffer [filenames buffername destination]
@@ -234,18 +241,31 @@
         ;c                        (.channels mat)
         ;mat_info                 (matInfo mat )
         ;_                        (async/poll! req)
-        mat-info                 (cutter.cutter_helper/load-images-to-queue filenames out pbo)
-        ;req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
-        ;req-delete-reply         (clojure.core.async/<!! req)
-        ;req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data [[w h c no_files]]})
-        ;orig_source_dat          (clojure.core.async/<!! req)
-        ;is_good_dat              (vector? orig_source_dat)
-        ;req-buffers              (if is_good_dat (first orig_source_dat) nil)
-        ;req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
-
+        mat_info                 (cutter.cutter_helper/load-images-to-queue filenames out pbo)
+        req-input-dat            (cutter.cutter_helper/map-to-request-format mat_info 1)
+        ;_ (println  req-input-dat)
+        req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
+        req-delete-reply         (clojure.core.async/<!! req)
+        req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data req-input-dat})
+        orig_source_dat          (clojure.core.async/<!! req)
+        is_good_dat              (vector? orig_source_dat)
+        req-buffers              (if is_good_dat (first orig_source_dat) nil)
+        req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
         ;source                   (if (< (count source) maximum-buffer-length) (conj source (matInfo mat)) source )
         ;newcount                 (count source)
         ]
+    (while-let.core/while-let
+        [dest-buffer         (nth req-buffers @t-a-index)
+         pbo_id              (nth req-pbo_ids @t-a-index)
+         image     (clojure.core.async/<!! out)
+         rows                (nth image 1)
+         step                (nth image 2)
+         h                   (nth image 4)
+         w                   (nth image 5)
+         ib                  (nth image 6)
+         buffer_i            (nth image 0)
+         image               (assoc image 9 pbo_id)
+         ] (swap! t-a-index inc))
     ;; (swap! cutter.cutter/the-window-state assoc :texture-arrays
     ;;        (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
     ;;                                                    :destination bufdestination
