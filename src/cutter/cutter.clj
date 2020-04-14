@@ -524,6 +524,7 @@
                           buffer)))
 
 (defn- set-texture-pbo [tex-image-target width height format pbo]
+  ;(println tex-image-target width height format pbo)
   (try
     (if (GL15/glIsBuffer pbo)
       (do
@@ -558,9 +559,12 @@
        tex-image-target    ^Integer (+ 0 target)
        nbytes              (* width height image-bytes)
        buffer              buffer]
+    ;(println "before choice" width height image-bytes)
     (if (or init? (not= setnbytes nbytes))
       (do
+        ;(println "init")
         (set-texture tex-image-target internal-format width height format buffer)
+        ;(println " after set-texture" width height image-bytes)
         (let [queue               (:queue texture)
               out1                (:out1 texture)
               mlt                 (:mult texture)
@@ -578,6 +582,7 @@
           (swap! locals assoc :i-textures i-textures)))
       (do
         (if (< 0 img-addr)
+           ;;(set-texture tex-image-target internal-format width height format buffer)
           (cutter.cutter/set-texture-pbo tex-image-target width height format pbo_id)
           )))
     (except-gl-errors "@ end of load-texture if-stmt")))

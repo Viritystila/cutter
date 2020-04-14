@@ -197,7 +197,7 @@
 
 
 ;;Add Texture from file to texture-array
-(def fs ["../fb1.jpg" "../fb1.jpg"])
+ (def fs ["../sc.png"])
 ;; (add-to-buffer fs "a" :iChannel1)
 (defn add-to-buffer [filenames buffername destination]
   (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
@@ -206,7 +206,7 @@
         running?                 false
         idx                      buffername
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
-        bufdestination           (:destination texture-array)
+        bufdestination           (destination texture-array)
         bufdestination           (if (nil? bufdestination) :iChannelNull bufdestination)
         running?                 (:running texture-array)
         running?                 (if (nil? running?) false running?)
@@ -242,12 +242,12 @@
         ;w                        (.width mat)
         ;c                        (.channels mat)
         ;mat_info                 (matInfo mat )
-        ;_                        (async/poll! req)
+        _                        (async/poll! req)
         mat_info                 (cutter.cutter_helper/load-images-to-queue filenames out pbo)
         req-input-dat            (cutter.cutter_helper/map-to-request-format mat_info 1)
-        ;_ (println "as"  old-pbo-ids)
-        ;req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
-        ;req-delete-reply         (clojure.core.async/<!! req)
+        _ (println "asasdas"  req-input-dat)
+        req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
+        req-delete-reply         (clojure.core.async/<!! req)
         req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data req-input-dat})
         orig_source_dat          (clojure.core.async/<!! req)
         is_good_dat              (vector? orig_source_dat)
@@ -256,31 +256,53 @@
         ;source                   (if (< (count source) maximum-buffer-length) (conj source (matInfo mat)) source )
         ;newcount                 (count source)
         ]
-    (while-let.core/while-let [image     (clojure.core.async/poll! out)]
-      (let [dest-buffer         (nth req-buffers @t-a-index)
-            pbo_id              (nth req-pbo_ids @t-a-index)
-            ;image     (clojure.core.async/<!! out)
-            rows                (nth image 1)
-            step                (nth image 2)
-            h                   (nth image 4)
-            w                   (nth image 5)
-            ib                  (nth image 6)
-            buffer_i            (nth image 0)
-            image               (assoc image 9 pbo_id)
-            ]
-        ;(println "sdas")
-        ) (swap! t-a-index inc))
-    ;; (swap! cutter.cutter/the-window-state assoc :texture-arrays
-    ;;        (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
-    ;;                                                    :destination bufdestination
-    ;;                                                    :source source
-    ;;                                                    :running running?
-    ;;                                                    :fps fps
-    ;;                                                    :index 0
-    ;;                                                    :mode :fw
-    ;;                                                    :start-index start-index
-    ;;                                                    :stop-index (min maximum-buffer-length newcount))))
-    out))
+    (println orig_source_dat)
+    (println "Adding images" filenames)
+    ;(clojure.core.async/thread)
+    (do  (while-let.core/while-let [image     (clojure.core.async/poll! out)]
+           (let [dest-buffer         (nth req-buffers @t-a-index)
+                 pbo_id              (nth req-pbo_ids @t-a-index)
+                                        ;image     (clojure.core.async/<!! out)
+                 rows                (nth image 1)
+                 step                (nth image 2)
+                 h                   (nth image 4)
+                 w                   (nth image 5)
+                 ib                  (nth image 6)
+                 buffer_i            (nth image 0)
+                 mat                 (nth image 7)
+                 _ (println "whib" w h ib)
+                 _ (println "db" dest-buffer)
+                 image               (assoc image 9 pbo_id)
+                 copybuf             (oc-mat-to-bytebuffer mat)
+                 _ (println "cb" copybuf)
+                 buffer-capacity     (.capacity copybuf)
+                 dest-capacity       (.capacity dest-buffer)
+                 ;_ (println  (= buffer-capacity dest-capacity))
+                 _                   (if (= buffer-capacity dest-capacity)
+                                       (do (let [image           (assoc image 9 pbo_id)
+                                                 _               (swap! pbo_ids conj pbo_id)
+                                                 _               (swap! image-buffer conj (assoc image 0  (.flip (.put dest-buffer copybuf ))))
+                                                 ;;_               (swap! image-buffer conj (assoc image 0  buffer_i))
+                                                 ]) )
+                                       (do (swap! rejected-pbos conj pbo_id)
+                                           (swap! rejected-buffers conj dest-buffer)))
+                 ]
+                                        (println "sdas" @image-buffer @pbo_ids)
+             (swap! t-a-index inc)))
+         (swap! cutter.cutter/the-window-state assoc :texture-arrays
+                (assoc texture-arrays buffername-key (assoc texture-array :idx buffername
+                                                            :destination bufdestination
+                                                            :source @image-buffer
+                                                            :running running?
+                                                            :fps 30
+                                                            :index 0
+                                                            :mode :fw
+                                                            :loop true
+                                                            :start-index start-index
+                                                            :stop-index maximum-buffer-length
+                                                            :pbo_ids @pbo_ids)))
+         (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data @rejected-pbos})
+         (println "Finished adding images"))))
 
 (defn add-from-dir [dir buffername]
   (let [dir    (clojure.java.io/file dir)
