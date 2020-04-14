@@ -195,8 +195,9 @@
         start-index              (if (= -1 start-frame) start-index start-frame)
         stop-index               (:stop-index texture-array)
         stop-index               (if (nil? stop-index) maximum-buffer-length (min maximum-buffer-length stop-index))
-        texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
+        ;texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
         old-pbo-ids              (:pbo_ids texture-array)
+        ;_ (print "old-pbo-ids" old-pbo-ids)
         old-pbo-ids              (if (nil? old-pbo-ids) [] old-pbo-ids)
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
@@ -240,6 +241,7 @@
                   copybuf             (oc-mat-to-bytebuffer mat)
                   buffer-capacity     (.capacity copybuf)
                   dest-capacity       (.capacity dest-buffer)
+                  ;_ (println "sad" @pbo_ids)
                   _                   (if (= buffer-capacity dest-capacity)
                                         (do (let [image           (assoc image 9 pbo_id)
                                                   _               (swap! pbo_ids conj pbo_id)

@@ -831,7 +831,7 @@
         destination   (:destination req)
         buf-name      (:buf-name req)
         data          (:data req)]
-    (println data)
+    ;(println data)
     (case type
       :new     (let [widths    (mapv (fn [x] (nth x 0)) data)
                      heights   (mapv (fn [x] (nth x 1)) data)
@@ -843,7 +843,8 @@
                      buffers   (mapv last (partition 2 (flatten pbo-data)))]
                  (clojure.core.async/offer! reply-queue [buffers pbo_ids]))
       :del     (let [pbo_ids   data]
-                 (mapv (fn [x] (delete-PBO-buf) x) pbo_ids)
+                 ;(println "del data" data)
+                 (mapv (fn [x] (delete-PBO-buf x)) pbo_ids)
                   (clojure.core.async/offer! reply-queue true))
       :del-buf (if  (contains? (:texture-arrays @locals) buf-name)
                  (do (clear-buffer buf-name)

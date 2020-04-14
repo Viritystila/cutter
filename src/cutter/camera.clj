@@ -147,7 +147,7 @@
         start-index              (if (nil? start-index) 0 start-index)
         stop-index               (:stop-index texture-array)
         stop-index               (if (nil? stop-index) maximum-buffer-length stop-index)
-        texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
+        ;texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
         old-pbo-ids              (:pbo_ids texture-array)
         old-pbo-ids              (if (nil? old-pbo-ids) [] old-pbo-ids)
         i-textures               (:i-textures @cutter.cutter/the-window-state)
