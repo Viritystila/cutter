@@ -41,6 +41,7 @@
                   [org.clojure/tools.namespace "0.2.11"]
                   [org.clojure/core.async "0.4.490"]
                   [while-let "0.2.0"]
+                  [org.clojure/math.numeric-tower "0.0.4"]
                   [watchtower          "0.1.1"]
                   [org.viritystila/opencv "4.2.0-linux"]
                   [org.viritystila/opencv-native "4.2.0-linux"]

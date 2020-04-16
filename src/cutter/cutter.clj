@@ -14,7 +14,8 @@
     :as async
     :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
             alts! alts!! timeout]]
-   )
+
+   [clojure.math.numeric-tower :as math])
   (:import
    [java.io File FileInputStream]
    [java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder]
@@ -363,6 +364,10 @@
     (swap! ni concat (mapv (fn [x] (- (clojure.edn/read-string x) 1)) nia))
     (swap! ti concat (mapv (fn [x] (- (clojure.edn/read-string x) 1)) tia))
     ))
+
+(defn is_near [v1 v2]
+  (< (math/abs (- v1 v2)) 0.01 ))
+
 
 (defn load-obj [path]
   (let [content           (slurp path)
