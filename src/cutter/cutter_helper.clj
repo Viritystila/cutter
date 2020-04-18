@@ -5,7 +5,6 @@
             ;[clojure.java.io :as io]
                                         ;[while-let.core :as while-let]
             [clojure.math.numeric-tower :as math]
-            [clojure.m]
             [cutter.cutter :refer :all]
             [cutter.texturearray :refer :all]
             [cutter.camera :refer :all]

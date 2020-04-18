@@ -22,6 +22,7 @@
    [org.lwjgl BufferUtils]
    [java.lang.ref Cleaner]
    [org.lwjgl.system MemoryUtil]
+   [org.lwjgl.assimp Assimp]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
    [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]))
 
@@ -369,6 +370,12 @@
   (< (math/abs (- v1 v2)) 0.01 ))
 
 
+;;atom fror out_vetices, out_uvs, out_normals
+;; (defn get-similar-vertex-index [in_vertex in_uv in_normal out_vertices out_uvs out_normals result]
+;;   (let []
+;;     (doseq [i (range (count out_vertices))]
+;;       )))
+
 (defn load-obj [path]
   (let [content           (slurp path)
         vertices          (atom [])
@@ -391,8 +398,68 @@
     [@vertices @normals @texture-coords @vertice-indices @texture-indices @normal-indices])
   )
 
+;; (defn mod_normals [length vertice_indices normal_indices]
+;;   (let [output  (atom (repeat 0 length))]
+;;     (doseq )))
+
+
+(defn process-indices [aimesh]
+  (let [num-faces        (.mNumFaces aimesh)
+        ai-faces         (.mFaces aimesh)
+        b                (atom [])]
+    (mapv  (fn [x] (let [ai-face  (.get ai-faces x)
+                        buffer   (.mIndices ai-face)]
+                    (while (< 0 (.remaining buffer))  (swap! b conj (.get buffer))) )) (range num-faces))
+    @b))
+
+(defn process-normals [aimesh]
+  (let [ai-normals    (.mNormals aimesh)
+        ;ai-normal     (.get ai-normals)
+        b             (atom [])]
+    (while (< 0 (.remaining ai-normals))
+      (let [ai-normal   (.get ai-normals)
+            x           (.x ai-normal)
+            y           (.y ai-normal)
+            z           (.z ai-normal)]
+        (swap! b conj x y z)
+        ;(println x y z)
+        ))
+    @b))
+
+(defn process-text-coords [aimesh]
+  (let [text-coords     (.mTextureCoords aimesh)
+        num-text-coords (.remaining text-coords)
+        b               (atom [])]
+    (doseq [i (range num-text-coords)]
+      (let [text-coord (.get text-coords)]
+        (swap! b conj (.x text-coord))
+        (swap! b conj (- 1 (.y text-coord)))))
+     @b))
+
+(def ai-flags (and org.lwjgl.assimp.Assimp/aiProcess_JoinIdenticalVertices
+                   org.lwjgl.assimp.Assimp/aiProcess_Triangulate
+                   org.lwjgl.assimp.Assimp/aiProcess_GenSmoothNormals
+                   org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices))
+
+(defn load-mesh [file]
+  (let [aiscene        (org.lwjgl.assimp.Assimp/aiImportFile file 0)
+        num-materials  (.mNumMaterials aiscene)
+        num-meshes     (.mNumMeshes aiscene)
+        ai-materials   (.mMaterials aiscene)
+        ai-meshes      (.mMeshes aiscene)
+        ;_  (println (.get ai-meshes 1))
+        meshes         (mapv (fn [x] (org.lwjgl.assimp.AIMesh/create (long (.get ai-meshes x )))) (range num-meshes))
+        ]
+    ;(println num-materials num-meshes)
+    ;(println (.mNumFaces (first meshes)))
+    (mapv process-indices meshes)
+    (mapv process-normals meshes)
+    (mapv process-text-coords meshes)
+    ))
+
+
 (defn load-plane []
-  (let [path      (clojure.java.io/resource "plane3.obj")
+  (let [path      (clojure.java.io/resource "plane4.obj")
         output    (cutter.cutter/load-obj path) ]
     output))  ;
 
@@ -478,6 +545,15 @@
         vboi-id             (GL15/glGenBuffers)
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
         _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
+        _ (println "vertices "  (vec (partition 3 (nth vertices_and_indices 0))) "count " (count  (vec (partition 3 (nth vertices_and_indices 0))) ) )
+        _ (println "UV "  (vec (partition 2 (nth vertices_and_indices 2))) "count " (count  (vec (partition 2 (nth vertices_and_indices 2))) ) )
+        _ (println "normals "  (vec (partition 3 (nth vertices_and_indices 1))) "count" (count  (vec (partition 3 (nth vertices_and_indices 1))) ) )
+        _ (println "vertice indices"  (nth vertices_and_indices 3) "count" (count (nth vertices_and_indices 3)))
+        _ (println "unque vertice indice" (distinct  (nth vertices_and_indices 3)))
+        _ (println "uv indices"  (nth vertices_and_indices 4)  "count" (count (nth vertices_and_indices 4)) )
+        _ (println "unique uv indices " (distinct  (nth vertices_and_indices 4)))
+        _ (println "normal indices"  (nth vertices_and_indices 5)  "count" (count (nth vertices_and_indices 5)) )
+        _ (println "unique normal indices " (distinct  (nth vertices_and_indices 5) ))
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
         ;; Output Pixel buffers    :outputPBOs tex-buf  (:buffer (:iPreviousFrame i-textures))
         pbo_size            (* 3 (:width @locals) (:height @locals) )

@@ -19,6 +19,7 @@
   (def LWJGL_MODULES ["lwjgl"
                       "lwjgl-glfw"
                       "lwjgl-opengl"
+                      "lwjgl-assimp"
   ])
 
   (def LWJGL_PLATFORMS ["linux" "macos" "windows"])
