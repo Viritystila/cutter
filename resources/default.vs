@@ -20,21 +20,18 @@ mat4 rotationMatrix(vec3 axis, float angle) {
 out vec2 texCoordV;
 out vec3 Normal;
 void main(void) {
+  vec4 _vertex=vertexPosition_modelspace;
+  _vertex.z=texture2D(iChannel1, uv_modelspace).b*2.1;
   texCoordV=uv_modelspace;
-Normal=normals_modelspace;
+  vec4 iChannel1_texture=texture2D(iChannel1, texCoordV);
+  Normal=normals_modelspace;
   float time = iGlobalTime + 20.0;
   float v = gl_VertexID;
-float vertex = mod(v, 8.);
-//v = (v-vertex)/6.;
-float a1 = 2.0 ;//mod(1, 32.);
-//v = (v-a1)/32.;
+  float vertex = mod(v, 8.);
+  float a1 = 2.0 ;
   float a2 = 1.0;
-
   float a1n = (a1+.5)/32.*2.*PI;
   float a2n = (a2+.5)/32.*2.*PI;
-
-a1 += 1.0 ;//mod(vertex,1.);
-a2 += 2.0 ;// vertex==2.||vertex>=4.?1.:0.;
 
   a1 = a1/32.*2.*PI;
   a2 = a2/32.*2.*PI;
@@ -43,15 +40,12 @@ a2 += 2.0 ;// vertex==2.||vertex>=4.?1.:0.;
   vec3 norm = vec3(cos(a1n)*cos(a2n),sin(a2n),sin(a1n)*cos(a2n));
   norm = vec3(cos(a1)*cos(a2),sin(a2),sin(a1)*cos(a2));
 
-pos.xz *= mat2(cos(time),sin(time),-sin(time),cos(time));
-pos.yz *= mat2(cos(time),sin(time),-sin(time),-cos(time));
+  pos.xz *= mat2(cos(time),sin(time),-sin(time),cos(time));
+  pos.yz *= mat2(cos(time),sin(time),-sin(time),-cos(time));
   norm.xz *= mat2(cos(time),sin(time),-sin(time),cos(time));
   norm.yz *= mat2(cos(time),sin(time),-sin(time),cos(time));
   vec4 sp=vec4(pos.x,pos.y, pos.z, 1);
-mat4 rotma=rotationMatrix(vec3(0.0+time,time, 1.0), time);
-
-//texCoordV=vec2(cos(a1)*cos(a2),sin(a2));
-
-
-  gl_Position = vertexPosition_modelspace*vec4(1, 1,1 ,2)*rotma;
+  mat4 rotma=rotationMatrix(vec3(0.0+1,1, 1.0), time);
+  //;vertexPosition_modelspace*
+  gl_Position =vertexPosition_modelspace*vec4(1,1,1,1.25)*rotma; // _vertex*vec4(1,1,1,2)*rotma;
 }

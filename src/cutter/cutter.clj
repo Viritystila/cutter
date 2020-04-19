@@ -407,9 +407,17 @@
   (let [num-faces        (.mNumFaces aimesh)
         ai-faces         (.mFaces aimesh)
         b                (atom [])]
-    (mapv  (fn [x] (let [ai-face  (.get ai-faces x)
-                        buffer   (.mIndices ai-face)]
-                    (while (< 0 (.remaining buffer))  (swap! b conj (.get buffer))) )) (range num-faces))
+    ;(println "num faces " num-faces)
+    (doseq [i (range num-faces)]
+      (let [ai-face (.get ai-faces i)
+            buffer  (.mIndices ai-face)]
+        (while (< 0 (.remaining buffer))
+          (let [indice (.get buffer)]
+            (swap! b conj indice) ))))
+    ;; (mapv  (fn [x] (let [ai-face  (.get ai-faces x)
+    ;;                     buffer   (.mIndices ai-face)]
+    ;;                 (while (< 0 (.remaining buffer))  (swap! b conj (.get buffer))) )) (range num-faces))
+    ;(println "indice count" (count @b) @b)
     @b))
 
 (defn process-normals [aimesh]
@@ -440,41 +448,55 @@
 (defn process-vertices [aimesh]
   (let [ai-vertices       (.mVertices aimesh)
         b                 (atom [])]
+    (print ai-vertices)
     (while (< 0 (.remaining ai-vertices))
       (let [ai-vertex   (.get ai-vertices)
             x           (.x ai-vertex)
             y           (.y ai-vertex)
             z           (.z ai-vertex)]
         (swap! b conj x y z)))
+    ;(println "vert count" (count@b) @b)
     @b))
 
 
-(def ai-flags (and org.lwjgl.assimp.Assimp/aiProcess_JoinIdenticalVertices
-                   org.lwjgl.assimp.Assimp/aiProcess_Triangulate
-                   org.lwjgl.assimp.Assimp/aiProcess_GenSmoothNormals
-                   org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices))
+(def ai-flags (bit-or  org.lwjgl.assimp.Assimp/aiProcess_JoinIdenticalVertices
+                       org.lwjgl.assimp.Assimp/aiProcess_Triangulate
+                       org.lwjgl.assimp.Assimp/aiProcess_GenSmoothNormals
+                       org.lwjgl.assimp.Assimp/aiProcess_FixInfacingNormals
+                       org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices
+                       org.lwjgl.assimp.Assimp/aiProcess_SortByPType
+                       org.lwjgl.assimp.Assimp/aiProcess_FindInvalidData
+                       org.lwjgl.assimp.Assimp/aiProcess_GenUVCoords
+                       org.lwjgl.assimp.Assimp/aiProcess_FindDegenerates
+                       org.lwjgl.assimp.Assimp/aiProcess_CalcTangentSpace
+                       org.lwjgl.assimp.Assimp/aiProcess_OptimizeMeshes
+                       0
+               ))
 
 (defn load-mesh [file]
+;(org.lwjgl.assimp.Assimp/aiSetImportPropertyInteger org.lwjgl.assimp.Assimp/aiPrimitiveType_POINT )
   (let [aiscene        (org.lwjgl.assimp.Assimp/aiImportFile file ai-flags)
         num-materials  (.mNumMaterials aiscene)
         num-meshes     (.mNumMeshes aiscene)
         ai-materials   (.mMaterials aiscene)
         ai-meshes      (.mMeshes aiscene)
         meshes         (mapv (fn [x] (org.lwjgl.assimp.AIMesh/create (long (.get ai-meshes x )))) (range num-meshes))
-        ]
-    (mapv (fn [x] {:indices          (process-indices x)
-                  :normals          (process-normals x)
-                  :text-coords      (process-text-coords x)
-                  :vertices         (process-vertices x)}) meshes)
+
+        md (mapv (fn [x] {:indices          (process-indices x)
+                      :normals          (process-normals x)
+                      :text-coords      (process-text-coords x)
+                         :vertices         (process-vertices x)}) meshes)]
+    (org.lwjgl.assimp.Assimp/aiReleaseImport aiscene)
     ;(mapv process-indices meshes)
     ;(mapv process-normals meshes)
     ;(mapv process-text-coords meshes)
-    ;(mapv process-vertices meshes)
+                                        ;(mapv process-vertices meshes)
+    md
     ))
 
 
 (defn load-plane []
-  (let [path      (clojure.java.io/resource "plane4.obj")
+  (let [path      (clojure.java.io/resource "plane2.obj")
         output    (cutter.cutter/load-obj path) ]
     output))  ;
 
@@ -489,11 +511,11 @@
         output    (cutter.cutter/load-obj path) ]
     output))
 
-
+;;duck_triangulate.dae
 (defn- init-buffers
   [locals]
   (let [;vertices_and_indices     (cutter.cutter/load-plane)
-        vertices_and_indices      (first (load-mesh "cube.obj"))
+        vertices_and_indices      (first (load-mesh "Monkey.dae"))
         ;;Vertices
         ;;vertices   (float-array (vec (nth vertices_and_indices 0)))
         vertices            (float-array (:vertices  vertices_and_indices))
@@ -510,10 +532,12 @@
                           (.flip))
         ;;Indices
         ;;indices (byte-array (nth vertices_and_indices 3))
-        indices            (byte-array (:indices  vertices_and_indices))
+        indices            (int-array   (:indices  vertices_and_indices))
         indices-count (count indices)
+        ;_ (println  (:indices  vertices_and_indices))
+        ;_ (println (count  (:indices  vertices_and_indices)))
                                         ;_ (println indices-count)
-        indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
+        indices-buffer (-> (BufferUtils/createIntBuffer indices-count)
                            (.put indices)
                            (.flip))
         ;;Texture coordinates
@@ -765,7 +789,7 @@
     (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0);
                                         ;Indices
     (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
-    (GL20/glVertexAttribPointer 2 3 GL11/GL_FLOAT false 0 0);
+    (GL20/glVertexAttribPointer 2 1 GL11/GL_INT false 0 0);
                                         ;Texture coordinates
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbot-id)
     (GL20/glVertexAttribPointer 3 2 GL11/GL_FLOAT false 0 0);
@@ -781,7 +805,10 @@
     (except-gl-errors "@ draw prior to DrawArrays")
    ;(Thread/sleep 30)
     ;; Draw the vertices
-    (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_BYTE 0)
+     ;(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
+     (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_INT 0)
+     ;;(GL11/glDrawArrays  GL11/GL_TRIANGLES 0 indices-count)
+      (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
     (except-gl-errors "@ draw after DrawArrays")
 
     ;;Copying the previous image to its own texture
