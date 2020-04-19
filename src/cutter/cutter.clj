@@ -422,19 +422,32 @@
             y           (.y ai-normal)
             z           (.z ai-normal)]
         (swap! b conj x y z)
-        ;(println x y z)
         ))
     @b))
 
 (defn process-text-coords [aimesh]
-  (let [text-coords     (.mTextureCoords aimesh)
+  (let [text-coords     (.mTextureCoords aimesh 0)
         num-text-coords (.remaining text-coords)
+        ai-vertices     (.mVertices aimesh)
+        num-vertices    (.mNumVertices aimesh)
         b               (atom [])]
-    (doseq [i (range num-text-coords)]
-      (let [text-coord (.get text-coords)]
+    (while (< 0 (.remaining text-coords))
+      (let [text-coord     (.get text-coords)]
         (swap! b conj (.x text-coord))
-        (swap! b conj (- 1 (.y text-coord)))))
+         (swap! b conj (- 1 (.y text-coord)))))
      @b))
+
+(defn process-vertices [aimesh]
+  (let [ai-vertices       (.mVertices aimesh)
+        b                 (atom [])]
+    (while (< 0 (.remaining ai-vertices))
+      (let [ai-vertex   (.get ai-vertices)
+            x           (.x ai-vertex)
+            y           (.y ai-vertex)
+            z           (.z ai-vertex)]
+        (swap! b conj x y z)))
+    @b))
+
 
 (def ai-flags (and org.lwjgl.assimp.Assimp/aiProcess_JoinIdenticalVertices
                    org.lwjgl.assimp.Assimp/aiProcess_Triangulate
@@ -442,19 +455,21 @@
                    org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices))
 
 (defn load-mesh [file]
-  (let [aiscene        (org.lwjgl.assimp.Assimp/aiImportFile file 0)
+  (let [aiscene        (org.lwjgl.assimp.Assimp/aiImportFile file ai-flags)
         num-materials  (.mNumMaterials aiscene)
         num-meshes     (.mNumMeshes aiscene)
         ai-materials   (.mMaterials aiscene)
         ai-meshes      (.mMeshes aiscene)
-        ;_  (println (.get ai-meshes 1))
         meshes         (mapv (fn [x] (org.lwjgl.assimp.AIMesh/create (long (.get ai-meshes x )))) (range num-meshes))
         ]
-    ;(println num-materials num-meshes)
-    ;(println (.mNumFaces (first meshes)))
-    (mapv process-indices meshes)
-    (mapv process-normals meshes)
-    (mapv process-text-coords meshes)
+    (mapv (fn [x] {:indices          (process-indices x)
+                  :normals          (process-normals x)
+                  :text-coords      (process-text-coords x)
+                  :vertices         (process-vertices x)}) meshes)
+    ;(mapv process-indices meshes)
+    ;(mapv process-normals meshes)
+    ;(mapv process-text-coords meshes)
+    ;(mapv process-vertices meshes)
     ))
 
 
@@ -477,9 +492,11 @@
 
 (defn- init-buffers
   [locals]
-  (let [vertices_and_indices     (cutter.cutter/load-plane)
+  (let [;vertices_and_indices     (cutter.cutter/load-plane)
+        vertices_and_indices      (first (load-mesh "cube.obj"))
         ;;Vertices
-        vertices   (float-array (vec (nth vertices_and_indices 0)))
+        ;;vertices   (float-array (vec (nth vertices_and_indices 0)))
+        vertices            (float-array (:vertices  vertices_and_indices))
         vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
                                 (.put vertices)
                                 (.flip))
@@ -492,20 +509,23 @@
                           (.put colors)
                           (.flip))
         ;;Indices
-        indices (byte-array (nth vertices_and_indices 3))
+        ;;indices (byte-array (nth vertices_and_indices 3))
+        indices            (byte-array (:indices  vertices_and_indices))
         indices-count (count indices)
                                         ;_ (println indices-count)
         indices-buffer (-> (BufferUtils/createByteBuffer indices-count)
                            (.put indices)
                            (.flip))
         ;;Texture coordinates
-        texture-coords (float-array (vec (nth vertices_and_indices 2)))
+        ;;texture-coords (float-array (vec (nth vertices_and_indices 2)))
+        texture-coords        (float-array (:text-coords  vertices_and_indices))
         uvcount        (count texture-coords)
         uv-buffer      (-> (BufferUtils/createFloatBuffer uvcount)
                            (.put texture-coords)
                            (.flip))
         ;;Normals
-        normal-coords (float-array (vec (nth vertices_and_indices 1)))
+        ;;normal-coords (float-array (vec (nth vertices_and_indices 1)))
+        normal-coords       (float-array (:normals  vertices_and_indices))
         normalcount        (count normal-coords)
         normal-buffer      (-> (BufferUtils/createFloatBuffer normalcount)
                            (.put normal-coords)
@@ -545,15 +565,6 @@
         vboi-id             (GL15/glGenBuffers)
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
         _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
-        _ (println "vertices "  (vec (partition 3 (nth vertices_and_indices 0))) "count " (count  (vec (partition 3 (nth vertices_and_indices 0))) ) )
-        _ (println "UV "  (vec (partition 2 (nth vertices_and_indices 2))) "count " (count  (vec (partition 2 (nth vertices_and_indices 2))) ) )
-        _ (println "normals "  (vec (partition 3 (nth vertices_and_indices 1))) "count" (count  (vec (partition 3 (nth vertices_and_indices 1))) ) )
-        _ (println "vertice indices"  (nth vertices_and_indices 3) "count" (count (nth vertices_and_indices 3)))
-        _ (println "unque vertice indice" (distinct  (nth vertices_and_indices 3)))
-        _ (println "uv indices"  (nth vertices_and_indices 4)  "count" (count (nth vertices_and_indices 4)) )
-        _ (println "unique uv indices " (distinct  (nth vertices_and_indices 4)))
-        _ (println "normal indices"  (nth vertices_and_indices 5)  "count" (count (nth vertices_and_indices 5)) )
-        _ (println "unique normal indices " (distinct  (nth vertices_and_indices 5) ))
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
         ;; Output Pixel buffers    :outputPBOs tex-buf  (:buffer (:iPreviousFrame i-textures))
         pbo_size            (* 3 (:width @locals) (:height @locals) )
@@ -587,7 +598,7 @@
     (println "OpenGL version:" (GL11/glGetString GL11/GL_VERSION))
     (GL11/glClearColor 0.0 0.0 0.0 0.0)
     (GL11/glViewport 0 0 width height)
-                                        ;(GL11/glEnable GL11/GL_DEPTH_TEST)
+    (GL11/glEnable GL11/GL_DEPTH_TEST)
     (GL11/glDepthFunc GL11/GL_LESS)
     (init-buffers locals)
     (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
