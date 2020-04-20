@@ -115,14 +115,15 @@
 
 (defn process-text-coords [aimesh]
   (let [text-coords     (.mTextureCoords aimesh 0)
-        num-text-coords (.remaining text-coords)
+        num-text-coords (if (not (nil? text-coords)) (.remaining text-coords) nil )
         ai-vertices     (.mVertices aimesh)
         num-vertices    (.mNumVertices aimesh)
         b               (atom [])]
-    (while (< 0 (.remaining text-coords))
-      (let [text-coord     (.get text-coords)]
-        (swap! b conj (.x text-coord))
-         (swap! b conj (- 1 (.y text-coord)))))
+    (if (not (nil? num-text-coords))
+      (while (< 0 (.remaining text-coords))
+        (let [text-coord     (.get text-coords)]
+          (swap! b conj (.x text-coord))
+          (swap! b conj (- 1 (.y text-coord))))))
      @b))
 
 (defn process-vertices [aimesh]
