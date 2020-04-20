@@ -14,7 +14,6 @@
     :as async
     :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
             alts! alts!! timeout]]
-
    [clojure.math.numeric-tower :as math])
   (:import
    [java.io File FileInputStream]
@@ -118,80 +117,80 @@
                                                                                                                                                      (vec (make-array Float/TYPE 256))))
                                                                                                                                               (.flip))} } ) (range 1 16 1)))
    :i-floats                   (into {} (mapv (fn [x] {(keyword (str "iFloat" x)) {:data 0 }}) (range 1 17 1)))
-   :i-uniforms                 {:iResolution   {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
-                                :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iRandom        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 1},
-                                :iText          {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 2},
-                                :iChannel1      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 3},
-                                :iChannel2      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 4},
-                                :iChannel3      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 5},
-                                :iChannel4      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 6},
-                                :iChannel5      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 7},
-                                :iChannel6      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 8},
-                                :iChannel7      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 9},
-                                :iChannel8      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 10},
-                                :iChannel9      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 11},
-                                :iChannel10     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 12},
-                                :iChannel11     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 13},
-                                :iChannel12     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 14},
-                                :iChannel13     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 15},
-                                :iChannel14     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 16},
-                                :iChannel15     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 17},
-                                :iChannel16     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 18},
-                                :iDataArray1    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray2    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray3    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray4    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray5    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray6    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray7    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray8    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray9    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray10   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray11   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray12   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray13   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray14   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray15   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iDataArray16   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
-                                :iFloat1        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat2        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat3        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat4        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat5        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat6        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat7        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat8        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat9        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat10       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat11       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat12       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat13       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat14       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat15       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
-                                :iFloat16       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1}}
+   ;; :i-uniforms                 {:iResolution   {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
+   ;;                              :iGlobalTime    {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iRandom        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iPreviousFrame {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 1},
+   ;;                              :iText          {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 2},
+   ;;                              :iChannel1      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 3},
+   ;;                              :iChannel2      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 4},
+   ;;                              :iChannel3      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 5},
+   ;;                              :iChannel4      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 6},
+   ;;                              :iChannel5      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 7},
+   ;;                              :iChannel6      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 8},
+   ;;                              :iChannel7      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 9},
+   ;;                              :iChannel8      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 10},
+   ;;                              :iChannel9      {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 11},
+   ;;                              :iChannel10     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 12},
+   ;;                              :iChannel11     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 13},
+   ;;                              :iChannel12     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 14},
+   ;;                              :iChannel13     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 15},
+   ;;                              :iChannel14     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 16},
+   ;;                              :iChannel15     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 17},
+   ;;                              :iChannel16     {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)),          :extra "", :layout "", :unit 18},
+   ;;                              :iDataArray1    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray2    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray3    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray4    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray5    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray6    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray7    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray8    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray9    {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray10   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray11   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray12   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray13   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray14   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray15   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iDataArray16   {:type "float",     :loc 0, :gltype (fn [id data buf](.flip (.put ^FloatBuffer buf  (float-array data))) (GL20/glUniform1fv  ^Integer id ^FloatBuffer buf)), :extra "[256]", :layout "", :unit -1},
+   ;;                              :iFloat1        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat2        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat3        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat4        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat5        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat6        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat7        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat8        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat9        {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat10       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat11       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat12       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat13       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat14       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat15       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1},
+   ;;                              :iFloat16       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)),          :extra "", :layout "", :unit -1}}
                                         ;textures
-   :i-textures     {:iPreviousFrame {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}, ;
-                    :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannelNull   {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel1      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel2      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel3      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel4      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel5      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel6      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel7      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel8      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel9      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel10     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel11     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel12     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel13     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel14     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel15     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
-                    :iChannel16     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}
-                    }
+   ;; :i-textures     {:iPreviousFrame {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}, ;
+   ;;                  :iText          {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannelNull   {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel1      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel2      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel3      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel4      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel5      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel6      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel7      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel8      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel9      {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel10     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel11     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel12     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel13     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel14     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel15     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0},
+   ;;                  :iChannel16     {:tex-id 0, :target 0, :height 1, :width 1, :mat 0, :buffer 0,  :internal-format -1, :format -1, :channels 3, :init-opengl true, :queue 0, :mult 0, :out1 0}
+   ;;                  }
    })
 ;; GLOBAL STATE ATOMS
 
@@ -340,182 +339,15 @@
                (when (and (= key org.lwjgl.glfw.GLFW/GLFW_KEY_ESCAPE)
                           (= action org.lwjgl.glfw.GLFW/GLFW_RELEASE))
                  (org.lwjgl.glfw.GLFW/glfwSetWindowShouldClose (:window @locals) true)))))
-    ;(println "aaaa" (:window @locals))
     (org.lwjgl.glfw.GLFW/glfwSetKeyCallback       (:window @locals) (:keyCallback @locals))
     (org.lwjgl.glfw.GLFW/glfwMakeContextCurrent   (:window @locals))
     (org.lwjgl.glfw.GLFW/glfwSwapInterval         2)
     (org.lwjgl.glfw.GLFW/glfwShowWindow           (:window @locals))))
 
-                                        ;
-                                        ;
-(defn line-parser-1 [input atom-array]
-  (let  [num    (mapv (fn [x] (clojure.edn/read-string x)) input)]
-    (swap! atom-array concat   num)))
-
-(defn line-parser-2 [input vi ni ti]
-  (let  [split        (mapv (fn [x] (clojure.string/split x #"/")) input)
-         via          (mapv (fn [x] (nth x 0)) split)
-         nia          (mapv (fn [x] (nth x 2)) split)
-         tia          (mapv (fn [x] (nth x 1)) split)
-                                        ;num    (map (fn [x] (clojure.edn/read-string x)) input)
-         ]
-                                        ;(println split)
-                                        ;(println via nia tia)
-    (swap! vi concat (mapv (fn [x] (- (clojure.edn/read-string x) 1)) via))
-    (swap! ni concat (mapv (fn [x] (- (clojure.edn/read-string x) 1)) nia))
-    (swap! ti concat (mapv (fn [x] (- (clojure.edn/read-string x) 1)) tia))
-    ))
-
-(defn is_near [v1 v2]
-  (< (math/abs (- v1 v2)) 0.01 ))
-
-
-;;atom fror out_vetices, out_uvs, out_normals
-;; (defn get-similar-vertex-index [in_vertex in_uv in_normal out_vertices out_uvs out_normals result]
-;;   (let []
-;;     (doseq [i (range (count out_vertices))]
-;;       )))
-
-(defn load-obj [path]
-  (let [content           (slurp path)
-        vertices          (atom [])
-        normals           (atom [])
-        texture-coords    (atom [])
-        vertice-indices   (atom [])
-        normal-indices    (atom [])
-        texture-indices   (atom [])
-        split-content     (clojure.string/split-lines content)
-        split-content     (mapv (fn [x] (clojure.string/split x #"\s+")) split-content)]
-    (doseq [line split-content]
-                                        ;(println line)
-      (let [first-element   (first line)]
-        (case first-element
-          "v"  (do (cutter.cutter/line-parser-1 (rest line) vertices))
-          "vn" (do (cutter.cutter/line-parser-1 (rest line) normals))
-          "vt" (do (cutter.cutter/line-parser-1 (rest line) texture-coords))
-          "f"  (do (cutter.cutter/line-parser-2 (rest line) vertice-indices normal-indices texture-indices))
-          "default")))
-    [@vertices @normals @texture-coords @vertice-indices @texture-indices @normal-indices])
-  )
-
-;; (defn mod_normals [length vertice_indices normal_indices]
-;;   (let [output  (atom (repeat 0 length))]
-;;     (doseq )))
-
-
-(defn process-indices [aimesh]
-  (let [num-faces        (.mNumFaces aimesh)
-        ai-faces         (.mFaces aimesh)
-        b                (atom [])]
-    ;(println "num faces " num-faces)
-    (doseq [i (range num-faces)]
-      (let [ai-face (.get ai-faces i)
-            buffer  (.mIndices ai-face)]
-        (while (< 0 (.remaining buffer))
-          (let [indice (.get buffer)]
-            (swap! b conj indice) ))))
-    ;; (mapv  (fn [x] (let [ai-face  (.get ai-faces x)
-    ;;                     buffer   (.mIndices ai-face)]
-    ;;                 (while (< 0 (.remaining buffer))  (swap! b conj (.get buffer))) )) (range num-faces))
-    ;(println "indice count" (count @b) @b)
-    @b))
-
-(defn process-normals [aimesh]
-  (let [ai-normals    (.mNormals aimesh)
-        ;ai-normal     (.get ai-normals)
-        b             (atom [])]
-    (while (< 0 (.remaining ai-normals))
-      (let [ai-normal   (.get ai-normals)
-            x           (.x ai-normal)
-            y           (.y ai-normal)
-            z           (.z ai-normal)]
-        (swap! b conj x y z)
-        ))
-    @b))
-
-(defn process-text-coords [aimesh]
-  (let [text-coords     (.mTextureCoords aimesh 0)
-        num-text-coords (.remaining text-coords)
-        ai-vertices     (.mVertices aimesh)
-        num-vertices    (.mNumVertices aimesh)
-        b               (atom [])]
-    (while (< 0 (.remaining text-coords))
-      (let [text-coord     (.get text-coords)]
-        (swap! b conj (.x text-coord))
-         (swap! b conj (- 1 (.y text-coord)))))
-     @b))
-
-(defn process-vertices [aimesh]
-  (let [ai-vertices       (.mVertices aimesh)
-        b                 (atom [])]
-    (print ai-vertices)
-    (while (< 0 (.remaining ai-vertices))
-      (let [ai-vertex   (.get ai-vertices)
-            x           (.x ai-vertex)
-            y           (.y ai-vertex)
-            z           (.z ai-vertex)]
-        (swap! b conj x y z)))
-    ;(println "vert count" (count@b) @b)
-    @b))
-
-
-(def ai-flags (bit-or  org.lwjgl.assimp.Assimp/aiProcess_JoinIdenticalVertices
-                       org.lwjgl.assimp.Assimp/aiProcess_Triangulate
-                       org.lwjgl.assimp.Assimp/aiProcess_GenSmoothNormals
-                       org.lwjgl.assimp.Assimp/aiProcess_FixInfacingNormals
-                       org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices
-                       org.lwjgl.assimp.Assimp/aiProcess_SortByPType
-                       org.lwjgl.assimp.Assimp/aiProcess_FindInvalidData
-                       org.lwjgl.assimp.Assimp/aiProcess_GenUVCoords
-                       org.lwjgl.assimp.Assimp/aiProcess_FindDegenerates
-                       org.lwjgl.assimp.Assimp/aiProcess_CalcTangentSpace
-                       org.lwjgl.assimp.Assimp/aiProcess_OptimizeMeshes
-                       0
-               ))
-
-(defn load-mesh [file]
-;(org.lwjgl.assimp.Assimp/aiSetImportPropertyInteger org.lwjgl.assimp.Assimp/aiPrimitiveType_POINT )
-  (let [aiscene        (org.lwjgl.assimp.Assimp/aiImportFile file ai-flags)
-        num-materials  (.mNumMaterials aiscene)
-        num-meshes     (.mNumMeshes aiscene)
-        ai-materials   (.mMaterials aiscene)
-        ai-meshes      (.mMeshes aiscene)
-        meshes         (mapv (fn [x] (org.lwjgl.assimp.AIMesh/create (long (.get ai-meshes x )))) (range num-meshes))
-
-        md (mapv (fn [x] {:indices          (process-indices x)
-                      :normals          (process-normals x)
-                      :text-coords      (process-text-coords x)
-                         :vertices         (process-vertices x)}) meshes)]
-    (org.lwjgl.assimp.Assimp/aiReleaseImport aiscene)
-    ;(mapv process-indices meshes)
-    ;(mapv process-normals meshes)
-    ;(mapv process-text-coords meshes)
-                                        ;(mapv process-vertices meshes)
-    md
-    ))
-
-
-(defn load-plane []
-  (let [path      (clojure.java.io/resource "plane2.obj")
-        output    (cutter.cutter/load-obj path) ]
-    output))  ;
-
-(defn load-cube []
-  (let [path      (clojure.java.io/resource "cube.obj")
-        output    (cutter.cutter/load-obj path) ]
-    output))
-
-
-(defn load-sphere []
-  (let [path      (clojure.java.io/resource "sphere.obj")
-        output    (cutter.cutter/load-obj path) ]
-    output))
-
-;;duck_triangulate.dae
 (defn- init-buffers
   [locals]
   (let [;vertices_and_indices     (cutter.cutter/load-plane)
-        vertices_and_indices      (first (load-mesh "Monkey.dae"))
+        vertices_and_indices      (first (cutter.gl_init/load-mesh "resources/dual.dae"))
         ;;Vertices
         ;;vertices   (float-array (vec (nth vertices_and_indices 0)))
         vertices            (float-array (:vertices  vertices_and_indices))

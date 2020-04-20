@@ -36,6 +36,7 @@ void main(void) {
   a1 = a1/32.*2.*PI;
   a2 = a2/32.*2.*PI;
   float snd = 0.0;
+
   vec3 pos = vec3(cos(a1)*cos(a2),sin(a2),sin(a1)*cos(a2));
   vec3 norm = vec3(cos(a1n)*cos(a2n),sin(a2n),sin(a1n)*cos(a2n));
   norm = vec3(cos(a1)*cos(a2),sin(a2),sin(a1)*cos(a2));
@@ -47,5 +48,5 @@ void main(void) {
   vec4 sp=vec4(pos.x,pos.y, pos.z, 1);
   mat4 rotma=rotationMatrix(vec3(0.0+1,1, 1.0), time);
   //;vertexPosition_modelspace*
-  gl_Position =vertexPosition_modelspace*vec4(1,1,1,1.25)*rotma; // _vertex*vec4(1,1,1,2)*rotma;
+  gl_Position =_vertex*vec4(1,1,1,1.25)*rotma; // _vertex*vec4(1,1,1,2)*rotma;
 }

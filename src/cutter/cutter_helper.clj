@@ -16,29 +16,10 @@
                      alts! alts!! timeout]]
             ;clojure.string
             )
-  ;(:import
-    ;[org.bytedeco.javacpp Pointer]
-    ;[org.bytedeco.javacpp BytePointer]
-    ;[org.bytedeco.javacpp v4l2]
-    ;[org.opencv.core Mat Core CvType]
-    ; [org.opencv.videoio Videoio VideoCapture]
-    ; [org.opencv.video Video]
-    ; [org.opencv.imgproc Imgproc]
-    ; [org.opencv.imgcodecs Imgcodecs]
-           ; (java.awt.image BufferedImage DataBuffer DataBufferByte WritableRaster)
-           ; (java.io File FileInputStream)
-           ; (java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder)
-           ; (java.util Calendar)
-           ; (java.util List)
-           ; (javax.imageio ImageIO)
-           ; (java.lang.reflect Field)
-           ; (org.lwjgl BufferUtils)
-           ; (org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback)
-           ; (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL40)
-           ;)
            )
-
-;v4l2
+;;;;;;;;
+;;v4l2;;
+;;;;;;;;
 (defn openV4L2output [device]
   (let [h (:height @the-window-state)
           w                (:width @the-window-state)
@@ -81,8 +62,9 @@
           (closeV4L2output)
           (Thread/sleep 100)))))
 
-;Data array
-;(apply assoc [1 2 3 4] (interleave (range (count [1 2 3 4])) [11 32 13 14] ))
+;;;;;;;;;;;;;;;
+;;Data array;;;
+;;;;;;;;;;;;;;;
 (defn set-dataArray-item [arraykey idx val]
     (let [{:keys [maxDataArrays maxDataArraysLength i-dataArrays]} @cutter.cutter/the-window-state
           haskey        (contains? i-dataArrays arraykey)
@@ -99,7 +81,7 @@
       (if haskey (swap! the-window-state assoc :i-dataArrays i-dataArrays))
         nil))
 
-;
+
 (defn get-dataArray-item [arraykey idx]
     (let [{:keys [maxDataArrays maxDataArraysLength i-dataArrays]} @cutter.cutter/the-window-state
           haskey        (contains? i-dataArrays arraykey)
@@ -108,8 +90,9 @@
           data          (if haskey (:datavec dataArray) nil)
           val           (if haskey (nth data idx) nil)]
           val))
-
-;Floats
+;;;;;;;;;;
+;;Floats;;
+;;;;;;;;;;
 (defn set-float [floatKey val]
     (let [{:keys [i-floats]} @cutter.cutter/the-window-state
           haskey        (contains? i-floats floatKey)
@@ -125,36 +108,9 @@
           floatVal      (floatKey i-floats)
           val           (if haskey (:data floatVal) nil)]
         val))
-
-
-;; (defn set-texture-by-filename [filename destination-texture-key]
-;;   "Set texture by filename and adds the filename to the list"
-;;   (let [textures            (:textures @cutter.cutter/the-window-state)
-;;         i-textures          (:i-textures @cutter.cutter/the-window-state)
-;;         texture             (destination-texture-key i-textures)
-;;         mat                 (:mat texture)
-;;         ;;mat                 (cutter.opencv/oc_load_image filename)
-;;         _                  (cutter.opencv/oc_load_image_2 filename [mat])
-;;         height              (.height mat)
-;;         width               (.width mat)
-;;         channels            (.channels mat)
-;;         internal-format     (cutter.opencv/oc-tex-internal-format mat)
-;;         format              (cutter.opencv/oc-tex-format mat)
-;;         queue               (:queue texture)
-;;         pbo                 (:pbo texture)
-;;         gl_buffer           (:gl_buffer texture)
-;;         texture             (assoc texture :width width :height height :channels channels :internal-format internal-format :format format :init-opengl true)
-;;         i-textures          (assoc i-textures destination-texture-key texture)
-;;         textures            (assoc textures (keyword filename) {:idx filename,
-;;                                                                 :destination destination-texture-key,
-;;                                                                 :source mat,
-;;                                                                 :running true})]
-;;     (swap! cutter.cutter/the-window-state assoc :textures textures)
-;;     (swap! cutter.cutter/the-window-state assoc :i-textures i-textures)
-;;     (async/offer! queue  (conj (matInfo mat) pbo)))
-;;   nil)
-
-;Text
+;;;;;;;;
+;;Text;;
+;;;;;;;;
 (defn write-text
   " (cutter.cutter_helper/write-text \"cutter\" 0 220 10 100 0.2 0.4 20 10 true) "
   [text x y size r g b thickness linetype clear]
@@ -196,8 +152,9 @@
         as     (mapv (fn [x] a) m-i )]
     (mapv (fn [w h c a] [w h c a]) ws hs cs as )))
 
-
-;;Add Texture from file to texture-array
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;Add Texture from file to texture-array;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def fs ["/home/mikael/Pictures/test1.png" "/home/mikael/Pictures/test2.png"
          "/home/mikael/Pictures/test3.png" "/home/mikael/Pictures/test4.png"
          "/home/mikael/Pictures/test5.png" "/home/mikael/Pictures/test6.png"
@@ -238,14 +195,8 @@
         rejected-pbos            (atom [])
         t-a-index                (atom 0)
         filenames                (filter (apply every-pred [string? #(.exists (clojure.java.io/as-file %))]) filenames)
-        ;is_filename-str          (str filename)
         no_files                 (count filenames)
         out                      (clojure.core.async/chan (async/buffer no_files))
-        ;mat                      (cutter.opencv/oc_load_image filename)
-        ;h                        (.height mat)
-        ;w                        (.width mat)
-        ;c                        (.channels mat)
-        ;mat_info                 (matInfo mat )
         _                        (async/poll! req)
         mat_info                 (cutter.cutter_helper/load-images-to-queue filenames out pbo)
         req-input-dat            (cutter.cutter_helper/map-to-request-format mat_info 1)
@@ -257,16 +208,11 @@
         is_good_dat              (vector? orig_source_dat)
         req-buffers              (if is_good_dat (first orig_source_dat) nil)
         req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
-        ;source                   (if (< (count source) maximum-buffer-length) (conj source (matInfo mat)) source )
-        ;newcount                 (count source)
         ]
-    ;(println orig_source_dat)
     (println "Adding images" filenames)
-    ;(clojure.core.async/thread)
     (do  (while-let.core/while-let [image     (clojure.core.async/poll! out)]
            (let [dest-buffer         (nth req-buffers @t-a-index)
                  pbo_id              (nth req-pbo_ids @t-a-index)
-                                        ;image     (clojure.core.async/<!! out)
                  rows                (nth image 1)
                  step                (nth image 2)
                  h                   (nth image 4)
@@ -274,20 +220,14 @@
                  ib                  (nth image 6)
                  buffer_i            (nth image 0)
                  mat                 (nth image 7)
-                 ;_ (println "whib" w h ib)
-                 ;_ (println "db" dest-buffer)
                  image               (assoc image 9 pbo_id)
                  copybuf             (oc-mat-to-bytebuffer mat)
-                 ;_ (println "cb" copybuf)
                  buffer-capacity     (.capacity copybuf)
                  dest-capacity       (.capacity dest-buffer)
-                 ;_ (println  (= buffer-capacity dest-capacity))
                  _                   (if (= buffer-capacity dest-capacity)
                                        (do (let [image           (assoc image 9 pbo_id)
                                                  _               (swap! pbo_ids conj pbo_id)
-                                                 _               (swap! image-buffer conj (assoc image 0  (.flip (.put dest-buffer copybuf ))))
-                                                 ;;_               (swap! image-buffer conj (assoc image 0  buffer_i))
-                                                 ]) )
+                                                 _               (swap! image-buffer conj (assoc image 0  (.flip (.put dest-buffer copybuf ))))   ]) )
                                        (do (swap! rejected-pbos conj pbo_id)
                                            (swap! rejected-buffers conj dest-buffer)))
                  ]
@@ -315,14 +255,4 @@
         files   (mapv str files)]
     (println files)
     (add-to-buffer files buffername destination)
-       ;(doseq [x files ](add-to-buffer x buffername)   )
     ))
-
-
-;; (defn rfs []  (overtone.osc/osc-close (:osc-server @cutter.cutter/the-window-state))
-;;               (overtone.osc/osc-close (:osc-client @cutter.cutter/the-window-state))
-;;               (stop-cutter-local)
-;;               (cutter.texturearray/stop-all-buffers)
-;;               (cutter.camera/stop-all-cameras)
-;;               (cutter.video/stop-all-videos)
-;;               (refresh))
