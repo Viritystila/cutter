@@ -19,7 +19,6 @@
    [java.io File FileInputStream]
    [java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder]
    [org.lwjgl BufferUtils]
-   [java.lang.ref Cleaner]
    [org.lwjgl.system MemoryUtil]
    [org.lwjgl.assimp Assimp]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
@@ -50,7 +49,7 @@
    :vbot-id                    0
    :vbon-id                    0
 
-   :buffer-objects             {} ;{:plane {:vao 0, :verticex-count 0, :indices-count 0,  :vbo-id, 0 :vbo-buffer 0, :vboc-id 0, :color-buffer 0, :vboi-id 0, :index-buffer 0, :vbot-id 0, :uv-buffer 0, :vbon-id 0, :normal-buffer 0 }
+   :buffer-objects             {} ;{:id {:vao 0, :verticex-count 0, :indices-count 0,  :vbo-id, 0 :vbo-buffer 0, :vboc-id 0, :color-buffer 0, :vboi-id 0, :index-buffer 0, :vbot-id 0, :uv-buffer 0, :vbon-id 0, :normal-buffer 0 }
    ;; shader program
    ;; Pixel buffers
    :outputPBOs                 0
@@ -344,9 +343,23 @@
     (org.lwjgl.glfw.GLFW/glfwSwapInterval         2)
     (org.lwjgl.glfw.GLFW/glfwShowWindow           (:window @locals))))
 
+
+
+
+(def meshes [ "resources/cube.dae"  "resources/plane6.dae"])
+
+
 (defn- init-buffers
   [locals]
-  (let [;vertices_and_indices     (cutter.cutter/load-plane)
+  (let [buffer-objects            (:buffer-objects @locals)
+        ;vertices_and_indices     (cutter.cutter/load-plane)
+        meshpaths                 ["resources/cube.dae"  "resources/plane6.dae"]
+        buffer-objects            (into {} (mapv (fn [x]
+                                                   (let [md    (cutter.gl_init/load-mesh x)
+                                                         mdk   (keyword (str (:vao-id md)))]
+                                                     (println "aaaaaaa" mdk)
+                                                     {mdk md})) meshpaths ))
+        ;;buffer-objects            (assoc buffer-objects (keyword (str (:vao-id meshdata))) meshdata)
         vertices_and_indices      (first (cutter.gl_init/load-mesh "resources/dual.dae"))
         ;;Vertices
         ;;vertices   (float-array (vec (nth vertices_and_indices 0)))
@@ -355,10 +368,7 @@
                                 (.put vertices)
                                 (.flip))
         vertices-count      (count vertices)
-        colors (float-array
-                [1.0 0.0 0.0
-                 0.0 1.0 0.0
-                 0.0 0.0 1.0])
+        colors             (float-array (:colors  vertices_and_indices))
         colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
                           (.put colors)
                           (.flip))
@@ -436,6 +446,7 @@
         _ (except-gl-errors "@ end of init-buffers")]
     (swap! locals
            assoc
+           :buffer-objects  buffer-objects
            :vbo-id vbo-id
            :vao-id vao-id
            :vboc-id vboc-id
@@ -613,6 +624,7 @@
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:unit (x i-uniforms)))
       (get-textures locals x i-uniforms))
 
+    (GL30/glBindVertexArray vao-id)
                                         ;Vertices
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
     (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0);
@@ -818,7 +830,7 @@
   (try-reload-shader locals)
   (let [startTime               (atom (System/nanoTime))]
     (println "Start thread")
-    (GL30/glBindVertexArray (:vao-id @locals))
+    ;(GL30/glBindVertexArray (:vao-id @locals))
     (GL20/glEnableVertexAttribArray 0)
     (GL20/glEnableVertexAttribArray 1)
     (GL20/glEnableVertexAttribArray 2)

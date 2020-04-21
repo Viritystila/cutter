@@ -10,7 +10,9 @@
   (:import
    [org.opencv.core Mat Core CvType]
    [org.lwjgl.assimp Assimp]
-   (org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45)
+   [java.nio IntBuffer ByteBuffer FloatBuffer ByteOrder]
+   [org.lwjgl BufferUtils]
+   [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]
    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,6 +139,12 @@
         (swap! b conj x y z)))
     @b))
 
+;;Placeholder
+(defn process-colors [aimesh]
+  [1.0 0.0 0.0
+   0.0 1.0 0.0
+   0.0 0.0 1.0])
+
 
 (def ai-flags (bit-or  org.lwjgl.assimp.Assimp/aiProcess_JoinIdenticalVertices
                        org.lwjgl.assimp.Assimp/aiProcess_Triangulate
@@ -163,6 +171,91 @@
                    {:indices          (process-indices x)
                     :normals          (process-normals x)
                     :text-coords      (process-text-coords x)
-                    :vertices         (process-vertices x)}) meshes)]
+                    :vertices         (process-vertices x)
+                    :colors           (process-colors x)}) meshes)]
     (org.lwjgl.assimp.Assimp/aiReleaseImport aiscene)
     md))
+
+
+
+(defn init-mesh [path]
+  (let [vertices_and_indices      (first (cutter.gl_init/load-mesh path))
+        vertices                  (float-array (:vertices  vertices_and_indices))
+        colors                    (float-array (:colors  vertices_and_indices))
+        indices                   (int-array   (:indices  vertices_and_indices))
+        texture-coords            (float-array (:text-coords  vertices_and_indices))
+        normal-coords             (float-array (:normals  vertices_and_indices))
+        vertices-buffer           (-> (BufferUtils/createFloatBuffer (count vertices))
+                                      (.put vertices)
+                                      (.flip))
+        vertices-count            (count vertices)
+        colors-count              (count colors)
+        indices-count             (count indices)
+        uvcount                   (count texture-coords)
+        normalcount               (count normal-coords)
+        vertices-buffer           (-> (BufferUtils/createFloatBuffer vertices-count)
+                                      (.put vertices)
+                                      (.flip))
+        colors-buffer             (-> (BufferUtils/createFloatBuffer colors-count)
+                                      (.put colors)
+                                      (.flip))
+        indices-buffer            (-> (BufferUtils/createIntBuffer indices-count)
+                                      (.put indices)
+                                      (.flip))
+        uv-buffer                 (-> (BufferUtils/createFloatBuffer uvcount)
+                                      (.put texture-coords)
+                                      (.flip))
+        normal-buffer             (-> (BufferUtils/createFloatBuffer normalcount)
+                                      (.put normal-coords)
+                                      (.flip))
+        vao-id                    (GL30/glGenVertexArrays)
+        _                         (GL30/glBindVertexArray vao-id)
+        vbo-id                    (GL15/glGenBuffers)
+        _                         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
+        _                         (GL15/glBufferData GL15/GL_ARRAY_BUFFER
+                                                     ^FloatBuffer vertices-buffer
+                                                     GL15/GL_STATIC_DRAW)
+        _                         (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0)
+        _                         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+        vboc-id                   (GL15/glGenBuffers)
+        _                         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
+        _                         (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
+        _                         (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
+        _                         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+        vbot-id                   (GL15/glGenBuffers)
+        _                         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbot-id)
+        _                         (GL15/glBufferData GL15/GL_ARRAY_BUFFER uv-buffer GL15/GL_STATIC_DRAW)
+        _                         (GL20/glVertexAttribPointer 2 2 GL11/GL_FLOAT false 0 0)
+        _                         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+        vbon-id                   (GL15/glGenBuffers)
+        _                         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbon-id)
+        _                         (GL15/glBufferData GL15/GL_ARRAY_BUFFER normal-buffer GL15/GL_STATIC_DRAW)
+        _                         (GL20/glVertexAttribPointer 3 3 GL11/GL_FLOAT false 0 0)
+        _                         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+        vboi-id             (GL15/glGenBuffers)
+        _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
+        _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
+        _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+        ]
+    {:path                path
+     :vertices            vertices
+     :colors              colors
+     :indices             indices
+     :uv                  texture-coords
+     :normals             normal-coords
+     :vertices-buffer     vertices-buffer
+     :colors-buffer       colors-buffer
+     :indices-buffer      indices-buffer
+     :uv-buffer           uv-buffer
+     :normal-buffer       normal-buffer
+     :verticex-count      vertices-count
+     :colors-count        colors-count
+     :indices-count       indices-count
+     :uv-count            uvcount
+     :normal-count        normalcount
+     :vao-id              vao-id
+     :vbo-id              vbo-id
+     :vboc-id             vboc-id
+     :vbot-id             vbot-id
+     :vbon-id             vbon-id
+     :vboi-id             vboi-id}))
