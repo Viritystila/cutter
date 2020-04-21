@@ -355,11 +355,9 @@
         ;vertices_and_indices     (cutter.cutter/load-plane)
         meshpaths                 ["resources/cube.dae"  "resources/plane6.dae"]
         buffer-objects            (into {} (mapv (fn [x]
-                                                   (let [md    (cutter.gl_init/load-mesh x)
+                                                   (let [md    (cutter.gl_init/init-mesh x)
                                                          mdk   (keyword (str (:vao-id md)))]
-                                                     (println "aaaaaaa" mdk)
                                                      {mdk md})) meshpaths ))
-        ;;buffer-objects            (assoc buffer-objects (keyword (str (:vao-id meshdata))) meshdata)
         vertices_and_indices      (first (cutter.gl_init/load-mesh "resources/dual.dae"))
         ;;Vertices
         ;;vertices   (float-array (vec (nth vertices_and_indices 0)))
@@ -624,7 +622,7 @@
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:unit (x i-uniforms)))
       (get-textures locals x i-uniforms))
 
-    (GL30/glBindVertexArray vao-id)
+    ;(GL30/glBindVertexArray vao-id)
                                         ;Vertices
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
     (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0);
@@ -830,7 +828,7 @@
   (try-reload-shader locals)
   (let [startTime               (atom (System/nanoTime))]
     (println "Start thread")
-    ;(GL30/glBindVertexArray (:vao-id @locals))
+    (GL30/glBindVertexArray (:vao-id @locals))
     (GL20/glEnableVertexAttribArray 0)
     (GL20/glEnableVertexAttribArray 1)
     (GL20/glEnableVertexAttribArray 2)
