@@ -354,7 +354,7 @@
   ;(println "max veretx atrribs"  (org.lwjgl.opengl.GL11/glGetInteger org.lwjgl.opengl.GL20/GL_MAX_VERTEX_ATTRIBS))
   (let [buffer-objects            (:buffer-objects @locals)
         ;vertices_and_indices     (cutter.cutter/load-plane)
-        meshpaths                 ["resources/plane6.dae"  "resources/cube.dae"]
+        meshpaths                 ["resources/sphere.dae"  "resources/cube.dae"]
         buffer-objects            (into {} (mapv (fn [x]
                                                    (let [md    (cutter.gl_init/init-mesh x)
                                                          mdk   (keyword (str (:vao-id md)))]
@@ -607,7 +607,7 @@
     ;; (GL20/glEnableVertexAttribArray 2)
     ;; (GL20/glEnableVertexAttribArray 3)
     ;; (GL20/glEnableVertexAttribArray 4)
-    ;;(GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+    (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
     (except-gl-errors "@ draw after activate textures")
     ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
@@ -636,8 +636,8 @@
              mesh-vbon-id        (:vbon-id mesh-data)
              mesh-indices-count  (:indices-count mesh-data)]
         ;;(println mesh-vao-id mesh-vbo-id mesh-vboc-id mesh-vboi-id mesh-vbot-id mesh-vbon-id)
-        (GL11/glDepthFunc GL11/GL_LESS)
-        (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+        ;(GL11/glDepthFunc GL11/GL_LESS)
+        ;(GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
         (GL30/glBindVertexArray mesh-vao-id)
         (GL20/glEnableVertexAttribArray 0)
         (GL20/glEnableVertexAttribArray 1)
