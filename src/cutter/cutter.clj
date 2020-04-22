@@ -101,8 +101,9 @@
    :no-i-channels              16
    :i-channels                 (mapv (fn [x] (keyword (str "iChannel" x))) (range 1 16 1))
    :i-extra-texture-names      [:iPreviousFrame :iText :iChannelNull]
-   :i-extra-uniform-names      [:iResolution :iGlobalTime :iRandom :iPreviousFrame :iText]
-   :i-extra-uniform-types      {:iResolution       {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
+   :i-extra-uniform-names      [:iMeshID :iResolution :iGlobalTime :iRandom :iPreviousFrame :iText]
+   :i-extra-uniform-types      {:iMeshID           {:type "int",     :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit -1}
+                                :iResolution       {:type "vec3",      :loc 0, :gltype (fn [id x y z] (GL20/glUniform3f id x y z)),  :extra "", :layout "", :unit -1},
                                 :iGlobalTime       {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)), :extra "", :layout "", :unit -1}
                                 :iRandom           {:type "float",     :loc 0, :gltype (fn [id x] (GL20/glUniform1f id x)), :extra "", :layout "", :unit -1},
                                 :iPreviousFrame    {:type "sampler2D", :loc 0, :gltype (fn [id x] (GL20/glUniform1i id x)), :extra "", :layout "", :unit 1},
@@ -635,9 +636,8 @@
              mesh-vbot-id        (:vbot-id mesh-data)
              mesh-vbon-id        (:vbon-id mesh-data)
              mesh-indices-count  (:indices-count mesh-data)]
-        ;;(println mesh-vao-id mesh-vbo-id mesh-vboc-id mesh-vboi-id mesh-vbot-id mesh-vbon-id)
-        ;(GL11/glDepthFunc GL11/GL_LESS)
-        ;(GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+        ((:gltype (:iMeshID i-uniforms)) (:loc (:iMeshID i-uniforms)) mesh-vao-id)
+        ;(println mesh-vao-id)
         (GL30/glBindVertexArray mesh-vao-id)
         (GL20/glEnableVertexAttribArray 0)
         (GL20/glEnableVertexAttribArray 1)
