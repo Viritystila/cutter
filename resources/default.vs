@@ -48,5 +48,5 @@ void main(void) {
   vec4 sp=vec4(pos.x,pos.y, pos.z, 1);
   mat4 rotma=rotationMatrix(vec3(0.0+1,1, 1.0), time);
   //;vertexPosition_modelspace*
-  gl_Position =_vertex*vec4(1,1,1,1.25)*rotma; // _vertex*vec4(1,1,1,2)*rotma;
+  gl_Position =vertexPosition_modelspace*vec4(1,1,1,1.25)*rotma; // _vertex*vec4(1,1,1,2)*rotma;
 }

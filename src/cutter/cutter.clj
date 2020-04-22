@@ -346,19 +346,20 @@
 
 
 
-(def meshes [ "resources/cube.dae"  "resources/plane6.dae"])
-
+(def meshes ["resources/plane6.dae"])
+; "resources/cube.dae"
 
 (defn- init-buffers
   [locals]
+  ;(println "max veretx atrribs"  (org.lwjgl.opengl.GL11/glGetInteger org.lwjgl.opengl.GL20/GL_MAX_VERTEX_ATTRIBS))
   (let [buffer-objects            (:buffer-objects @locals)
         ;vertices_and_indices     (cutter.cutter/load-plane)
-        meshpaths                 ["resources/cube.dae"  "resources/plane6.dae"]
+        meshpaths                 ["resources/plane6.dae"  "resources/cube.dae"]
         buffer-objects            (into {} (mapv (fn [x]
                                                    (let [md    (cutter.gl_init/init-mesh x)
                                                          mdk   (keyword (str (:vao-id md)))]
                                                      {mdk md})) meshpaths ))
-        vertices_and_indices      (first (cutter.gl_init/load-mesh "resources/dual.dae"))
+        vertices_and_indices      (first (cutter.gl_init/load-mesh "resources/plane6.dae"))
         ;;Vertices
         ;;vertices   (float-array (vec (nth vertices_and_indices 0)))
         vertices            (float-array (:vertices  vertices_and_indices))
@@ -594,24 +595,28 @@
                 i-floats
                 save-frames
                 old-pgm-id old-fs-id
+                buffer-objects
                 ]} @locals
         cur-time    (/ (- last-time start-time) 1000.0)]
-
     (except-gl-errors "@ draw before clear")
 
-    (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+    ;(doseq [mesh-data buffer-objects ])
+    ;; (GL30/glBindVertexArray (:vao-id @locals))
+    ;; (GL20/glEnableVertexAttribArray 0)
+    ;; (GL20/glEnableVertexAttribArray 1)
+    ;; (GL20/glEnableVertexAttribArray 2)
+    ;; (GL20/glEnableVertexAttribArray 3)
+    ;; (GL20/glEnableVertexAttribArray 4)
+    ;;(GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
     (except-gl-errors "@ draw after activate textures")
-
     ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
     ((:gltype (:iGlobalTime i-uniforms)) (:loc (:iGlobalTime i-uniforms)) cur-time)
     ((:gltype (:iRandom i-uniforms)) (:loc (:iRandom i-uniforms)) (rand))
-
     ((:gltype (:iPreviousFrame i-uniforms)) (:loc (:iPreviousFrame i-uniforms)) (:unit (:iPreviousFrame i-uniforms)))
     (get-textures locals :iPreviousFrame i-uniforms)
 
     ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) (:unit (:iText i-uniforms)))
     (get-textures locals :iText i-uniforms)
-
     (doseq [x (keys i-dataArrays)]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:datavec (x i-dataArrays)) (:buffer (x i-dataArrays))))
 
@@ -622,49 +627,71 @@
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:unit (x i-uniforms)))
       (get-textures locals x i-uniforms))
 
-    ;(GL30/glBindVertexArray vao-id)
-                                        ;Vertices
-    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
-    (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0);
-                                        ;Colors
-    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
-    (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0);
-                                        ;Indices
-    (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
-    (GL20/glVertexAttribPointer 2 1 GL11/GL_INT false 0 0);
-                                        ;Texture coordinates
-    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbot-id)
-    (GL20/glVertexAttribPointer 3 2 GL11/GL_FLOAT false 0 0);
-                                        ;Normal
-    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbon-id)
-    (GL20/glVertexAttribPointer 4 3 GL11/GL_FLOAT false 0 0);
-                                        ;// attribute 0. No particular reason for 0, but must match the layout in the shader.
-                                        ;// size
-                                        ;// type
-                                        ; // normalized?
-                                        ; // stride
-                                        ;// array buffer offset
-    (except-gl-errors "@ draw prior to DrawArrays")
-   ;(Thread/sleep 30)
-    ;; Draw the vertices
-     ;(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
-     (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_INT 0)
-     ;;(GL11/glDrawArrays  GL11/GL_TRIANGLES 0 indices-count)
-      (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+    (doseq [mesh-data (vals buffer-objects)]
+      (let  [mesh-vao-id         (:vao-id mesh-data)
+             mesh-vbo-id         (:vbo-id mesh-data)
+             mesh-vboc-id        (:vboc-id mesh-data)
+             mesh-vboi-id        (:vboi-id mesh-data)
+             mesh-vbot-id        (:vbot-id mesh-data)
+             mesh-vbon-id        (:vbon-id mesh-data)
+             mesh-indices-count  (:indices-count mesh-data)]
+        ;;(println mesh-vao-id mesh-vbo-id mesh-vboc-id mesh-vboi-id mesh-vbot-id mesh-vbon-id)
+        (GL11/glDepthFunc GL11/GL_LESS)
+        (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+        (GL30/glBindVertexArray mesh-vao-id)
+        (GL20/glEnableVertexAttribArray 0)
+        (GL20/glEnableVertexAttribArray 1)
+        (GL20/glEnableVertexAttribArray 2)
+        (GL20/glEnableVertexAttribArray 3)
+        (GL20/glEnableVertexAttribArray 4)
+        (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER mesh-vbo-id)
+        (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0);
+        (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER mesh-vboc-id)
+        (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0);
+        (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER mesh-vboi-id)
+        (GL20/glVertexAttribPointer 2 1 GL11/GL_INT false 0 0);
+        (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER mesh-vbot-id)
+        (GL20/glVertexAttribPointer 3 2 GL11/GL_FLOAT false 0 0);
+        (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER mesh-vbon-id)
+        (GL20/glVertexAttribPointer 4 3 GL11/GL_FLOAT false 0 0);
+        (GL11/glDrawElements  GL11/GL_TRIANGLES mesh-indices-count GL11/GL_UNSIGNED_INT 0)
+        ))
+    ;; (GL30/glBindVertexArray (:vao-id @locals))
+    ;; (GL20/glEnableVertexAttribArray 0)
+    ;; (GL20/glEnableVertexAttribArray 1)
+    ;; (GL20/glEnableVertexAttribArray 2)
+    ;; (GL20/glEnableVertexAttribArray 3)
+    ;; (GL20/glEnableVertexAttribArray 4)
+    ;;                                     ;Vertices
+    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
+    ;; (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0);
+    ;;                                     ;Colors
+    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
+    ;; (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0);
+    ;;                                     ;Indices
+    ;; (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
+    ;; (GL20/glVertexAttribPointer 2 1 GL11/GL_INT false 0 0);
+    ;;                                     ;Texture coordinates
+    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbot-id)
+    ;; (GL20/glVertexAttribPointer 3 2 GL11/GL_FLOAT false 0 0);
+    ;;                                     ;Normal
+    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbon-id)
+    ;; (GL20/glVertexAttribPointer 4 3 GL11/GL_FLOAT false 0 0);
+    ;; (except-gl-errors "@ draw prior to DrawArrays")
+    ;; ;; Draw the vertices
+    ;; (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_INT 0)
+    ;;(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
     (except-gl-errors "@ draw after DrawArrays")
-
     ;;Copying the previous image to its own texture
     (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
     (GL11/glCopyTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGB8 0 0 width height 0)
     (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-
     (if @save-frames
       (do ; download it and copy the previous image to its own texture
         (GL11/glReadBuffer GL11/GL_FRONT)
         (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (first outputPBOs))
         (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
         (GL11/glReadPixels 0 0 width height GL11/GL_RGB GL11/GL_UNSIGNED_BYTE  0)
-        ;(GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER (last outputPBOs))
         (let [v4l2_buffer (:v4l2_buffer @the-window-state)
               bb          (new org.bytedeco.javacpp.BytePointer v4l2_buffer)
               minsize     (long  @(:minsize @the-window-state))]
@@ -675,7 +702,6 @@
         (GL11/glBindTexture GL11/GL_TEXTURE_2D 0) )
       nil)
     ))
-
 
 (defn- update-and-draw
   [locals]
@@ -828,12 +854,12 @@
   (try-reload-shader locals)
   (let [startTime               (atom (System/nanoTime))]
     (println "Start thread")
-    (GL30/glBindVertexArray (:vao-id @locals))
-    (GL20/glEnableVertexAttribArray 0)
-    (GL20/glEnableVertexAttribArray 1)
-    (GL20/glEnableVertexAttribArray 2)
-    (GL20/glEnableVertexAttribArray 3)
-    (GL20/glEnableVertexAttribArray 4)
+    ;;(GL30/glBindVertexArray (:vao-id @locals))
+    ;;(GL20/glEnableVertexAttribArray 0)
+    ;;(GL20/glEnableVertexAttribArray 1)
+    ;;(GL20/glEnableVertexAttribArray 2)
+    ;;(GL20/glEnableVertexAttribArray 3)
+    ;;(GL20/glEnableVertexAttribArray 4)
 
     (while (and (= :yes (:active @locals))
                 (not (org.lwjgl.glfw.GLFW/glfwWindowShouldClose (:window @locals))))
