@@ -355,7 +355,7 @@
   ;(println "max veretx atrribs"  (org.lwjgl.opengl.GL11/glGetInteger org.lwjgl.opengl.GL20/GL_MAX_VERTEX_ATTRIBS))
   (let [buffer-objects            (:buffer-objects @locals)
         ;vertices_and_indices     (cutter.cutter/load-plane)
-        meshpaths                 ["resources/sphere.dae"  "resources/cube.dae"]
+        meshpaths                 ["resources/plane6.dae" "resources/sphere.dae"  "resources/cube.dae"]
         buffer-objects            (into {} (mapv (fn [x]
                                                    (let [md    (cutter.gl_init/init-mesh x)
                                                          mdk   (keyword (str (:vao-id md)))]
@@ -467,6 +467,9 @@
     (GL11/glViewport 0 0 width height)
     (GL11/glEnable GL11/GL_DEPTH_TEST)
     (GL11/glDepthFunc GL11/GL_LESS)
+    (GL11/glEnable GL11/GL_BLEND)
+    (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
+    (GL11/glEnable GL11/GL_CULL_FACE)
     (init-buffers locals)
     (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
     (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
