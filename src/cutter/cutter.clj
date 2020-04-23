@@ -346,8 +346,13 @@
     (org.lwjgl.glfw.GLFW/glfwShowWindow           (:window @locals))))
 
 
-(defn add-mesh [path]
-  (let [buffer-objects            (:buffer-objects @the-window-state)]))
+(defn add-mesh [path locals]
+  (println path)
+  (let [buffer-objects            (:buffer-objects @the-window-state)
+        md                        (cutter.gl_init/init-mesh path)
+        mdk                       (keyword (str (:vao-id md)))
+        buffer-objects            (assoc buffer-objects mdk md)]
+    (swap! locals assoc :buffer-objects buffer-objects)))
 
 (defn- init-buffers
   [locals]
@@ -526,14 +531,6 @@
         cur-time    (/ (- last-time start-time) 1000.0)
         mesh-index                              (atom 0)]
     (except-gl-errors "@ draw before clear")
-
-    ;(doseq [mesh-data buffer-objects ])
-    ;; (GL30/glBindVertexArray (:vao-id @locals))
-    ;; (GL20/glEnableVertexAttribArray 0)
-    ;; (GL20/glEnableVertexAttribArray 1)
-    ;; (GL20/glEnableVertexAttribArray 2)
-    ;; (GL20/glEnableVertexAttribArray 3)
-    ;; (GL20/glEnableVertexAttribArray 4)
     (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
     (except-gl-errors "@ draw after activate textures")
     ((:gltype (:iResolution i-uniforms)) (:loc (:iResolution i-uniforms)) width height 1.0)
@@ -723,26 +720,32 @@
         data          (:data req)]
     ;(println data)
     (case type
-      :new     (let [widths    (mapv (fn [x] (nth x 0)) data)
-                     heights   (mapv (fn [x] (nth x 1)) data)
-                     channels  (mapv (fn [x] (nth x 2)) data)
-                     amounts   (mapv (fn [x] (nth x 3)) data)
-                     pbo-data  (mapv (fn [w h c amount]
-                                       (mapv (fn [am]  (create-PBO-buf w h c)) (range amount))) widths heights channels amounts )
-                     pbo_ids  (mapv first (partition 2 (flatten pbo-data)))
-                     buffers   (mapv last (partition 2 (flatten pbo-data)))]
-                 (clojure.core.async/offer! reply-queue [buffers pbo_ids]))
-      :del     (let [pbo_ids   data]
-                 ;(println "del data" data)
-                 (mapv (fn [x] (delete-PBO-buf x)) pbo_ids)
+      :new      (let [widths    (mapv (fn [x] (nth x 0)) data)
+                      heights   (mapv (fn [x] (nth x 1)) data)
+                      channels  (mapv (fn [x] (nth x 2)) data)
+                      amounts   (mapv (fn [x] (nth x 3)) data)
+                      pbo-data  (mapv (fn [w h c amount]
+                                        (mapv (fn [am]  (create-PBO-buf w h c)) (range amount))) widths heights channels amounts )
+                      pbo_ids  (mapv first (partition 2 (flatten pbo-data)))
+                      buffers   (mapv last (partition 2 (flatten pbo-data)))]
+                  (clojure.core.async/offer! reply-queue [buffers pbo_ids]))
+      :del      (let [pbo_ids   data]
+                                        ;(println "del data" data)
+                  (mapv (fn [x] (delete-PBO-buf x)) pbo_ids)
                   (clojure.core.async/offer! reply-queue true))
-      :del-buf (if  (contains? (:texture-arrays @locals) buf-name)
-                 (do (clear-buffer buf-name)
-                     (clojure.core.async/offer! reply-queue true))
-                 (do (println "No such buffer "  buf-name)
-                     (clojure.core.async/offer! reply-queue false)))
+      :del-buf  (if  (contains? (:texture-arrays @locals) buf-name)
+                  (do (clear-buffer buf-name)
+                      (clojure.core.async/offer! reply-queue true))
+                  (do (println "No such buffer "  buf-name)
+                      (clojure.core.async/offer! reply-queue false)))
+      :add-mesh (if (str (first data))
+                  (do
+                    (println "Adding mesh" (first data))
+                    (add-mesh (first data) locals))
+                  )
       (println "Not a valid request type"))))
 
+;;  (clojure.core.async/>!! (:request-queue @the-window-state) {:type :add-mesh :destination :iChannel1 :buf-name "nul" :data ["resources/sphere.dae"]})
 (defn- run-thread
   [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
   (println "init-window")

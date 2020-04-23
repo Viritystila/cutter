@@ -57,21 +57,25 @@ void main(void) {
   norm.xz *= mat2(cos(time),sin(time),-sin(time),cos(time));
   norm.yz *= mat2(cos(time),sin(time),-sin(time),cos(time));
   vec4 sp=vec4(pos.x,pos.y, pos.z, 1);
-  vec4 scales[3]=vec4[3](vec4(20,20,1,1),
+  vec4 scales[4]=vec4[4](vec4(20,20,1,1),
                          vec4(1,1,1,0),
-                         vec4(1,1,1,1));
-  vec4 posits[3]=vec4[3](vec4(0,0,1,20),
+                         vec4(1,1,1,1),
+                          vec4(1,1,1,1));
+  vec4 posits[4]=vec4[4](vec4(0,0,1,20),
                          vec4(0,1,-3,3),
-                         vec4(-1,-1,-3,4));
-  mat4 rotmas[3]=mat4[3](rotationMatrix(vec3(0.0,1, 1.0), 0),
+                         vec4(-1,-1,-3,4),
+                         vec4(0,1,-3,3));
+  mat4 rotmas[4]=mat4[4](rotationMatrix(vec3(0.0,1, 1.0), 0),
                          rotationMatrix(vec3(2.0,1+time, 1.0+time), time),
-                         rotationMatrix(vec3(1.0+1,1, 1.0), time));
-  vec4 vertexPoss[3]=vec4[3](vertexPosition_modelspace,
+                         rotationMatrix(vec3(1.0+1,1, 1.0), time),
+                         rotationMatrix(vec3(0.0,1, 1.0), 0));
+  vec4 vertexPoss[4]=vec4[4](vertexPosition_modelspace,
                              //_vertex,
 
                              vertexPosition_modelspace+rad*vertexPosition_modelspace,
 
-                             vertexPosition_modelspace
+                             vertexPosition_modelspace,
+                              vertexPosition_modelspace
                              );
   vec4 scale=scales[iMeshID];
   vec4 posit=posits[iMeshID];
