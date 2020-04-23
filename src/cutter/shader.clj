@@ -91,10 +91,17 @@
        "\n"
        "layout(location = 1) in vec3 colors_modelspace;"
        "\n"
+       "layout(location = 2) in vec3 index_modelspace;"
+       "\n"
+       "layout(location = 3) in vec2 uv_modelspace;"
+       "\n"
+       "layout(location = 4) in vec3 normals_modelspace;"
+       "layout(location = 1) in vec3 colors_modelspace;"
+       "\n"
        "void main(void) {\n"
        "    gl_Position = vertexPosition_modelspace;\n"
        "}\n"))
-;* vec4(0.5*iRandom, 0.1, 0.0, 1.0)
+
 (defn- load-shader
   [^String shader-str ^Integer shader-type]
   ;(println shader-str)

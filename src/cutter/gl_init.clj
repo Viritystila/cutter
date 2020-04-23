@@ -150,14 +150,14 @@
                        org.lwjgl.assimp.Assimp/aiProcess_Triangulate
                        org.lwjgl.assimp.Assimp/aiProcess_GenSmoothNormals
                        org.lwjgl.assimp.Assimp/aiProcess_FixInfacingNormals
-                       org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices
-                       org.lwjgl.assimp.Assimp/aiProcess_SortByPType
-                       org.lwjgl.assimp.Assimp/aiProcess_FindInvalidData
+                       ;;org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices
+                       ;;org.lwjgl.assimp.Assimp/aiProcess_SortByPType
+                       ;;org.lwjgl.assimp.Assimp/aiProcess_FindInvalidData
                        org.lwjgl.assimp.Assimp/aiProcess_GenUVCoords
-                       org.lwjgl.assimp.Assimp/aiProcess_FindDegenerates
+                       ;;org.lwjgl.assimp.Assimp/aiProcess_FindDegenerates
                        org.lwjgl.assimp.Assimp/aiProcess_CalcTangentSpace
                        org.lwjgl.assimp.Assimp/aiProcess_OptimizeMeshes
-                       0
+
                ))
 
 (defn load-mesh [file]
@@ -236,6 +236,7 @@
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
         _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+
         ]
     {:path                path
      :vertices            vertices

@@ -3,6 +3,11 @@ layout(location = 1) in vec3 colors_modelspace;
 layout(location = 2) in vec3 index_modelspace;
 layout(location = 3) in vec2 uv_modelspace;
 layout(location = 4) in vec3 normals_modelspace;
+layout(location = 5) in vec4 modelScale;
+layout(location = 6) in vec4 modelPosition;
+layout(location = 7) in mat4 modelRotation;
+
+
 
 mat4 rotationMatrix(vec3 axis, float angle) {
     axis = normalize(axis);
@@ -21,7 +26,13 @@ out vec2 texCoordV;
 out vec3 Normal;
 void main(void) {
   vec4 _vertex=vertexPosition_modelspace;
-  _vertex.z=texture2D(iChannel1, uv_modelspace).b*1.1;
+  float rad=texture2D(iChannel1, uv_modelspace).r;
+
+  //_vertex.x= _vertex.x+rad;
+  //_vertex.y= _vertex.y+rad*rad;
+  //_vertex.z= _vertex.z+rad*rad;
+
+
   texCoordV=uv_modelspace;
   vec4 iChannel1_texture=texture2D(iChannel1, texCoordV);
   Normal=normals_modelspace;
@@ -47,20 +58,24 @@ void main(void) {
   norm.yz *= mat2(cos(time),sin(time),-sin(time),cos(time));
   vec4 sp=vec4(pos.x,pos.y, pos.z, 1);
   vec4 scales[3]=vec4[3](vec4(20,20,1,1),
-                         vec4(1,1,1,1),
+                         vec4(1,1,1,0),
                          vec4(1,1,1,1));
   vec4 posits[3]=vec4[3](vec4(0,0,1,20),
-                         vec4(0,1,-1,1),
-                         vec4(-1,1,-1,2));
+                         vec4(0,1,-3,3),
+                         vec4(-1,-1,-3,4));
   mat4 rotmas[3]=mat4[3](rotationMatrix(vec3(0.0,1, 1.0), 0),
                          rotationMatrix(vec3(2.0,1+time, 1.0+time), time),
                          rotationMatrix(vec3(1.0+1,1, 1.0), time));
   vec4 vertexPoss[3]=vec4[3](vertexPosition_modelspace,
-                             vertexPosition_modelspace,
-                             _vertex);
-  vec4 scale=scales[iMeshID-1];
-  vec4 posit=posits[iMeshID-1];
-  mat4 rotma=rotmas[iMeshID-1];
-  vec4 vertexPos=vertexPoss[iMeshID-1];
+                             //_vertex,
+
+                             vertexPosition_modelspace+rad*vertexPosition_modelspace,
+
+                             vertexPosition_modelspace
+                             );
+  vec4 scale=scales[iMeshID];
+  vec4 posit=posits[iMeshID];
+  mat4 rotma=rotmas[iMeshID];
+  vec4 vertexPos=vertexPoss[iMeshID];
   gl_Position =vertexPos*scale*rotma+posit; // _vertex*vec4(1,1,1,2)*rotma;
 }

@@ -49,7 +49,8 @@
    :vbot-id                    0
    :vbon-id                    0
 
-   :buffer-objects             {} ;{:id {:vao 0, :verticex-count 0, :indices-count 0,  :vbo-id, 0 :vbo-buffer 0, :vboc-id 0, :color-buffer 0, :vboi-id 0, :index-buffer 0, :vbot-id 0, :uv-buffer 0, :vbon-id 0, :normal-buffer 0 }
+   :buffer-objects             {}
+                                        ;{:id {:vao 0, :verticex-count 0, :indices-count 0,  :vbo-id, 0 :vbo-buffer 0, :vboc-id 0, :color-buffer 0, :vboi-id 0, :index-buffer 0, :vbot-id 0, :uv-buffer 0, :vbon-id 0, :normal-buffer 0 }
    ;; shader program
    ;; Pixel buffers
    :outputPBOs                 0
@@ -345,10 +346,8 @@
     (org.lwjgl.glfw.GLFW/glfwShowWindow           (:window @locals))))
 
 
-
-
-(def meshes ["resources/plane6.dae"])
-; "resources/cube.dae"
+(defn add-mesh [path]
+  (let [buffer-objects            (:buffer-objects @the-window-state)]))
 
 (defn- init-buffers
   [locals]
@@ -360,79 +359,6 @@
                                                    (let [md    (cutter.gl_init/init-mesh x)
                                                          mdk   (keyword (str (:vao-id md)))]
                                                      {mdk md})) meshpaths ))
-        vertices_and_indices      (first (cutter.gl_init/load-mesh "resources/plane6.dae"))
-        ;;Vertices
-        ;;vertices   (float-array (vec (nth vertices_and_indices 0)))
-        vertices            (float-array (:vertices  vertices_and_indices))
-        vertices-buffer     (-> (BufferUtils/createFloatBuffer (count vertices))
-                                (.put vertices)
-                                (.flip))
-        vertices-count      (count vertices)
-        colors             (float-array (:colors  vertices_and_indices))
-        colors-buffer (-> (BufferUtils/createFloatBuffer (count colors))
-                          (.put colors)
-                          (.flip))
-        ;;Indices
-        ;;indices (byte-array (nth vertices_and_indices 3))
-        indices            (int-array   (:indices  vertices_and_indices))
-        indices-count (count indices)
-        ;_ (println  (:indices  vertices_and_indices))
-        ;_ (println (count  (:indices  vertices_and_indices)))
-                                        ;_ (println indices-count)
-        indices-buffer (-> (BufferUtils/createIntBuffer indices-count)
-                           (.put indices)
-                           (.flip))
-        ;;Texture coordinates
-        ;;texture-coords (float-array (vec (nth vertices_and_indices 2)))
-        texture-coords        (float-array (:text-coords  vertices_and_indices))
-        uvcount        (count texture-coords)
-        uv-buffer      (-> (BufferUtils/createFloatBuffer uvcount)
-                           (.put texture-coords)
-                           (.flip))
-        ;;Normals
-        ;;normal-coords (float-array (vec (nth vertices_and_indices 1)))
-        normal-coords       (float-array (:normals  vertices_and_indices))
-        normalcount        (count normal-coords)
-        normal-buffer      (-> (BufferUtils/createFloatBuffer normalcount)
-                           (.put normal-coords)
-                           (.flip))
-        ;; create & bind Vertex Array Object
-        vao-id              (GL30/glGenVertexArrays)
-        _                   (GL30/glBindVertexArray vao-id)
-        ;; create & bind Vertex Buffer Object for vertices
-        vbo-id              (GL15/glGenBuffers)
-        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
-        _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER
-                                               ^FloatBuffer vertices-buffer
-                                               GL15/GL_STATIC_DRAW)
-        _                   (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0)
-        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-        ;; create & bind VBO for colors
-        vboc-id             (GL15/glGenBuffers)
-        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
-        _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER colors-buffer GL15/GL_STATIC_DRAW)
-        _                   (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0)
-        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-        ;; create & bind VBO for texture coordinates
-        vbot-id             (GL15/glGenBuffers)
-        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbot-id)
-        _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER uv-buffer GL15/GL_STATIC_DRAW)
-        _                   (GL20/glVertexAttribPointer 2 2 GL11/GL_FLOAT false 0 0)
-        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-        ;; create & bind VBO for normals
-        vbon-id             (GL15/glGenBuffers)
-        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbon-id)
-        _                   (GL15/glBufferData GL15/GL_ARRAY_BUFFER normal-buffer GL15/GL_STATIC_DRAW)
-        _                   (GL20/glVertexAttribPointer 3 3 GL11/GL_FLOAT false 0 0)
-        _                   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-        ;; deselect the VAO
-        _                   (GL30/glBindVertexArray 0)
-        ;; create & bind VBO for indices
-        vboi-id             (GL15/glGenBuffers)
-        _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
-        _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
-        _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-        ;; Output Pixel buffers    :outputPBOs tex-buf  (:buffer (:iPreviousFrame i-textures))
         pbo_size            (* 3 (:width @locals) (:height @locals) )
         pboi_1_id           (GL15/glGenBuffers)
         ;pboi_2_id           (GL15/glGenBuffers)
@@ -442,19 +368,18 @@
         _                   (GL44/glBufferStorage  GL21/GL_PIXEL_PACK_BUFFER (long pbo_size) flags)
         v4l2_buffer         (GL44/glMapBufferRange GL21/GL_PIXEL_PACK_BUFFER 0 pbo_size flags)
         _                   (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER 0)
-                                        ;_                   (GL30/glBindVertexArray 0)
         _ (except-gl-errors "@ end of init-buffers")]
     (swap! locals
            assoc
            :buffer-objects  buffer-objects
-           :vbo-id vbo-id
-           :vao-id vao-id
-           :vboc-id vboc-id
-           :vboi-id vboi-id
-           :vbot-id vbot-id
-           :vbon-id vbon-id
-           :vertices-count vertices-count
-           :indices-count indices-count
+           :vbo-id 0;vbo-id
+           :vao-id 0;vao-id
+           :vboc-id 0;vboc-id
+           :vboi-id 0;vboi-id
+           :vbot-id 0;vbot-id
+           :vbon-id 0;vbon-id
+           :vertices-count 0;vertices-count
+           :indices-count 0;indices-count
            :outputPBOs    [pboi_1_id pboi_1_id]
            :v4l2_buffer   v4l2_buffer)))
 
@@ -486,7 +411,6 @@
                           buffer)))
 
 (defn- set-texture-pbo [tex-image-target width height format pbo]
-  ;(println tex-image-target width height format pbo)
   (try
     (if (GL15/glIsBuffer pbo)
       (do
@@ -524,9 +448,7 @@
     ;(println "before choice" width height image-bytes)
     (if (or init? (not= setnbytes nbytes))
       (do
-        ;(println "init")
         (set-texture tex-image-target internal-format width height format buffer)
-        ;(println " after set-texture" width height image-bytes)
         (let [queue               (:queue texture)
               out1                (:out1 texture)
               mlt                 (:mult texture)
@@ -568,7 +490,7 @@
             (instance? java.lang.Long (nth image 0)) (do (set-opengl-texture
                                                           locals
                                                           texture-key
-                                                          0 ;(.convertFromAddr matConverter (long (nth image 0))  (int (nth image 1)) (long (nth image 2)) (long (nth image 3)))
+                                                          0
                                                           (nth image 5)
                                                           (nth image 4)
                                                           (nth image 6)
@@ -601,7 +523,8 @@
                 old-pgm-id old-fs-id
                 buffer-objects
                 ]} @locals
-        cur-time    (/ (- last-time start-time) 1000.0)]
+        cur-time    (/ (- last-time start-time) 1000.0)
+        mesh-index                              (atom 0)]
     (except-gl-errors "@ draw before clear")
 
     ;(doseq [mesh-data buffer-objects ])
@@ -618,19 +541,15 @@
     ((:gltype (:iRandom i-uniforms)) (:loc (:iRandom i-uniforms)) (rand))
     ((:gltype (:iPreviousFrame i-uniforms)) (:loc (:iPreviousFrame i-uniforms)) (:unit (:iPreviousFrame i-uniforms)))
     (get-textures locals :iPreviousFrame i-uniforms)
-
     ((:gltype (:iText i-uniforms)) (:loc (:iText i-uniforms)) (:unit (:iText i-uniforms)))
     (get-textures locals :iText i-uniforms)
     (doseq [x (keys i-dataArrays)]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:datavec (x i-dataArrays)) (:buffer (x i-dataArrays))))
-
     (doseq [x (keys i-floats)]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:data (x i-floats)) ))
-
     (doseq [x i-channels]
       ((:gltype (x i-uniforms)) (:loc (x i-uniforms)) (:unit (x i-uniforms)))
       (get-textures locals x i-uniforms))
-
     (doseq [mesh-data (vals buffer-objects)]
       (let  [mesh-vao-id         (:vao-id mesh-data)
              mesh-vbo-id         (:vbo-id mesh-data)
@@ -639,7 +558,7 @@
              mesh-vbot-id        (:vbot-id mesh-data)
              mesh-vbon-id        (:vbon-id mesh-data)
              mesh-indices-count  (:indices-count mesh-data)]
-        ((:gltype (:iMeshID i-uniforms)) (:loc (:iMeshID i-uniforms)) mesh-vao-id)
+        ((:gltype (:iMeshID i-uniforms)) (:loc (:iMeshID i-uniforms)) @mesh-index)
         ;(println mesh-vao-id)
         (GL30/glBindVertexArray mesh-vao-id)
         (GL20/glEnableVertexAttribArray 0)
@@ -658,32 +577,8 @@
         (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER mesh-vbon-id)
         (GL20/glVertexAttribPointer 4 3 GL11/GL_FLOAT false 0 0);
         (GL11/glDrawElements  GL11/GL_TRIANGLES mesh-indices-count GL11/GL_UNSIGNED_INT 0)
-        ))
-    ;; (GL30/glBindVertexArray (:vao-id @locals))
-    ;; (GL20/glEnableVertexAttribArray 0)
-    ;; (GL20/glEnableVertexAttribArray 1)
-    ;; (GL20/glEnableVertexAttribArray 2)
-    ;; (GL20/glEnableVertexAttribArray 3)
-    ;; (GL20/glEnableVertexAttribArray 4)
-    ;;                                     ;Vertices
-    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-id)
-    ;; (GL20/glVertexAttribPointer 0 3 GL11/GL_FLOAT false 0 0);
-    ;;                                     ;Colors
-    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vboc-id)
-    ;; (GL20/glVertexAttribPointer 1 3 GL11/GL_FLOAT false 0 0);
-    ;;                                     ;Indices
-    ;; (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
-    ;; (GL20/glVertexAttribPointer 2 1 GL11/GL_INT false 0 0);
-    ;;                                     ;Texture coordinates
-    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbot-id)
-    ;; (GL20/glVertexAttribPointer 3 2 GL11/GL_FLOAT false 0 0);
-    ;;                                     ;Normal
-    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbon-id)
-    ;; (GL20/glVertexAttribPointer 4 3 GL11/GL_FLOAT false 0 0);
-    ;; (except-gl-errors "@ draw prior to DrawArrays")
-    ;; ;; Draw the vertices
-    ;; (GL11/glDrawElements  GL11/GL_TRIANGLES indices-count GL11/GL_UNSIGNED_INT 0)
-    ;;(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+        )
+      (swap! mesh-index inc))
     (except-gl-errors "@ draw after DrawArrays")
     ;;Copying the previous image to its own texture
     (GL11/glBindTexture GL11/GL_TEXTURE_2D (:tex-id (:iPreviousFrame i-textures)))
@@ -746,19 +641,19 @@
     (GL20/glDeleteShader vs-id)
     (GL20/glDeleteShader fs-id)
     (GL20/glDeleteProgram pgm-id)
-    ;; Select the VAO
-    (GL30/glBindVertexArray vao-id)
-    (GL20/glDisableVertexAttribArray 0)
-    (GL20/glDisableVertexAttribArray 1)
-    (GL20/glDisableVertexAttribArray 2)
-    (GL20/glDisableVertexAttribArray 3)
-    (GL20/glDisableVertexAttribArray 4)
-    ;; Delete the vertex VBO
-    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-    (GL15/glDeleteBuffers ^Integer vbo-id)
-    ;; Delete the VAO
-    (GL30/glBindVertexArray 0)
-    (GL30/glDeleteVertexArrays vao-id)
+    ;; ;; Select the VAO
+    ;; (GL30/glBindVertexArray vao-id)
+    ;; (GL20/glDisableVertexAttribArray 0)
+    ;; (GL20/glDisableVertexAttribArray 1)
+    ;; (GL20/glDisableVertexAttribArray 2)
+    ;; (GL20/glDisableVertexAttribArray 3)
+    ;; (GL20/glDisableVertexAttribArray 4)
+    ;; ;; Delete the vertex VBO
+    ;; (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+    ;; (GL15/glDeleteBuffers ^Integer vbo-id)
+    ;; ;; Delete the VAO
+    ;; (GL30/glBindVertexArray 0)
+    ;; (GL30/glDeleteVertexArrays vao-id)
     ;; Delete pbo
     (GL15/glBindBuffer GL21/GL_PIXEL_PACK_BUFFER  (first outputPBOs))
     (GL15/glUnmapBuffer  GL21/GL_PIXEL_PACK_BUFFER)
