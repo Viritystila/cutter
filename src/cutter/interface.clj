@@ -135,6 +135,11 @@
   (cutter.texturearray/stop-buffer buffername)
   (cutter.cutter/set-clear buffername))
 
+(defn dab []
+  (let [bks  (mapv name (keys (:texture-arrays @cutter.cutter/the-window-state)))]
+    (doseq [x bks]
+      (d-buf x))))
+
 ;;;;;;;;;;
 ;;;V4l2;;;
 ;;;;;;;;;;
@@ -501,8 +506,12 @@
     ;(println  vs-shader-filename-or-str-atom )
     (cutter.camera/stop-all-cameras)
     (cutter.video/stop-all-videos)
-    (cutter.texturearray/stop-all-buffers)
+    (dab)
+    (while (not (nil? (keys (:texture-arrays @the-window-state))))
+      (Thread/sleep 100))
+    ;;(cutter.texturearray/stop-all-buffers)
     (cutter.cutter_helper/toggle-recording nil)
+    ;;(dab)
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom  title false display-sync-hz window-idx)))
 
 (defn start-cutter-fullscreen
@@ -523,6 +532,9 @@
     (cutter.video/stop-all-videos)
     (cutter.texturearray/stop-all-buffers)
     (cutter.cutter_helper/toggle-recording nil)
+    (dab)
+    (while (not (nil? (keys (:texture-arrays @the-window-state))))
+      (Thread/sleep 100))
     (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
 
 (defn stop-cutter
@@ -533,6 +545,9 @@
     (cutter.video/stop-all-videos)
     (cutter.texturearray/stop-all-buffers)
     (cutter.cutter_helper/toggle-recording nil)
+    (dab)
+    (while (not (nil? (keys (:texture-arrays @the-window-state))))
+      (Thread/sleep 100))
     (swap! the-window-state assoc :active :stopping)
     (while (not (inactive?))
       (Thread/sleep 200)))
@@ -545,10 +560,13 @@
 
 (defn rfs []  (overtone.osc/osc-close (:osc-server @cutter.cutter/the-window-state))
               (overtone.osc/osc-close (:osc-client @cutter.cutter/the-window-state))
-              (stop-cutter)
-              (cutter.texturearray/stop-all-buffers)
-              (cutter.camera/stop-all-cameras)
-              (cutter.video/stop-all-videos)
+  (stop-cutter)
+  (cutter.texturearray/stop-all-buffers)
+  (cutter.camera/stop-all-cameras)
+  (cutter.video/stop-all-videos)
+  (dab)
+  (while (not (nil? (keys (:texture-arrays @the-window-state))))
+      (Thread/sleep 100))
               (refresh))
 
 
