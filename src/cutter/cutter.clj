@@ -743,9 +743,28 @@
                     (println "Adding mesh" (first data))
                     (add-mesh (first data) locals))
                   )
+      :del-mesh (if (str (first data))
+                  (let [bd               (first data)
+                        buffer-objects   (:buffer-objects @locals)
+                        bk               (if (keyword? bd) bd (keyword bd))
+                        buffer-objects   (dissoc buffer-objects bk)]
+                        (swap! locals assoc :buffer-objects buffer-objects)))
       (println "Not a valid request type"))))
 
 ;;  (clojure.core.async/>!! (:request-queue @the-window-state) {:type :add-mesh :destination :iChannel1 :buf-name "nul" :data ["resources/sphere.dae"]})
+
+(defn request-mesh [path]
+  (let [fe   (.exists (clojure.java.io/file path))]
+    (if fe
+      (clojure.core.async/>!! (:request-queue @the-window-state) {:type :add-mesh :destination :iChannelNull :buf-name "null" :data [path]})
+      (println "File does not exist"))
+     ))
+
+(defn remove-mesh [mesh-vao-id]
+  (let []
+     (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del-mesh :destination :iChannelNull :buf-name "null" :data [mesh-vao-id]})))
+
+
 (defn- run-thread
   [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
   (println "init-window")
