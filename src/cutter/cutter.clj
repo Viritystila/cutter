@@ -765,10 +765,6 @@
                               shader-filename-or-str-atom)
         vs-shader-filename  (if is-filename
                               vs-shader-filename-or-str-atom)
-        ;; Fix for issue 15.  Normalize the given shader-filename to the
-        ;; path separators that the system will use.  If user gives path/to/shader.glsl
-        ;; and windows returns this as path\to\shader.glsl from .getPath, this
-        ;; change should make comparison to path\to\shader.glsl work.
         shader-filename     (if (and is-filename (not (nil? shader-filename)))
                               (.getPath (File. ^String shader-filename)))
         vs-shader-filename  (if (and vs-is-filename (not (nil? vs-shader-filename)))
@@ -798,9 +794,6 @@
           (swap! vs-watcher-future
                  (fn [x] (vs-start-watcher vs-shader-filename))))
         (add-watch vs-shader-str-atom :vs-shader-str-watch vs-watch-shader-str-atom))
-
-      ;; set a global window-state instead of creating a new one
-                                        ;(reset! the-window-state default-state-values)
       ;; start the requested shader
       (.start (Thread.
                (fn [] (run-thread the-window-state
@@ -813,38 +806,6 @@
                                  true-fullscreen?
                                  display-sync-hz
                                  window-idx)))))))
-
-(defn- start-local
-  "Start a new shader display."
-  [&{:keys [fs vs width height title display-sync-hz fullscreen? window-idx]
-     :or {fs                 (cutter.general/resource-to-temp "default.fs");;(.getPath (clojure.java.io/resource "default.fs"))
-          vs                 (cutter.general/resource-to-temp "default.vs");;(.getPath (clojure.java.io/resource "default.vs"))
-          width             1280
-          height            800
-          title             "cutter"
-          display-sync-hz   30
-          fullscreen?       false
-          window-idx        0}}]
-  (let [mode  [width height]
-        shader-filename-or-str-atom fs
-        vs-shader-filename-or-str-atom vs]
-    (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom  title false display-sync-hz window-idx)))
-
-(defn- start-fullscreen-local
-  "Start a new shader display."
-  [&{:keys [fs vs width height title display-sync-hz  fullscreen? window-idx]
-     :or {fs             (cutter.general/resource-to-temp "default.fs") ;;(.getPath (clojure.java.io/resource "default.fs"))
-          vs             (cutter.general/resource-to-temp "default.vs");;(.getPath (clojure.java.io/resource "default.vs"))
-          width           1280
-          height          800
-          title           "cutter"
-          display-sync-hz 30
-          fullscreen?     true
-          window-idx      0}}]
-  (let [mode  [width height]
-        shader-filename-or-str-atom fs
-        vs-shader-filename-or-str-atom vs]
-    (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;External shader input handling
