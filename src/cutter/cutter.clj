@@ -282,7 +282,7 @@
   ;(println "max veretx atrribs"  (org.lwjgl.opengl.GL11/glGetInteger org.lwjgl.opengl.GL20/GL_MAX_VERTEX_ATTRIBS))
   (let [buffer-objects            (:buffer-objects @locals)
         ;vertices_and_indices     (cutter.cutter/load-plane)
-        meshpaths                 ["resources/plane.dae"]
+        meshpaths                 [ (cutter.general/resource-to-temp "plane.dae")]
         buffer-objects            (into {} (mapv (fn [x]
                                                    (let [md    (cutter.gl_init/init-mesh x)
                                                          mdk   (keyword (str (:vao-id md)))]
@@ -674,8 +674,6 @@
                         (swap! locals assoc :buffer-objects buffer-objects)))
       (println "Not a valid request type"))))
 
-;;  (clojure.core.async/>!! (:request-queue @the-window-state) {:type :add-mesh :destination :iChannel1 :buf-name "nul" :data ["resources/sphere.dae"]})
-
 (defn request-mesh [path]
   (let [fe   (.exists (clojure.java.io/file path))]
     (if fe
@@ -819,8 +817,8 @@
 (defn- start-local
   "Start a new shader display."
   [&{:keys [fs vs width height title display-sync-hz fullscreen? window-idx]
-     :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
-          vs                (.getPath (clojure.java.io/resource "default.vs"))
+     :or {fs                 (cutter.general/resource-to-temp "default.fs");;(.getPath (clojure.java.io/resource "default.fs"))
+          vs                 (cutter.general/resource-to-temp "default.vs");;(.getPath (clojure.java.io/resource "default.vs"))
           width             1280
           height            800
           title             "cutter"
@@ -835,8 +833,8 @@
 (defn- start-fullscreen-local
   "Start a new shader display."
   [&{:keys [fs vs width height title display-sync-hz  fullscreen? window-idx]
-     :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
-          vs                (.getPath (clojure.java.io/resource "default.vs"))
+     :or {fs             (cutter.general/resource-to-temp "default.fs") ;;(.getPath (clojure.java.io/resource "default.fs"))
+          vs             (cutter.general/resource-to-temp "default.vs");;(.getPath (clojure.java.io/resource "default.vs"))
           width           1280
           height          800
           title           "cutter"

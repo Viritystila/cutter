@@ -10,7 +10,15 @@
            ;(org.lwjgl BufferUtils)
            (java.io File FileInputStream)))
 
-;
+(defn resource-to-temp [res]
+  (let  [res-cont     (slurp (clojure.java.io/resource res))
+         split-res    (clojure.string/split res #"[.]")
+         temp-file    (java.io.File/createTempFile
+                       (first split-res) (str "." (last split-res)))
+         temp-path    (.getPath temp-file)]
+    (spit temp-path res-cont)
+    temp-path))
+
 (def not-nil? (complement nil?))
 
 (defn sleepTime

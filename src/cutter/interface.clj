@@ -13,12 +13,14 @@
             [cutter.opencv :refer :all]
             [cutter.cutter_helper :refer :all]
             [cutter.shader :refer :all]
+            [cutter.general :refer :all]
             ; [clojure.core.async
             ;  :as async
             ;  :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
             ;          alts! alts!! timeout]]
             ;clojure.string
             ))
+
 ;;;;;;;;;;;;
 ;;;Camera;;;
 ;;;;;;;;;;;;
@@ -490,8 +492,8 @@
 (defn start-cutter
   "Start a new shader display."
   [&{:keys [fs vs width height title display-sync-hz fullscreen? window-idx]
-     :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
-          vs                (.getPath (clojure.java.io/resource "default.vs"))
+     :or {fs                 (cutter.general/resource-to-temp "default.fs");;(.getPath (clojure.java.io/resource "default.fs"))
+          vs                 (cutter.general/resource-to-temp "default.vs");;(.getPath (clojure.java.io/resource "default.vs"))
           width             1280
           height            800
           title             "cutter"
@@ -517,8 +519,8 @@
 (defn start-cutter-fullscreen
   "Start a new shader display."
   [&{:keys [fs vs width height title display-sync-hz  fullscreen? window-idx]
-     :or {fs                (.getPath (clojure.java.io/resource "default.fs"))
-          vs                (.getPath (clojure.java.io/resource "default.vs"))
+     :or {fs                 (cutter.general/resource-to-temp "default.fs");;(.getPath (clojure.java.io/resource "default.fs"))
+          vs                 (cutter.general/resource-to-temp "default.vs");;(.getPath (clojure.java.io/resource "default.vs"))
           width           1280
           height          800
           title           "cutter"
