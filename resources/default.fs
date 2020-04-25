@@ -47,7 +47,7 @@ void main(void) {
   iChannel2_texture.a= 1;//iChannel2_texture.b;
   iChannel1_texture.a=1;
   vec4 text=texture2D(iText, uv);
-  vec4 array[4]=vec4[4](iChannel3_texture, iChannel1_texture, trns, trns);
+  vec4 array[4]=vec4[4](iChannel1_texture, trns, iChannel2_texture, trns);
   op=array[iMeshID];
   //op =mix(iChannel1_texture+iChannel3_texture, iChannel2_texture+text*100, 0.5);
 }

@@ -115,18 +115,21 @@
         ))
     @b))
 
+
 (defn process-text-coords [aimesh]
-  (let [text-coords     (.mTextureCoords aimesh 0)
-        num-text-coords (if (not (nil? text-coords)) (.remaining text-coords) nil )
-        ai-vertices     (.mVertices aimesh)
-        num-vertices    (.mNumVertices aimesh)
-        b               (atom [])]
-    (if (not (nil? num-text-coords))
-      (while (< 0 (.remaining text-coords))
-        (let [text-coord     (.get text-coords)]
-          (swap! b conj (.x text-coord))
-          (swap! b conj (- 1 (.y text-coord))))))
-     @b))
+  (if (not (nil?  (.mTextureCoords aimesh 0)))
+    (let [text-coords     (.mTextureCoords aimesh 0)
+          num-text-coords (if (not (nil? text-coords)) (.remaining text-coords) nil )
+          ai-vertices     (.mVertices aimesh)
+          num-vertices    (.mNumVertices aimesh)
+          b               (atom [])]
+      (if (not (nil? num-text-coords))
+        (while (< 0 (.remaining text-coords))
+          (let [text-coord     (.get text-coords)]
+            (swap! b conj (.x text-coord))
+            (swap! b conj (- 1 (.y text-coord))))))
+      @b)
+    (do (println "No UV coords")  [])))
 
 (defn process-vertices [aimesh]
   (let [ai-vertices       (.mVertices aimesh)
@@ -149,15 +152,14 @@
 (def ai-flags (bit-or  org.lwjgl.assimp.Assimp/aiProcess_JoinIdenticalVertices
                        org.lwjgl.assimp.Assimp/aiProcess_Triangulate
                        org.lwjgl.assimp.Assimp/aiProcess_GenSmoothNormals
-                       org.lwjgl.assimp.Assimp/aiProcess_FixInfacingNormals
-                       ;;org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices
-                       ;;org.lwjgl.assimp.Assimp/aiProcess_SortByPType
-                       ;;org.lwjgl.assimp.Assimp/aiProcess_FindInvalidData
+                       ;;org.lwjgl.assimp.Assimp/aiProcess_FixInfacingNormals
+                       org.lwjgl.assimp.Assimp/aiProcess_PreTransformVertices
+                       org.lwjgl.assimp.Assimp/aiProcess_SortByPType
+                       org.lwjgl.assimp.Assimp/aiProcess_FindInvalidData
                        org.lwjgl.assimp.Assimp/aiProcess_GenUVCoords
-                       ;;org.lwjgl.assimp.Assimp/aiProcess_FindDegenerates
+                       org.lwjgl.assimp.Assimp/aiProcess_FindDegenerates
                        org.lwjgl.assimp.Assimp/aiProcess_CalcTangentSpace
                        org.lwjgl.assimp.Assimp/aiProcess_OptimizeMeshes
-
                ))
 
 (defn load-mesh [file]
@@ -185,9 +187,6 @@
         indices                   (int-array   (:indices  vertices_and_indices))
         texture-coords            (float-array (:text-coords  vertices_and_indices))
         normal-coords             (float-array (:normals  vertices_and_indices))
-        vertices-buffer           (-> (BufferUtils/createFloatBuffer (count vertices))
-                                      (.put vertices)
-                                      (.flip))
         vertices-count            (count vertices)
         colors-count              (count colors)
         indices-count             (count indices)
@@ -235,9 +234,7 @@
         vboi-id             (GL15/glGenBuffers)
         _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER vboi-id)
         _                   (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
-        _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-
-        ]
+        _                   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)]
     {:path                path
      :vertices            vertices
      :colors              colors
