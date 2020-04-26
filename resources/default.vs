@@ -1,5 +1,3 @@
-
-
 mat4 rotationMatrix(vec3 axis, float angle) {
     axis = normalize(axis);
     float s = sin(angle);
@@ -15,24 +13,37 @@ mat4 rotationMatrix(vec3 axis, float angle) {
 #define PI 3.14159
 out vec2 texCoordV;
 out vec3 Normal;
-
 out VertexData {
-    vec2 texCoordV;
-    vec3 Normal;
-    vec4 vertexPos;
-    int meshIdx;
+    vec4 vertexPosition_modelspace;
+    vec3 colors_modelspace;
+    vec3 index_modelspace;
+    vec2 uv_modelspace;
+    vec3 normals_modelspace;
+    vec4 modelScale;
+    vec4 modelPosition;
+    mat4 modelRotation;
 } VertexOut;
 
+
+
 void main(void) {
+VertexOut.vertexPosition_modelspace=vertexPosition_modelspace;
+VertexOut.colors_modelspace=colors_modelspace;
+VertexOut.index_modelspace=index_modelspace;
+VertexOut.uv_modelspace=uv_modelspace;
+VertexOut.normals_modelspace=normals_modelspace;
+VertexOut.modelScale=modelScale;
+VertexOut.modelPosition=modelPosition;
+VertexOut.modelRotation=modelRotation;
+
   vec4 _vertex=vertexPosition_modelspace;
   float rad=texture2D(iChannel2, uv_modelspace).b;
   rad=rad;//*rad*rad;
- 
- 
+
+
   texCoordV=uv_modelspace;
   texCoordV.y=1.0- texCoordV.y;
-  VertexOut.texCoordV=texCoordV;
-  VertexOut.meshIdx=iMeshID;
+  VertexOut.uv_modelspace=texCoordV;
   vec4 iChannel1_texture=texture2D(iChannel1, texCoordV);
   Normal=normals_modelspace;
   float time = iGlobalTime + 20.0;
@@ -56,7 +67,7 @@ void main(void) {
   norm.xz *= mat2(cos(time),sin(time),-sin(time),cos(time));
   norm.yz *= mat2(cos(time),sin(time),-sin(time),cos(time));
   vec4 sp=vec4(pos.x,pos.y, pos.z, 1);
-  vec4 scales[4]=vec4[4](vec4(21,20,1,1),
+  vec4 scales[4]=vec4[4](vec4(21,21,0,1),
                          vec4(1,1,1,2),
                          vec4(1,1,1,1),
                           vec4(1,1,1,1));
