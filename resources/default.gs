@@ -24,13 +24,20 @@ out VertexData {
 
  void main()
 {
-    vec4 shift[2]=vec4[2](vec4(0,0,0,0),vec4(0,0,0,0));
+
+
+
+
 
     for(int i = 0; i < gl_in.length(); i++)
   {
+
+    vec4 shift[2]=vec4[2](vec4(VertexIn[i].normals_modelspace,0),
+                          vec4(VertexIn[i].normals_modelspace,0));
+
     vec4 sh=shift[iMeshID];
      // copy attributes
-    gl_Position = gl_in[i].gl_Position+sh;
+    gl_Position = gl_in[i].gl_Position;
     VertexOut.Normal = VertexIn[i].normals_modelspace;
     VertexOut.texCoordV = VertexIn[i].uv_modelspace;
     texCoordV=VertexIn[i].uv_modelspace;
@@ -38,5 +45,7 @@ out VertexData {
    EmitVertex();
   }
   EndPrimitive();
+
+
 
 }
