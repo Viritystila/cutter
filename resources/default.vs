@@ -19,6 +19,8 @@ out vec3 Normal;
 out VertexData {
     vec2 texCoordV;
     vec3 Normal;
+    vec4 vertexPos;
+    int meshIdx;
 } VertexOut;
 
 void main(void) {
@@ -30,6 +32,7 @@ void main(void) {
   texCoordV=uv_modelspace;
   texCoordV.y=1.0- texCoordV.y;
   VertexOut.texCoordV=texCoordV;
+  VertexOut.meshIdx=iMeshID;
   vec4 iChannel1_texture=texture2D(iChannel1, texCoordV);
   Normal=normals_modelspace;
   float time = iGlobalTime + 20.0;
