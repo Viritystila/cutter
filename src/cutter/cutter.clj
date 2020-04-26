@@ -63,6 +63,10 @@
    :vs-shader-filename         nil
    :vs-shader-str-atom         (atom nil)
    :vs-shader-str               ""
+   :gs-shader-good             true ;; false in error condition
+   :gs-shader-filename         nil
+   :gs-shader-str-atom         (atom nil)
+   :gs-shader-str               ""
    :vs-id                      0
    :fs-id                      0
    :gs-id                      0
@@ -70,8 +74,10 @@
    :pgm-id                     0
    :temp-fs-string             ""
    :temp-vs-string             ""
+   :temp-gs-string             ""
    :temp-fs-filename           ""
    :temp-vs-filename           ""
+   :temp-gs-filename           ""
    ;; Textures, cameras and video paths
    :maximum-textures           1000
    :maximum-texture-folders    1000
@@ -216,6 +222,8 @@
    shader-str-atom
    vs-shader-filename
    vs-shader-str-atom
+   gs-shader-filename
+   gs-shader-str-atom
    true-fullscreen?
    display-sync-hz
    window-idx]
@@ -228,10 +236,13 @@
         height              (nth display-mode 1)
         shader-str          (if (nil? shader-filename)
                               @shader-str-atom
-                              (slurp-fs locals shader-filename))
+                              (slurp-fs locals shader-filename :fs))
         vs-shader-str       (if (nil? vs-shader-filename)
                               @vs-shader-str-atom
-                              (slurp-fs locals  vs-shader-filename))]
+                              (slurp-fs locals  vs-shader-filename :vs))
+        gs-shader-str       (if (nil? gs-shader-filename)
+                              @gs-shader-str-atom
+                              (slurp-fs locals  gs-shader-filename :gs))]
     (swap! locals
            assoc
            :active                :yes
@@ -245,8 +256,11 @@
            :shader-str-atom       shader-str-atom
            :vs-shader-filename    vs-shader-filename
            :vs-shader-str-atom    vs-shader-str-atom
+           :gs-shader-filename    gs-shader-filename
+           :gs-shader-str-atom    gs-shader-str-atom
            :shader-str            shader-str
-           :vs-shader-str         vs-shader-str)
+           :vs-shader-str         vs-shader-str
+           :gs-shader-str         gs-shader-str)
     (if true-fullscreen? (fullscreen-display!) (undecorate-display!) )
     (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE    org.lwjgl.glfw.GLFW/GLFW_OPENGL_CORE_PROFILE)
     (org.lwjgl.glfw.GLFW/glfwWindowHint org.lwjgl.glfw.GLFW/GLFW_OPENGL_FORWARD_COMPAT  org.lwjgl.glfw.GLFW/GLFW_FALSE)
@@ -529,9 +543,12 @@
     (swap! locals
            assoc
            :last-time cur-time)
-    (if (and (:shader-good @locals) (:vs-shader-good @locals))
+    (if (and
+         (:shader-good @locals)
+         (:vs-shader-good @locals)
+         (:gs-shader-good @locals))
       (do
-        (if (or @reload-shader @vs-reload-shader)
+        (if (or @reload-shader @vs-reload-shader @gs-reload-shader)
           (try-reload-shader locals)  ; this must call glUseProgram
           (GL20/glUseProgram pgm-id)) ; else, normal path...
         (draw locals))
@@ -687,9 +704,32 @@
 
 
 (defn- run-thread
-  [locals mode shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom title true-fullscreen? display-sync-hz window-idx]
+  [locals
+   mode
+   shader-filename
+   shader-str-atom
+   vs-shader-filename
+   vs-shader-str-atom
+   gs-shader-filename
+   gs-shader-str-atom
+   title
+   true-fullscreen?
+   display-sync-hz
+   window-idx]
   (println "init-window")
-  (init-window locals mode title shader-filename shader-str-atom vs-shader-filename vs-shader-str-atom true-fullscreen? display-sync-hz window-idx)
+  (init-window
+   locals
+   mode
+   title
+   shader-filename
+   shader-str-atom
+   vs-shader-filename
+   vs-shader-str-atom
+   gs-shader-filename
+   gs-shader-str-atom
+   true-fullscreen?
+   display-sync-hz
+   window-idx)
   (println "init-gl")
   (init-gl locals)
   (try-reload-shader locals)
@@ -701,7 +741,6 @@
     ;;(GL20/glEnableVertexAttribArray 2)
     ;;(GL20/glEnableVertexAttribArray 3)
     ;;(GL20/glEnableVertexAttribArray 4)
-
     (while (and (= :yes (:active @locals))
                 (not (org.lwjgl.glfw.GLFW/glfwWindowShouldClose (:window @locals))))
       (reset! startTime (System/nanoTime))
@@ -752,35 +791,54 @@
       (Thread/sleep 200)))
   (remove-watch (:shader-str-atom @the-window-state) :shader-str-watch)
   (remove-watch (:vs-shader-str-atom @the-window-state) :vs-shader-str-watch)
+  (remove-watch (:gs-shader-str-atom @the-window-state) :gs-shader-str-watch)
   (stop-watcher @vs-watcher-future)
+  (stop-watcher @gs-watcher-future)
   (stop-watcher @watcher-future))
 
 (defn start-shader-display
   "Start a new shader display with the specified mode. Prefer start or
    start-fullscreen for simpler usage."
-  [mode shader-filename-or-str-atom  vs-shader-filename-or-str-atom title true-fullscreen? display-sync-hz window-idx]
+  [mode
+   shader-filename-or-str-atom
+   vs-shader-filename-or-str-atom
+   gs-shader-filename-or-str-atom
+   title
+   true-fullscreen?
+   display-sync-hz
+   window-idx]
   (let [is-filename         (not (instance? clojure.lang.Atom shader-filename-or-str-atom))
         vs-is-filename      (not (instance? clojure.lang.Atom vs-shader-filename-or-str-atom))
+        gs-is-filename      (not (instance? clojure.lang.Atom gs-shader-filename-or-str-atom))
         shader-filename     (if is-filename
                               shader-filename-or-str-atom)
         vs-shader-filename  (if is-filename
                               vs-shader-filename-or-str-atom)
-        shader-filename     (if (and is-filename (not (nil? shader-filename)))
-                              (.getPath (File. ^String shader-filename)))
-        vs-shader-filename  (if (and vs-is-filename (not (nil? vs-shader-filename)))
-                              (.getPath (File. ^String vs-shader-filename)))
+        gs-shader-filename  (if is-filename
+                              gs-shader-filename-or-str-atom)
+        shader-filename     (if (and is-filename (not (nil? shader-filename))) (.getPath (File. ^String shader-filename)))
+        vs-shader-filename  (if (and vs-is-filename (not (nil? vs-shader-filename)))(.getPath (File. ^String vs-shader-filename)))
+        gs-shader-filename  (if (and gs-is-filename (not (nil? gs-shader-filename)))(.getPath (File. ^String gs-shader-filename)))
         shader-str-atom     (if-not is-filename
                               shader-filename-or-str-atom
                               (atom nil))
         vs-shader-str-atom  (if-not vs-is-filename
                               vs-shader-filename-or-str-atom
                               (atom nil))
+        gs-shader-str-atom  (if-not gs-is-filename
+                              gs-shader-filename-or-str-atom
+                              (atom nil))
         shader-str          (if-not is-filename
                               @shader-str-atom)
         vs-shader-str       (if-not vs-is-filename
-                              @vs-shader-str-atom)]
-    (when (and (cutter.general/sane-user-inputs shader-filename shader-str)
-               (cutter.general/sane-user-inputs vs-shader-filename vs-shader-str))
+                              @vs-shader-str-atom)
+        gs-shader-str       (if-not gs-is-filename
+                              @gs-shader-str-atom)]
+    (when
+        (and
+         (cutter.general/sane-user-inputs shader-filename shader-str)
+         (cutter.general/sane-user-inputs vs-shader-filename vs-shader-str)
+         (cutter.general/sane-user-inputs gs-shader-filename gs-shader-str))
       ;; stop the current shader
       (stop-cutter-local)
       ;; start the watchers
@@ -790,10 +848,17 @@
                  (fn [x] (start-watcher shader-filename))))
         (add-watch shader-str-atom :shader-str-watch watch-shader-str-atom))
       (if vs-is-filename
-        (when-not (nil? vs-shader-filename)
-          (swap! vs-watcher-future
-                 (fn [x] (vs-start-watcher vs-shader-filename))))
+        (do ;;(println "VSVS")
+          (when-not (nil? vs-shader-filename)
+              (swap! vs-watcher-future
+                     (fn [x] (vs-start-watcher vs-shader-filename)))))
         (add-watch vs-shader-str-atom :vs-shader-str-watch vs-watch-shader-str-atom))
+      (if gs-is-filename
+        (do ;;(println "GSGS")
+          (when-not (nil? gs-shader-filename)
+              (swap! gs-watcher-future
+                     (fn [x] (gs-start-watcher gs-shader-filename)))))
+        (add-watch gs-shader-str-atom :gs-shader-str-watch gs-watch-shader-str-atom))
       ;; start the requested shader
       (.start (Thread.
                (fn [] (run-thread the-window-state
@@ -802,6 +867,8 @@
                                  shader-str-atom
                                  vs-shader-filename
                                  vs-shader-str-atom
+                                 gs-shader-filename
+                                 gs-shader-str-atom
                                  title
                                  true-fullscreen?
                                  display-sync-hz
@@ -811,14 +878,14 @@
 ;;External shader input handling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn set-shader [shader-filename-or-str-atom shader-type]
-  (let [watcher-key                   (case shader-type :fs :shader-str-watch :vs :vs-shader-str-watch)
-        watcher-future-atom           (case shader-type :fs watcher-future :vs vs-watcher-future)
-        shader-str-atom-key           (case shader-type :fs :shader-str-atom :vs :vs-shader-str-atom)
-        shader-str-key                (case shader-type :fs :shader-str :vs :vs-shader-str)
-        watch-shader-str-atom-fn      (case shader-type :fs watch-shader-str-atom :vs vs-watch-shader-str-atom)
-        start-watcher-fn              (case shader-type :fs start-watcher :vs vs-start-watcher)
-        shader-filename-key           (case shader-type :fs :shader-filename :vs :vs-shader-filename)
-        reload-shader-atom            (case shader-type :fs reload-shader :vs vs-reload-shader)
+  (let [watcher-key                   (case shader-type :fs :shader-str-watch :vs :vs-shader-str-watch :gs :gs-shader-str-watch)
+        watcher-future-atom           (case shader-type :fs watcher-future :vs vs-watcher-future :gs gs-watcher-future)
+        shader-str-atom-key           (case shader-type :fs :shader-str-atom :vs :vs-shader-str-atom :gs :gs-shader-str-atom)
+        shader-str-key                (case shader-type :fs :shader-str :vs :vs-shader-str :gs :gs-shader-str)
+        watch-shader-str-atom-fn      (case shader-type :fs watch-shader-str-atom :vs vs-watch-shader-str-atom :gs gs-watch-shader-str-atom)
+        start-watcher-fn              (case shader-type :fs start-watcher :vs vs-start-watcher :gs gs-start-watcher)
+        shader-filename-key           (case shader-type :fs :shader-filename :vs :vs-shader-filename :gs :gs-shader-filename)
+        reload-shader-atom            (case shader-type :fs reload-shader :vs vs-reload-shader :gs gs-reload-shader)
         is-filename                   (not (instance? clojure.lang.Atom shader-filename-or-str-atom))
         shader-filename               (if is-filename shader-filename-or-str-atom)
         shader-filename               (if (and is-filename (not (nil? shader-filename)))
@@ -847,13 +914,13 @@
       (println "Setting shader failed"))) nil)
 
 (defn reset-temp-string [shader-type]
-  (let [temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string)]
+  (let [temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string :gs :temp-gs-string)]
     (swap! cutter.cutter/the-window-state
            assoc
            temp-shader-key "")) nil)
 
 (defn apped-to-temp-string [input shader-type]
-  (let [temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string)
+  (let [temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string :gs :temp-gs-string)
         temp-shader-string  (temp-shader-key @cutter.cutter/the-window-state)]
     (swap! cutter.cutter/the-window-state
            assoc
@@ -861,7 +928,7 @@
 
 (defn create-temp-shader-file [filename shader-type]
   (let [fd                        (java.io.File/createTempFile filename nil)
-        temp-shader-filename-key  (case shader-type :fs :temp-fs-filename :vs :temp-vs-filename)]
+        temp-shader-filename-key  (case shader-type :fs :temp-fs-filename :vs :temp-vs-filename :gs :temp-gs-filename)]
     (swap! cutter.cutter/the-window-state
            assoc
            temp-shader-filename-key (.getPath fd))
@@ -877,8 +944,7 @@
 (defn save-temp-shader [filename shader-type]
   (let [fd                  (create-temp-shader-file filename shader-type)
         path                (.getPath fd)
-        temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string)
+        temp-shader-key     (case shader-type :fs :temp-fs-string :vs :temp-vs-string :gs :temp-gs-string)
         temp-shader-string  (temp-shader-key @cutter.cutter/the-window-state)
         split-string        (clojure.string/split-lines temp-shader-string)]
-                                        ;(println split-string)
     (write-file path split-string )))

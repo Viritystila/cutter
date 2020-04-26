@@ -13,13 +13,7 @@
             [cutter.opencv :refer :all]
             [cutter.cutter_helper :refer :all]
             [cutter.shader :refer :all]
-            [cutter.general :refer :all]
-            ; [clojure.core.async
-            ;  :as async
-            ;  :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
-            ;          alts! alts!! timeout]]
-            ;clojure.string
-            ))
+            [cutter.general :refer :all] ))
 
 ;;;;;;;;;;;;
 ;;;Camera;;;
@@ -487,22 +481,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;Stopping and Starting Cutter;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 (defn start-cutter
   "Start a new shader display."
-  [&{:keys [fs vs width height title display-sync-hz fullscreen? window-idx]
-     :or {fs                 (cutter.general/resource-to-temp "default.fs");;(.getPath (clojure.java.io/resource "default.fs"))
-          vs                 (cutter.general/resource-to-temp "default.vs");;(.getPath (clojure.java.io/resource "default.vs"))
-          width             1280
-          height            800
-          title             "cutter"
-          display-sync-hz   30
-          fullscreen?       false
-          window-idx        0}}]
+  [&{:keys [fs vs gs width height title display-sync-hz fullscreen? window-idx]
+     :or {fs              (cutter.general/resource-to-temp "default.fs")
+          vs              (cutter.general/resource-to-temp "default.vs")
+          gs              (cutter.general/resource-to-temp "default.gs")
+          width           1280
+          height          800
+          title           "cutter"
+          display-sync-hz 30
+          fullscreen?     false
+          window-idx      0}}]
   (let [mode  [width height]
         shader-filename-or-str-atom fs
-        vs-shader-filename-or-str-atom vs]
+        vs-shader-filename-or-str-atom vs
+        gs-shader-filename-or-str-atom gs]
     ;(println fs vs)
     ;(println  shader-filename-or-str-atom)
     ;(println  vs-shader-filename-or-str-atom )
@@ -514,13 +508,22 @@
     ;;(cutter.texturearray/stop-all-buffers)
     (cutter.cutter_helper/toggle-recording nil)
     ;;(dab)
-    (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom  title false display-sync-hz window-idx)))
+    (start-shader-display
+     mode
+     shader-filename-or-str-atom
+     vs-shader-filename-or-str-atom
+     gs-shader-filename-or-str-atom
+     title
+     false
+     display-sync-hz
+     window-idx)))
 
 (defn start-cutter-fullscreen
   "Start a new shader display."
-  [&{:keys [fs vs width height title display-sync-hz  fullscreen? window-idx]
-     :or {fs                 (cutter.general/resource-to-temp "default.fs");;(.getPath (clojure.java.io/resource "default.fs"))
-          vs                 (cutter.general/resource-to-temp "default.vs");;(.getPath (clojure.java.io/resource "default.vs"))
+  [&{:keys [fs vs gs width height title display-sync-hz  fullscreen? window-idx]
+     :or {fs              (cutter.general/resource-to-temp "default.fs")
+          vs              (cutter.general/resource-to-temp "default.vs")
+          gs              (cutter.general/resource-to-temp "default.gs")
           width           1280
           height          800
           title           "cutter"
@@ -529,7 +532,8 @@
           window-idx      0}}]
   (let [mode  [width height]
         shader-filename-or-str-atom fs
-        vs-shader-filename-or-str-atom vs]
+        vs-shader-filename-or-str-atom vs
+        gs-shader-filename-or-str-atom gs]
     (cutter.camera/stop-all-cameras)
     (cutter.video/stop-all-videos)
     (cutter.texturearray/stop-all-buffers)
@@ -537,7 +541,15 @@
     (dab)
     (while (not (nil? (keys (:texture-arrays @the-window-state))))
       (Thread/sleep 100))
-    (start-shader-display mode shader-filename-or-str-atom vs-shader-filename-or-str-atom title true display-sync-hz window-idx)))
+    (start-shader-display
+     mode
+     shader-filename-or-str-atom
+     vs-shader-filename-or-str-atom
+     gs-shader-filename-or-str-atom
+     title
+     true
+     display-sync-hz
+     window-idx)))
 
 (defn stop-cutter
   "Stop and destroy the shader display. Blocks until completed."

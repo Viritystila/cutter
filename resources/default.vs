@@ -1,12 +1,3 @@
-layout(location = 0) in vec4 vertexPosition_modelspace;
-layout(location = 1) in vec3 colors_modelspace;
-layout(location = 2) in vec3 index_modelspace;
-layout(location = 3) in vec2 uv_modelspace;
-layout(location = 4) in vec3 normals_modelspace;
-layout(location = 5) in vec4 modelScale;
-layout(location = 6) in vec4 modelPosition;
-layout(location = 7) in mat4 modelRotation;
-
 
 
 mat4 rotationMatrix(vec3 axis, float angle) {
@@ -24,18 +15,21 @@ mat4 rotationMatrix(vec3 axis, float angle) {
 #define PI 3.14159
 out vec2 texCoordV;
 out vec3 Normal;
+
+out VertexData {
+    vec2 texCoordV;
+    vec3 Normal;
+} VertexOut;
+
 void main(void) {
   vec4 _vertex=vertexPosition_modelspace;
   float rad=texture2D(iChannel2, uv_modelspace).b;
   rad=rad;//*rad*rad;
-
-  //_vertex.x= _vertex.x+rad;
-  //_vertex.y= _vertex.y+rad*rad;
-  //_vertex.z= _vertex.z+rad*rad;
-
-
+ 
+ 
   texCoordV=uv_modelspace;
   texCoordV.y=1.0- texCoordV.y;
+  VertexOut.texCoordV=texCoordV;
   vec4 iChannel1_texture=texture2D(iChannel1, texCoordV);
   Normal=normals_modelspace;
   float time = iGlobalTime + 20.0;

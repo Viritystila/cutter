@@ -2,6 +2,10 @@ out vec4 op;
 in vec2 texCoordV;
 in vec3 Normal;
 
+in VertexData {
+    vec2 texCoordV;
+    vec3 Normal;
+} VertexIn[3];
 
 vec4 colorRemoval(vec4 fg, vec4 bg, float th, float mod1, float r, float g, float b){
   vec3 color_diff = fg.rgb - vec3(r, g, b);
@@ -28,13 +32,13 @@ vec4 colorToAlpha(vec4 fg,  float th, float mod1, float r, float g, float b){
   return fg;
 
 }
-
+ 
 
 void main(void) {
   vec3 norm=normalize(Normal);
   vec2 uv = (gl_FragCoord.xy / iResolution.xy);
   uv.y=-1.0-uv.y;
-
+  //VertexIn[0].texCoordV;
 
   vec4 iChannel1_texture=texture2D(iChannel1, texCoordV);
   iChannel1_texture.a=0.001;
