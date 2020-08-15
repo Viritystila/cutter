@@ -1,13 +1,13 @@
-
-#OpenCV 4.2
+cmake -DBUILD_SHARED_LIBS=OFF -DBUILD_JASPER=OFF -DWITH_JASPER=OFF -DBUILD_opencv_python2=OFF -DHAVE_opencv_python2=OFF .
+#OpenCV 4.4
 # or on linux
 mkdir -p native/linux/x86_64
-cp ./lib/libopencv_java420.so native/linux/x86_64/
+cp ./lib/libopencv_java440.so native/linux/x86_64/
 jar -cMf opencv-native-linux.jar native
 
-mvn install:install-file -DgroupId=org.viritystila -DartifactId=opencv -Dversion=4.2.0-linux -Dfile=opencv-420.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/OpenCV/  -DcreateChecksum=true
+mvn install:install-file -DgroupId=org.viritystila -DartifactId=opencv -Dversion=4.4.0-linux -Dfile=opencv-440.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/OpenCV/  -DcreateChecksum=true
 
-mvn install:install-file -DgroupId=org.viritystila -DartifactId=opencv-native -Dversion=4.2.0-linux -Dfile=opencv-native-linux.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/OpenCV/  -DcreateChecksum=true
+mvn install:install-file -DgroupId=org.viritystila -DartifactId=opencv-native -Dversion=4.4.0-linux -Dfile=opencv-native-linux.jar -Dpackaging=jar -DgeneratePom=true -DlocalRepositoryPath=/home/mikael/Viritystila/OpenCV/  -DcreateChecksum=true
 
 
 #javacpp

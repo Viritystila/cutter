@@ -2,7 +2,7 @@ Cutter v4l2 video related commands
 
 
 #V4L2 loopback:
-sudo modprobe v4l2loopback devices=5
+sudo modprobe v4l2loopback devices=5 exclusive_caps=1
 
 //Terminal output to v4l2 loopback
 
@@ -12,33 +12,13 @@ v4l2loopback-ctl set-fps 1 /dev/video3
 
 kitty/launcher/kitty --v4l2_res 3200x1800 --v4l2_dev /dev/video3
 
-(Reduce FPS in the reading pgroam, othersie the CPU consumption wil be high at high resolutions)
+(Reduce FPS in the reading program, otherwise the CPU consumption wil be high at high resolutions)
 
-sudo rmmod v4l2loopback
 
 sudo v4l2loopback-ctl set-caps "video/x-raw,format=RGB,width=1280,height=800" /dev/video4
 
 v4l2loopback-ctl set-fps 30 /dev/video4
 
-#Term to svg:
-
-termtosvg -g 130x32 -v4l2 /dev/video2  (960 540 video for terminal v4l2 loopback)
-
-#GST record:
-gst-launch-1.0 jackaudiosrc ! audioconvert ! pulsesink
-
-gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw,format=RGB,width=1920,height=1080,framerate=25/1 ! videoconvert ! videoflip method=vertical-flip !  jpegenc ! avimux ! filesink location=test.avi
-
-gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw,format=RGB,width=3200,height=1800,framerate=30/1 ! xvimagesink
-
-mpv test.avi -o s1.mp4 --vf=fps=25
-
-#FFMPEG captrue and video preparation
-
-H264_mp4 is a well tested vidoe format.
-
-Prepare video:
-ffmpeg -err_detect ignore_err -i video.mp4 -c copy video_fixed.mp4
 
 Enable hardware decodng on Nvidia (with this more than three four videos cause a crash. Starting videos after startup is also error prone):
 

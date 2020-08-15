@@ -336,7 +336,7 @@
     (GL11/glDepthFunc GL11/GL_LESS)
     (GL11/glEnable GL11/GL_BLEND)
     (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
-    ;;(GL11/glEnable GL11/GL_CULL_FACE)
+    (GL11/glEnable GL11/GL_CULL_FACE)
     (init-buffers locals)
     (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iPreviousFrame width height))
     (swap! locals assoc :i-textures (cutter.gl_init/initialize-texture locals :iText width height))
