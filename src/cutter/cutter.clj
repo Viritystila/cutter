@@ -894,7 +894,7 @@
         shader-str                    (if-not is-filename @shader-str-atom)
         shader-str                    (if (nil? shader-filename)
                                         @shader-str-atom
-                                        (slurp-fs cutter.cutter/the-window-state shader-filename))]
+                                        (slurp-fs cutter.cutter/the-window-state shader-filename shader-type))]
     (if is-filename
       (do
         (remove-watch (shader-str-atom-key @cutter.cutter/the-window-state) watcher-key)
