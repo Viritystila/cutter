@@ -74,7 +74,8 @@
                                                   :fw (if loop? (mod (max index start-index) (min stop-index buffer-length))
                                                         (min index (min stop-index (- buffer-length 1))))
                                                   :bw (if loop? (mod (min index stop-index) (min stop-index buffer-length))
-                                                    (max index (min start-index buffer-length))))]
+                                                          (max index (min start-index buffer-length)))
+                                                  :idx index)]
                       (reset! startTime (System/nanoTime))
                       (reset! internal-index cur-index)
                       ;;(println cur-index)
@@ -85,7 +86,7 @@
                       (case mode
                         :fw  (do (swap! internal-index inc))
                         :bw  (do (swap! internal-index dec))
-                        :idx (reset! index (:index (buffername-key texture-arrays)) ))
+                        :idx (reset! internal-index (:index (buffername-key texture-arrays)) ))
                       (swap! cutter.cutter/the-window-state assoc :texture-arrays
                         (assoc texture-arrays buffername-key (assoc texture-array
                                                               :fps fps
