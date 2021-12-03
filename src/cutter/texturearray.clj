@@ -32,6 +32,10 @@
         pbo_ids                  (:pbo_ids texture-array)
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination-texture-key i-textures)
+        texture                  (assoc texture :input-name buffername-key)
+        texture                  (assoc texture :input-type :buffer)
+        _                        (swap! cutter.cutter/the-window-state assoc :i-textures
+                                    (assoc i-textures destination-texture-key texture))
         queue                    (:queue texture)
         buffer-length            (count source)
         texture-array            (assoc texture-array

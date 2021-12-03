@@ -47,6 +47,12 @@
         capture                   (:source video)
         running?                  (:running video)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
+        i-textures               (:i-textures @cutter.cutter/the-window-state)
+        texture                   (destination-texture-key i-textures)
+        texture                   (assoc texture :input-name video-key)
+        texture                   (assoc texture :input-type :video)
+        _                         (swap! cutter.cutter/the-window-state assoc :i-textures
+                                    (assoc i-textures destination-texture-key texture))
         mat                       (:mat (destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
         index                     (if (nil? (:index video)) 0 (:index video))
         start-index               (if (nil? (:start-index video)) 0  (:start-index video))
@@ -201,6 +207,10 @@
         old-pbo-ids              (if (nil? old-pbo-ids) [] old-pbo-ids)
         i-textures               (:i-textures @cutter.cutter/the-window-state)
         texture                  (destination i-textures)
+        texture                  (assoc texture :input-name buffername-key)
+        texture                  (assoc texture :input-type :buffer)
+        _                        (swap! cutter.cutter/the-window-state assoc :i-textures
+                                    (assoc i-textures destination texture))
         queue                    (:queue texture)
         mlt                      (:mult texture)
         req                      (:req texture)

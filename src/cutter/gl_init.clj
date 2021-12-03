@@ -19,7 +19,7 @@
 ;;Single texture OpenGL initialize;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn init-texture
-  [width height target tex-id queue out1 mlt req pbo]
+  [width height target tex-id queue out1 mlt req pbo input-name input-type]
   (let [target              target
         tex-id              tex-id
         mat                 (org.opencv.core.Mat/zeros height width org.opencv.core.CvType/CV_8UC3)
@@ -56,7 +56,9 @@
                              :out1             out1
                              :req              req
                              :pbo              pbo
-                             :gl_buffer        gl_buffer}]
+                             :gl_buffer        gl_buffer,
+                             :input-name input-name,
+                             :input-type input-type}]
     (GL11/glBindTexture target tex-id)
     (GL11/glTexParameteri target GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri target GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
@@ -82,7 +84,9 @@
                                                                out1
                                                                mlt
                                                                req
-                                                               pbo))]
+                                                               pbo
+                                                               ""
+                                                               ""))]
     i-textures))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -148,7 +148,9 @@
                         :out1 0,
                         :req  0,
                         :pbo -1,
-                        :gl_buffer -1}
+                        :gl_buffer -1,
+                        :input-name "",
+                        :input-type ""}
         unit_no        (atom 2)]
     (doseq [x (keys all-specified)]
       (case x
@@ -380,6 +382,8 @@
        queue               (:queue texture)
        pbo                 (:pbo texture)
        gl_buffer           (:gl_buffer texture)
+       input-name          (:input-name texture)
+       input-type          (:input-type texture)
        height              height ;(nth image 4)
        width               width ;(nth image 5)
        image-bytes         image-bytes; (nth image 6)
@@ -397,12 +401,14 @@
               req                 (:req texture)
               pbo                 (:pbo texture)
               gl_buffer           (:gl_buffer texture)
+              input-name          (:input-name texture)
+              input-type          (:input-type texture)
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER pbo)
               _                   (GL15/glUnmapBuffer  GL21/GL_PIXEL_UNPACK_BUFFER)
               _                   (GL15/glBindBuffer GL21/GL_PIXEL_UNPACK_BUFFER 0)
               _                   (GL30/glDeleteBuffers pbo)
               pbo                 (GL15/glGenBuffers)
-              texture     (init-texture width height target tex-id queue out1 mlt req pbo)
+              texture     (init-texture width height target tex-id queue out1 mlt req pbo input-name input-type)
               texture     (assoc texture :init-opengl false)
               i-textures  (assoc i-textures texture-key texture)]
           (swap! locals assoc :i-textures i-textures)))
