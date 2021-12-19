@@ -15,11 +15,46 @@
             [cutter.shader :refer :all]
             [cutter.general :refer :all] ))
 
+
+
+(defn stopper-run [type destination-texture-key]
+  (let [item                     (type  @cutter.cutter/the-window-state)
+        item-keys                (keys item)
+        running-keys             (into {} (map (fn [x]  {x (:running (x item))}) item-keys))
+        destination-keys         (into {} (map (fn [x]  {x (:destination (x item))}) item-keys))]
+   (if true
+      (do (println "stop item running on " destination-texture-key)
+          (mapv (fn [x] (let [running (x running-keys)
+                             right-channel (= destination-texture-key (:destination (x item)))]
+                         (println x running right-channel (name x))
+                         (if (and running right-channel)
+                           (case type
+                             :texture-arrays (cutter.texturearray/stop-buffer x)
+                             :videos         (cutter.video/stop-video (name x))
+                             :cameras        (cutter.camera/stop-camera (name x))
+                             nil
+                             ;:textures       (cutter.)
+                             (Thread/sleep 50))
+                           )
+                         )) item-keys)))
+    ))
+
+
+(defn stopper [destination-texture-key]
+  "Stop buffer video, camera or texture on partuclar iChannel when changing to a new one"
+  (let [
+        items                    [:texture-arrays :videos :cameras]
+   ]
+  (mapv (fn [x] (stopper-run x destination-texture-key)) items)
+    )
+  )
+
 ;;;;;;;;;;;;
 ;;;Camera;;;
 ;;;;;;;;;;;;
 (defn cam [device destination-texture-key]
   "Start camera, example (cam \"0\" :iChannel1)"
+  (stopper destination-texture-key)
   (cutter.camera/set-live-camera-texture device destination-texture-key))
 
 (defn stop-cam [device]
@@ -48,6 +83,7 @@
 ;;;;;;;;;;;
 (defn vid [filename destination-texture-key]
   "Start video, example (vid \"./test1.mp4\" :iChannel1)"
+  (stopper destination-texture-key)
   (cutter.video/set-live-video-texture filename destination-texture-key))
 
 (defn stop-vid [filename]
@@ -78,25 +114,11 @@
 ;;;;;;;;;;;;
 ;;;Buffer;;;
 ;;;;;;;;;;;;
+
 (defn buf [buffername destination-texture-key]
   "Play buffer, example (buf \"a \" :iChannel1)"
-  (let [texture-arrays           (:texture-arrays  @cutter.cutter/the-window-state)
-        buffername-key           (keyword buffername)
-        buf-keys                 (keys texture-arrays)
-        running-keys             (into {} (map (fn [x]  {x (:running (x texture-arrays))}) buf-keys))
-        channel-keys             (into {} (map (fn [x]  {x (:destination (x texture-arrays))}) buf-keys)) ]
-    (if true
-      (do (println "stop bufs running on " destination-texture-key)
-          (mapv (fn [x] (let [running (x running-keys)
-                             right-channel (= destination-texture-key (:destination (x texture-arrays)))]
-                         (println x running right-channel)
-                         (if (and running right-channel)
-                           (cutter.texturearray/stop-buffer x)
-                           (Thread/sleep 50)
-                           )
-                        )) buf-keys)))
-    (Thread/sleep 10)
-  (cutter.texturearray/set-buffer-texture buffername destination-texture-key)))
+  (stopper destination-texture-key)
+  (cutter.texturearray/set-buffer-texture buffername destination-texture-key)  )
 
 (defn c-buf [src tgt]
   "Copy buffer, example (c-buf \"a \" \"b \")"
