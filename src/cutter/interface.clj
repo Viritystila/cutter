@@ -80,19 +80,7 @@
 ;;;;;;;;;;;;
 (defn buf [buffername destination-texture-key]
   "Play buffer, example (buf \"a \" :iChannel1)"
-  (let [i-textures               (:i-textures @cutter.cutter/the-window-state)
-        texture                  (destination-texture-key i-textures)
-        input-name               (:input-name texture)
-        input-type               (:input-type texture)]
-        (println (keys texture))
-        (println input-name)
-        (println input-type)
-        
-        (case input-type
-            :buffer (cutter.texturearray/stop-buffer input-name)
-            :video (cutter.video/stop-video (name input-name))
-            :camera (cutter.camera/stop-camera (name input-name))
-            (cutter.texturearray/set-buffer-texture buffername destination-texture-key))))
+  (cutter.texturearray/set-buffer-texture buffername destination-texture-key))
 
 (defn c-buf [src tgt]
   "Copy buffer, example (c-buf \"a \" \"b \")"
