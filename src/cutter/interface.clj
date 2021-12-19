@@ -80,7 +80,23 @@
 ;;;;;;;;;;;;
 (defn buf [buffername destination-texture-key]
   "Play buffer, example (buf \"a \" :iChannel1)"
-  (cutter.texturearray/set-buffer-texture buffername destination-texture-key))
+  (let [texture-arrays           (:texture-arrays  @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        buf-keys                 (keys texture-arrays)
+        running-keys             (into {} (map (fn [x]  {x (:running (x texture-arrays))}) buf-keys))
+        channel-keys             (into {} (map (fn [x]  {x (:destination (x texture-arrays))}) buf-keys)) ]
+    (if true
+      (do (println "stop bufs running on " destination-texture-key)
+          (mapv (fn [x] (let [running (x running-keys)
+                            right-channel (:running (x texture-arrays))]
+                         (println x running right-channel)
+                         (if (and running right-channel)
+                           (cutter.texturearray/stop-buffer x)
+                           (Thread/sleep 50)
+                           )
+                        )) buf-keys)))
+    (Thread/sleep 10)
+  (cutter.texturearray/set-buffer-texture buffername destination-texture-key)))
 
 (defn c-buf [src tgt]
   "Copy buffer, example (c-buf \"a \" \"b \")"
@@ -202,7 +218,7 @@
 (defn get-texture-keys [] (keys (:textures @the-window-state)))
 
 (defn list-texture-arrays [] (println (:texture-arrays @the-window-state)))
-(defn list-texture-array-keys [] (keys (:texture-arrays @the-window-state)))
+(defn list-texture-array-keys [] (keys (:texture-arrays  @cutter.cutter/the-window-state)))
 
 ;;;;;;;;;
 ;;;OSC;;;
