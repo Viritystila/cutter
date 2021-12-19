@@ -23,19 +23,21 @@
         running-keys             (into {} (map (fn [x]  {x (:running (x item))}) item-keys))
         destination-keys         (into {} (map (fn [x]  {x (:destination (x item))}) item-keys))]
    (if true
-      (do (println "stop item running on " destination-texture-key)
+      (do ;(println "stop item running on " destination-texture-key)
           (mapv (fn [x] (let [running (x running-keys)
                              right-channel (= destination-texture-key (:destination (x item)))]
-                         (println x running right-channel (name x))
+                         ;(println x running right-channel (name x))
                          (if (and running right-channel)
-                           (case type
-                             :texture-arrays (cutter.texturearray/stop-buffer x)
-                             :videos         (cutter.video/stop-video x)
-                             :cameras        (cutter.camera/stop-camera (name x))
-                             nil
-                             ;:textures       (cutter.)
-                             (Thread/sleep 50)
-                             )
+                           (do
+                             (println "stop type " type " item "  x " on " destination-texture-key)
+                             (case type
+                               :texture-arrays (cutter.texturearray/stop-buffer x)
+                               :videos         (cutter.video/stop-video x)
+                               :cameras        (cutter.camera/stop-camera (name x))
+                               nil
+                                        ;:textures       (cutter.)
+                               (Thread/sleep 50)
+                               ))
                            )
                          )) item-keys)))
     ))
