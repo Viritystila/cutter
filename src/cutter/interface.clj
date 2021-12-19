@@ -88,7 +88,7 @@
     (if true
       (do (println "stop bufs running on " destination-texture-key)
           (mapv (fn [x] (let [running (x running-keys)
-                            right-channel (:running (x texture-arrays))]
+                             right-channel (= destination-texture-key (:destination (x texture-arrays)))]
                          (println x running right-channel)
                          (if (and running right-channel)
                            (cutter.texturearray/stop-buffer x)
