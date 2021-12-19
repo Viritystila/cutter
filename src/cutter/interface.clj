@@ -15,8 +15,6 @@
             [cutter.shader :refer :all]
             [cutter.general :refer :all] ))
 
-
-
 (defn stopper-run [type destination-texture-key]
   (let [item                     (type  @cutter.cutter/the-window-state)
         item-keys                (keys item)
@@ -41,7 +39,6 @@
                            )
                          )) item-keys)))
     ))
-
 
 (defn stopper [destination-texture-key]
   "Stop buffer video, camera or texture on partuclar iChannel when changing to a new one"
