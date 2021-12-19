@@ -30,11 +30,12 @@
                          (if (and running right-channel)
                            (case type
                              :texture-arrays (cutter.texturearray/stop-buffer x)
-                             :videos         (cutter.video/stop-video (name x))
+                             :videos         (cutter.video/stop-video x)
                              :cameras        (cutter.camera/stop-camera (name x))
                              nil
                              ;:textures       (cutter.)
-                             (Thread/sleep 50))
+                             (Thread/sleep 50)
+                             )
                            )
                          )) item-keys)))
     ))
