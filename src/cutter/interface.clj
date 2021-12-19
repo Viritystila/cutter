@@ -51,7 +51,6 @@
   (mapv (fn [x] (stopper-run x destination-texture-key)) items)
     )
   )
-
 ;;;;;;;;;;;;
 ;;;Camera;;;
 ;;;;;;;;;;;;
