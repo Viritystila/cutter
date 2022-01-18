@@ -44,6 +44,8 @@
         video-key                 (keyword filename)
         videos                    (:videos @cutter.cutter/the-window-state)
         video                     (video-key videos)
+        mode                      (:mode video)
+        mode                      (if (nil? mode) :fw mode)
         capture                   (:source video)
         running?                  (:running video)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
@@ -51,6 +53,8 @@
         index                     (if (nil? (:index video)) 0 (:index video))
         start-index               (if (nil? (:start-index video)) 0  (:start-index video))
         start-index               (if (= -1 start-frame) start-index start-frame)
+        pos                       (:pos video)
+        pos                       (if (nil? pos) start-index pos)
         stop-index                (if (and (nil? (:stop-index video)) (not (nil? capture))) (oc-get-capture-property :frame-count  capture) (:stop-index video))
         fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
         video                     {:idx filename,
@@ -60,7 +64,9 @@
                                    :fps fps
                                    :index index
                                    :start-index start-index
-                                   :stop-index stop-index}
+                                   :stop-index stop-index
+                                   :mode mode
+                                   :pos pos}
         videos                    (assoc videos video-key video)
         startTime                 (atom (System/nanoTime))]
         (swap! cutter.cutter/the-window-state assoc :videos videos)
@@ -79,6 +85,8 @@
               (while-let/while-let [running (:running (video-key (:videos @cutter.cutter/the-window-state))) ]
                 (let [fps                   (:fps (video-key (:videos @cutter.cutter/the-window-state)))
                       video-destination     (:destination (video-key (:videos @cutter.cutter/the-window-state)))
+                      mode                  (:mode (video-key (:videos @cutter.cutter/the-window-state)))
+                      pos                   (:pos (video-key (:videos @cutter.cutter/the-window-state)))
                       queue                 (:queue ( video-destination (:i-textures @cutter.cutter/the-window-state)))
                       frame-index           (oc-get-capture-property :pos-frames capture)
                       index                 (:index (video-key (:videos @cutter.cutter/the-window-state)))
@@ -86,21 +94,26 @@
                       stop-index            (:stop-index (video-key (:videos @cutter.cutter/the-window-state)))
                       mat                   (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
                       pbo_id                (:pbo (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))]
-                    ;(println mat)
-                    (reset! startTime (System/nanoTime))
+                                        ;(println mat)
+                  (reset! startTime (System/nanoTime))
+                  ;;(println pos)
+                  (case mode
+                    :fw nil
+                    :pause (do (oc-set-capture-property :pos-frames capture pos)))
+                  (do
                     (if (< (oc-get-capture-property :pos-frames capture) stop-index )
-                    (oc-query-frame capture mat)
-                    (do (oc-set-capture-property :pos-frames capture start-index) )
-                    )
+                      (oc-query-frame capture mat)
+                      (do (oc-set-capture-property :pos-frames capture start-index) )
+                      )
                     (async/offer!
-                      queue
-                      (conj (matInfo mat) pbo_id))
-                    (Thread/sleep
-                      (cutter.general/sleepTime @startTime
-                        (System/nanoTime)
-                        fps ))))
+                     queue
+                     (conj (matInfo mat) pbo_id)))
+                  (Thread/sleep
+                   (cutter.general/sleepTime @startTime
+                                             (System/nanoTime)
+                                             fps ))))
               (.release capture)))))
-        nil)
+  nil)
 
 (defn set-live-video-texture [filename destination-texture-key] (set-live-video filename destination-texture-key -1 -1))
 
@@ -145,6 +158,32 @@
         videos                   (assoc videos video-key video)]
         (swap! cutter.cutter/the-window-state assoc :videos videos) nil))
 
+(defn set-video-paused [filename]
+  (let [maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        videos                   (:videos @cutter.cutter/the-window-state)
+        video-key                (keyword filename)
+        video                    (video-key videos)
+        video                    (assoc video :mode :pause)
+        videos                   (assoc videos video-key video)]
+        (swap! cutter.cutter/the-window-state assoc :videos videos)nil))
+
+(defn set-video-play [filename]
+  (let [maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        videos                   (:videos @cutter.cutter/the-window-state)
+        video-key                (keyword filename)
+        video                    (video-key videos)
+        video                    (assoc video :mode :fw)
+        videos                   (assoc videos video-key video)]
+        (swap! cutter.cutter/the-window-state assoc :videos videos)nil))
+
+(defn set-video-pos [filename pos]
+  (let [maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        videos                   (:videos @cutter.cutter/the-window-state)
+        video-key                (keyword filename)
+        video                    (video-key videos)
+        video                    (assoc video :pos (min pos maximum-buffer-length))
+        videos                   (assoc videos video-key video)]
+        (swap! cutter.cutter/the-window-state assoc :videos videos)nil))
 
 (defn get-video-property [filename property val]
   (let [device-id                 filename
@@ -166,7 +205,7 @@
         start-video?             (or (nil? video) (not (:running video)))
         _                        (if start-video? (set-live-video filename :iChannelNull start-frame 100)  )
                                         ;_                        (Thread/sleep 500)
-        current-frame            @(:current-frame @the-window-state)
+        ;;current-frame            @(:current-frame @the-window-state)
         _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 500))
         videos                   (:videos @the-window-state)
         video                    (video-key videos)
@@ -177,6 +216,7 @@
         mat                      (:mat (destination (:i-textures @cutter.cutter/the-window-state)))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         maximum-buffer-length    (min length maximum-buffer-length)
+        ;;_ (println maximum-buffer-length)
         texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
         running?                 false
         idx                      buffername
@@ -193,8 +233,9 @@
         start-index              (:start-index texture-array)
         start-index              (if (nil? start-index) 0 start-index)
         start-index              (if (= -1 start-frame) start-index start-frame)
+        ;;_ (println start-index)
         stop-index               (:stop-index texture-array)
-        stop-index               (if (nil? stop-index) maximum-buffer-length (min maximum-buffer-length stop-index))
+        stop-index               (if (nil? stop-index) maximum-buffer-length (min maximum-buffer-length (+ start-index stop-index)))
         ;texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
         old-pbo-ids              (:pbo_ids texture-array)
         ;_ (print "old-pbo-ids" old-pbo-ids)
@@ -226,8 +267,14 @@
         req-buffers              (if is_good_dat (first orig_source_dat) nil)
         req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
         ]
-    (while  @(:request-buffers @the-window-state) (Thread/sleep 500))
-        (println "Recording from: " filename " to " buffername)
+    (while  @(:request-buffers @the-window-state) (Thread/sleep 100))
+    (println "Recording from: " filename " to " buffername)
+    (set-video-paused filename)
+    (set-video-pos filename start-frame)
+;;    (set-video-property filename :pos-frames start-frame)
+    ;;(cutter.opencv/oc-set-capture-property :pos-frames source (max 25 start-index))
+    (Thread/sleep 100)
+    (set-video-play filename)
         (async/thread
           (while (and (.isOpened source) (< @t-a-index maximum-buffer-length) is_good_dat )
             (let [fps                 (cutter.opencv/oc-get-capture-property :fps source)

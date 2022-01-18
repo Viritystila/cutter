@@ -36,9 +36,9 @@
    :keyCallback                nil
    :current-frame              (atom 1)
                                         ;OSC
-   :osc-server                 (overtone.osc/osc-server 44100 "cutter-osc")
-   :osc-client                 (overtone.osc/osc-client "localhost" 44100)
-   :osc-port                   44100
+   :osc-server                 (overtone.osc/osc-server 44110 "cutter-osc")
+   :osc-client                 (overtone.osc/osc-client "localhost" 44110)
+   :osc-port                   44110
    ;; geom ids
    :vbo-id                     0
    :vertices-count             0
@@ -83,16 +83,16 @@
    :maximum-texture-folders    1000
    :maximum-cameras            1000
    :maximum-videos             1000
-   :maximum-buffer-length      2500  ;Frames
+   :maximum-buffer-length      25000  ;Frames
    :default-buffer-length      250
    :request-buffers            (atom false)
    :requested-buffer           (atom {})
    :request-reset              (atom "")
    :request-queue              (async/chan (async/buffer 100))
-   :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false}}
-   :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0, pbo_ids 0}
-   :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0}}
-   :videos                     {} ;{:filename, {:idx :destination :source "capture" :running false, :fps 30}}
+   :textures                   {} ;{:filename, {:idx :destination :source "mat" :running false :queue -1}}
+   :texture-arrays             {} ;{:name, {:idx :destination :source "buf array" :running false, :fps 30, index: 0, :mode :fw, :loop true, :start-index 0, :stop-index 0, pbo_ids 0, :queue -1}
+   :cameras                    {} ;{:device, {:idx :destination :source "capture" :running false, :fps 30, index: 0, :start-index 0, :stop-index 0, :queue -1}}
+   :videos                     {} ;{:filename, {:idx :destination :source "capture" :running false, :fps 30, :queue -1, :mode :fw, :pos 0 }}
                                         ;Data Arrays
    :maxDataArrays              16
    :maxDataArraysLength        256
