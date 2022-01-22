@@ -181,7 +181,9 @@
         videos                   (:videos @cutter.cutter/the-window-state)
         video-key                (keyword filename)
         video                    (video-key videos)
-        video                    (assoc video :pos (min pos maximum-buffer-length))
+        capture                  (:source video)
+        video-max-frame          (if (nil? capture) 0 (oc-get-capture-property :frame-count  capture))
+        video                    (assoc video :pos (min pos video-max-frame))
         videos                   (assoc videos video-key video)]
         (swap! cutter.cutter/the-window-state assoc :videos videos)nil))
 
