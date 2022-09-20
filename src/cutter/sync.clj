@@ -4,9 +4,9 @@
             [clojure.math.numeric-tower :as math]
             [cutter.cutter :refer :all]
             [cutter.texturearray :refer :all]
-            [cutter.camera :refer :all]
-            [cutter.video :refer :all]
-            [cutter.opencv :refer :all]
+            ;[cutter.camera :refer :all]
+            ;[cutter.video :refer :all]
+            ;[cutter.opencv :refer :all]
             [clojure.core.async
              :as async
              :refer [>! <! >!! <!! go go-loop chan sliding-buffer dropping-buffer close! thread
@@ -20,13 +20,13 @@
 ;;;;;;;;;;;;;;
 (defonce videoSync (atom {}))
 
-(defn sync-thread [buf-key synth-name-key ctrl-bus start-frame sample-rate control-queue]
+(defn sync-thread [buf-key synth-name-key ctrl-bus start-frame sample-rate frame-rate control-queue]
   (let []
     (async/thread
       (while (not (= :stop (async/poll! control-queue)))
         (let [spos    (first (overtone.sc.bus/control-bus-get ctrl-bus))
               tpos    (/ spos sample-rate)
-              fram    (int (- (* tpos 25) start-frame))]
+              fram    (int (- (* tpos frame-rate) start-frame))]
           (cutter.texturearray/set-buffer-index buf-key  fram)))
       :stopped)))
 
@@ -41,14 +41,21 @@
         (swap! videoSync assoc synth-name-key data)))))
 
 (defn avs
-  ([buf-key synth-name-key ctrl-bus start-frame sample-rate]
+  ([buf-key synth-name-key ctrl-bus start-frame sample-rate frame-rate]
    (let [control-queue (chan (sliding-buffer 1))
-         stc           (sync-thread buf-key synth-name-key ctrl-bus start-frame sample-rate control-queue)]
+         stc           (sync-thread buf-key synth-name-key ctrl-bus start-frame sample-rate frame-rate control-queue)]
      (store-sync control-queue stc synth-name-key)))
+([buf-key synth-name-key ctrl-bus start-frame sample-rate]
+   (let [frame-rate        25
+         control-queue     (chan (sliding-buffer 1))
+         stc              (sync-thread buf-key synth-name-key ctrl-bus start-frame sample-rate frame-rate control-queue)]
+         (store-sync control-queue stc synth-name-key)))
   ([buf-key synth-name-key ctrl-bus start-frame]
    (let [sample-rate       48000
+         frame-rate        25
          control-queue     (chan (sliding-buffer 1))
-         stc              (sync-thread buf-key synth-name-key ctrl-bus start-frame sample-rate control-queue)](store-sync control-queue stc synth-name-key))))
+         stc              (sync-thread buf-key synth-name-key ctrl-bus start-frame sample-rate frame-rate control-queue)]
+         (store-sync control-queue stc synth-name-key))))
 
 
 (defn stop-sync [synth-name-key]
