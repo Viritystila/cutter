@@ -22,10 +22,43 @@
    [org.lwjgl.system MemoryUtil]
    [org.lwjgl.assimp Assimp]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
-   [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]))
+   [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]
+   [org.freedesktop.gstreamer Gst Pipeline Caps Version Buffer ElementFactory]))
+
+;;(def pipeline (Gst/parseLaunch "videotestsrc is-live=1 ! video/x-raw,format=YUY2,framerate=30/1 ! videoconvert ! pipewiresink mode=provide stream-properties=props,media.class=Video/Source,node.description=Cutter_output,object.id=99,node.name=Cutter" ))
+
+
+(def pipeline (Gst/parseLaunch "appsrc name=src ! video/x-raw,format=rgb,framerate=30/1 ! videoconvert ! pipewiresink mode=provide name=snk stream-properties=props,media.class=Video/Source,node.description=Cutter_output,object.id=99,node.name=Cutter"))
+
+(def appsrc (.getElementByName pipeline "src"))
+
+(.set appsrc "emit-signals" true)
+
+
+;;(.play pipeline)
+
+;;(.stop pipeline)
+
+;;(.getState pipeline)
+
+;;(def pipeline (new Pipeline "output"))
+;;(def appsrc (ElementFactory/make "appsrc" "source"))
+;;(def srcfilter (ElementFactory/make "capsfilter" "srcfiler"))
+;;(def fltcaps (new Caps "video/x-raw-rgb, framerate=30/1, width=1280, height=800, bpp=16, depth=16"))
+;;(def videorate (ElementFactory/make "videorate" "videorate"))
+;;(def ratefilter (ElementFactory/make "capsfilter" "RateFilter"))
+;;(def videosink (ElementFactory/make "pipewiresink" "videosink"))
+
+;;(.setProperty videosink "mode" "provide")
+
+;;videosrc.set_property("device", "/dev/video1")
+;;(.setCaps ratefilter (Caps/fromString "video/x-raw-rgb, framerate=30/1"))
+;;(.addMany pipeline appsrc srcfiler videorate ratefilter videosink)
 
 (defonce default-state-values
-  {:active                     :no  ;; :yes/:stopping/:no
+  {:gst_init                   (Gst/init Version/BASELINE "Cutter-output" (into-array [""]) )
+   :gst_output                 ""
+   :active                     :no  ;; :yes/:stopping/:no
    :width                      0
    :height                     0
    :title                      ""

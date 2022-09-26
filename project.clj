@@ -51,6 +51,8 @@
                   [org.viritystila/v4l2-platform "1.0-linux"]
                   [org.viritystila/v4l2-native "1.0-linux"]
                   ;[overtone/osc-clj "0.7.1"]
+                  [org.freedesktop.gstreamer/gst1-java-core "1.4.0"]
+                  [net.java.dev.jna/jna-platform "5.12.1"]
                   [overtone "0.10.6"]]
   (lwjgl-deps-with-natives)))
 
