@@ -23,17 +23,28 @@
    [org.lwjgl.assimp Assimp]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
    [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]
-   [org.freedesktop.gstreamer Gst Pipeline Caps Version Buffer ElementFactory]))
+   [org.freedesktop.gstreamer Gst Pipeline Caps Version Buffer ElementFactory elements.AppSrc]))
 
 ;;(def pipeline (Gst/parseLaunch "videotestsrc is-live=1 ! video/x-raw,format=YUY2,framerate=30/1 ! videoconvert ! pipewiresink mode=provide stream-properties=props,media.class=Video/Source,node.description=Cutter_output,object.id=99,node.name=Cutter" ))
 
 
-(def pipeline (Gst/parseLaunch "appsrc name=src ! video/x-raw,format=rgb,framerate=30/1 ! videoconvert ! pipewiresink mode=provide name=snk stream-properties=props,media.class=Video/Source,node.description=Cutter_output,object.id=99,node.name=Cutter"))
+(def pipeline (Gst/parseLaunch "appsrc name=src ! video/x-raw,format=rgb,framerate=30/1 ! pipewiresink mode=provide name=snk stream-properties=props,media.class=Video/Source,node.description=Cutter_output,object.id=99,node.name=Cutter"))
 
 (def appsrc (.getElementByName pipeline "src"))
 
 (.set appsrc "emit-signals" true)
 
+(defn nd
+  [asia]
+  (reify org.freedesktop.gstreamer.elements.AppSrc$NEED_DATA
+    (needData [this elem size]
+      (println asia))
+    )
+  )
+
+(def nnd (nd "asia"))
+
+;;(.needData (nd 1 2))
 
 ;;(.play pipeline)
 
