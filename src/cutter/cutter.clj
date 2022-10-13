@@ -23,91 +23,70 @@
    [org.lwjgl.assimp Assimp]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
    [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]
-   [org.freedesktop.gstreamer Gst Pipeline Caps Version Buffer ElementFactory elements.AppSrc]))
+   [org.freedesktop.gstreamer Gst Pipeline Caps Version Buffer BufferPool ElementFactory elements.AppSrc]))
 
 (Gst/init Version/BASELINE "Cutter-output" (into-array [""]) )
 
 ;(def pipeline2 (Gst/parseLaunch "videotestsrc is-live=1 ! video/x-raw,format=YUY2,framerate=30/1 ! videoconvert ! autovideosink" ))
 
-
-;;(def pipeline (Gst/parseLaunch "appsrc name=src ! video/x-raw,format=RGB,framerate=2/1,width=1280, height=800 ! videorate ! capsfilter ! pipewiresink mode=provide stream-properties=props,media.class=Video/Source,node.description=Cutter_output,node.name=Cutter"))
-
-;;, bpp=16, depth=16
-;; videorate ! capsfilter name=RateFilter !
-(def pipeline (Gst/parseLaunch "appsrc name=src ! video/x-raw,format=RGB,framerate=30/1,width=1280, height=800  ! videoconvert !   autovideosink"))
-
-(def appsrc (.getElementByName pipeline "src"))
-
-(.set appsrc "emit-signals" true)
-
-(.setStreamType appsrc org.freedesktop.gstreamer.elements.AppSrc$StreamType/STREAM)
-
-;(def RateFilter (.getElementByName pipeline "RateFilter"))
-
-;(.setCaps RateFilter (Caps/fromString "video/x-raw, framerate=30/1"))
-
-;(.setSize appsrc (* 1280 800 3))
-
-(def data (byte-array (* 1280 800 3)) )
-
-(java.util.Arrays/fill data (byte 112))
-
-(defn nd
-  []
-  (reify org.freedesktop.gstreamer.elements.AppSrc$NEED_DATA
-    (needData [this elem size]
-      ;(println elem)
-      ;(println size)
-      ;;(def data (byte-array (* 1280 800 3)))
-      ;;(java.util.Arrays/fill data (byte 122))
-      (def data (byte-array (* 1280 800 3)) )
-      (java.util.Arrays/fill data (byte (+ 100 (rand-int 12))))
-      (def gsbuf (new Buffer (* 1280 800 3)))
-      (.put (.map gsbuf true) data)
-      (.pushBuffer elem gsbuf)
-      ;;(.unmap buf)
-      )
-    )
-  )
-(def nnd (nd))
-
-(defn ed
-  []
-  (reify org.freedesktop.gstreamer.elements.AppSrc$ENOUGH_DATA
-    (enoughData [this elem]
-       ;(println "ei asiaa")
-      )))
+;;(def pipeline (Gst/parseLaunch "appsrc name=src ! video/x-raw,format=RGB,framerate=30/1,width=1280, height=800 !  capsfilter ! videoconvert ! glimagesink"))
 
 
-(def ned (ed))
+;; (def pipeline (Gst/parseLaunch "appsrc name=src ! video/x-raw,format=RGB,framerate=30/1,width=1280, height=800 !  capsfilter !  pipewiresink mode=provide stream-properties=props,media.class=Video/Source,node.description=Cutter_output,node.name=Cutter"))
 
-(.connect appsrc nnd)
 
-(.connect appsrc ned)
+;; (def appsrc (.getElementByName pipeline "src"))
 
-;; (def gsbuf (new Buffer (* 1280 800 3)))
-;; (.put (.map gsbuf true) data)
-;; (.pushBuffer appsrc gsbuf)
+;; (.set appsrc "emit-signals" true)
+
+;; (.setStreamType appsrc org.freedesktop.gstreamer.elements.AppSrc$StreamType/STREAM)
+
+;; (def data (byte-array (* 1280 800 3)) )
+
+;; (java.util.Arrays/fill data (byte 112))
+
+
+;; (defn nd
+;;   []
+;;   (reify org.freedesktop.gstreamer.elements.AppSrc$NEED_DATA
+;;     (needData [this elem size]
+;;       ;(println elem)
+;;       ;(println size)
+;;       ;;(def data (byte-array (* 1280 800 3)))
+;;       ;;(java.util.Arrays/fill data (byte 122))
+;;       ;(def data (byte-array (* 1280 800 3)) )
+;;       (java.util.Arrays/fill data (byte (+ 100 (rand-int 12))))
+;;       (def gsbuf (new Buffer (* 1280 800 3)))
+;;       (.put (.map gsbuf true) data)
+;;                                         ;(Thread/sleep 10)
+;;       (.unmap gsbuf)
+;;       (.pushBuffer appsrc gsbuf)
+;;       ;;(.unmap buf)
+;;       )
+;;     )
+;;   )
+
+;; (def nnd (nd))
+
+;; (defn ed
+;;   []
+;;   (reify org.freedesktop.gstreamer.elements.AppSrc$ENOUGH_DATA
+;;     (enoughData [this elem]
+;;        ;(println "ei asiaa")
+;;       )))
+
+
+;; (def ned (ed))
+
+;; (.connect appsrc nnd)
+
+;; (.connect appsrc ned)
 
 ;;(.play pipeline)
 
 ;;(.stop pipeline)
 
-;;(.getState pipeline)
-
-;;(def pipeline (new Pipeline "output"))
-;;(def appsrc (ElementFactory/make "appsrc" "source"))
-;;(def srcfilter (ElementFactory/make "capsfilter" "srcfiler"))
-;;(def fltcaps (new Caps "video/x-raw-rgb, framerate=30/1, width=1280, height=800, bpp=16, depth=16"))
-;;(def videorate (ElementFactory/make "videorate" "videorate"))
-;;(def ratefilter (ElementFactory/make "capsfilter" "RateFilter"))
-;;(def videosink (ElementFactory/make "pipewiresink" "videosink"))
-
-;;(.setProperty videosink "mode" "provide")
-
-;;videosrc.set_property("device", "/dev/video1")
-;;(.setCaps ratefilter (Caps/fromString "video/x-raw-rgb, framerate=30/1"))
-;;(.addMany pipeline appsrc srcfiler videorate ratefilter videosink)
+;;(.intValue (.getState pipeline))
 
 (defonce default-state-values
   {:gst_init                   "";;(Gst/init Version/BASELINE "Cutter-output" (into-array [""]) )
