@@ -72,8 +72,10 @@
         (swap! cutter.cutter/the-window-state assoc :videos videos)
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
           (do
-            (.open capture filename org.opencv.videoio.Videoio/CAP_FFMPEG)
-            ;;(.open capture filename org.opencv.videoio.Videoio/CAP_GSTREAMER)
+            ;;(.open capture filename org.opencv.videoio.Videoio/CAP_FFMPEG)
+            (.open capture filename org.opencv.videoio.Videoio/CAP_GSTREAMER) 
+            ;;(.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 1)
+            ;;(.open capture filename org.opencv.videoio.Videoio/CAP_V4L2)
             (swap! cutter.cutter/the-window-state assoc :videos
               (assoc videos
                 video-key (assoc video :running true
@@ -94,9 +96,8 @@
                       stop-index            (:stop-index (video-key (:videos @cutter.cutter/the-window-state)))
                       mat                   (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
                       pbo_id                (:pbo (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))]
-                                        ;(println mat)
                   (reset! startTime (System/nanoTime))
-                  ;;(println pos)
+                  ;;(println mat)
                   (case mode
                     :fw nil
                     :pause (do (oc-set-capture-property :pos-frames capture pos)))

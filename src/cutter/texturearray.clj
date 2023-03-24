@@ -34,6 +34,7 @@
         texture                  (destination-texture-key i-textures)
         queue                    (:queue texture)
         buffer-length            (count source)
+        _                        (println start-index stop-index buffer-length)
         texture-array            (assoc texture-array
                                     :idx idx,
                                     :destination destination-texture-key,
@@ -78,7 +79,7 @@
                                                   :idx index)]
                       (reset! startTime (System/nanoTime))
                       (reset! internal-index cur-index)
-                      ;;(println cur-index)
+                      ;(println cur-index)
                       ;(println  (nth source  (mod  cur-index (min (+ 1 stop-index) buffer-length)) ))
                       (async/offer!
                         queue

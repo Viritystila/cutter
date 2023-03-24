@@ -23,9 +23,10 @@
    [org.lwjgl.assimp Assimp]
    [org.lwjgl.glfw GLFW GLFWErrorCallback GLFWKeyCallback]
    [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL21 GL30 GL40 GL44 GL45]
-   [org.freedesktop.gstreamer Gst Pipeline Caps Version Buffer BufferPool ElementFactory elements.AppSrc]))
+   ;;[org.freedesktop.gstreamer Gst Pipeline Caps Version Buffer BufferPool ElementFactory elements.AppSrc]
+   ))
 
-(Gst/init Version/BASELINE "Cutter-output" (into-array [""]) )
+;;(Gst/init Version/BASELINE "Cutter-output" (into-array [""]) )
 
 ;(def pipeline2 (Gst/parseLaunch "videotestsrc is-live=1 ! video/x-raw,format=YUY2,framerate=30/1 ! videoconvert ! autovideosink" ))
 
@@ -494,6 +495,7 @@
     (GL11/glBindTexture target tex-id)
     (if  (not (nil? image))
       (do
+        ;;(println image)
         (if
             (instance? java.lang.Long (nth image 0)) (do (set-opengl-texture
                                                           locals
