@@ -1,4 +1,5 @@
-(ns #^{:author "Mikael Reponen"}
+;;(ns cutter.video)
+(ns ^{:author "Mikael Reponen"}
   cutter.video
   (:require ;[clojure.tools.namespace.repl :refer [refresh]]
             ;[watchtower.core :as watcher]
@@ -36,9 +37,9 @@
 
            )
 
-;
+
 ;Video
-(defn- set-live-video [filename destination-texture-key start-frame fps-in]
+(defn set-live-video [filename destination-texture-key start-frame fps-in]
   "Set texture by filename and adds the filename to the list"
   (let [filename                  filename
         video-key                 (keyword filename)
@@ -55,8 +56,9 @@
         start-index               (if (= -1 start-frame) start-index start-frame)
         pos                       (:pos video)
         pos                       (if (nil? pos) start-index pos)
+        ;;_ (println pos start-index)
         stop-index                (if (and (nil? (:stop-index video)) (not (nil? capture))) (oc-get-capture-property :frame-count  capture) (:stop-index video))
-        fps                       (if (= nil capture ) 30 (cutter.opencv/oc-get-capture-property :fps capture))
+        fps                       (if (= nil capture ) fps-in (cutter.opencv/oc-get-capture-property :fps capture))
         video                     {:idx filename,
                                    :destination destination-texture-key,
                                    :source capture,
@@ -72,9 +74,12 @@
         (swap! cutter.cutter/the-window-state assoc :videos videos)
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
           (do
-            ;;(.open capture filename org.opencv.videoio.Videoio/CAP_FFMPEG)
-            (.open capture filename org.opencv.videoio.Videoio/CAP_GSTREAMER) 
-            ;;(.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS 1)
+            (.open capture filename)
+            ;;(oc-set-capture-property :fps capture fps-in)
+            ;;(.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS fps)
+            (.open capture filename org.opencv.videoio.Videoio/CAP_GSTREAMER)
+            
+           
             ;;(.open capture filename org.opencv.videoio.Videoio/CAP_V4L2)
             (swap! cutter.cutter/the-window-state assoc :videos
               (assoc videos
@@ -206,9 +211,7 @@
         video-key                (keyword filename)
         video                    (video-key videos)
         start-video?             (or (nil? video) (not (:running video)))
-        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 100)  )
-                                        ;_                        (Thread/sleep 500)
-        ;;current-frame            @(:current-frame @the-window-state)
+        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 100))
         _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 500))
         videos                   (:videos @the-window-state)
         video                    (video-key videos)
@@ -270,17 +273,18 @@
         req-buffers              (if is_good_dat (first orig_source_dat) nil)
         req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
         ]
-    (while  @(:request-buffers @the-window-state) (Thread/sleep 100))
+    (while  @(:request-buffers @the-window-state) (Thread/sleep 50))
     (println "Recording from: " filename " to " buffername)
     (set-video-paused filename)
     (set-video-pos filename start-frame)
-;;    (set-video-property filename :pos-frames start-frame)
-    ;;(cutter.opencv/oc-set-capture-property :pos-frames source (max 25 start-index))
-    (Thread/sleep 100)
+    ;;(set-video-property filename :fps 1000)
+    (Thread/sleep 50)
     (set-video-play filename)
+    ;;(cutter.opencv/oc-set-capture-property :fps source 1000)
         (async/thread
           (while (and (.isOpened source) (< @t-a-index maximum-buffer-length) is_good_dat )
             (let [fps                 (cutter.opencv/oc-get-capture-property :fps source)
+                  ;;_ (println fps)
                   dest-buffer         (nth req-buffers @t-a-index)
                   pbo_id              (nth req-pbo_ids @t-a-index)
                   image               (async/<!! out)
@@ -291,7 +295,7 @@
                   copybuf             (oc-mat-to-bytebuffer mat)
                   buffer-capacity     (.capacity copybuf)
                   dest-capacity       (.capacity dest-buffer)
-                  ;_ (println "sad" @pbo_ids)
+                  ;;_ (println "sad" @pbo_ids)
                   _                   (if (= buffer-capacity dest-capacity)
                                         (do (let [image           (assoc image 9 pbo_id)
                                                   _               (swap! pbo_ids conj pbo_id)
