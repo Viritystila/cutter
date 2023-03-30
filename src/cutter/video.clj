@@ -58,8 +58,6 @@
         pos                       (if (nil? pos) start-index pos)
         fps                       (if (= nil capture ) fps-in (cutter.opencv/oc-get-capture-property :fps capture))
         stop-index                (if (and (nil? (:stop-index video)) (not (nil? capture))) (oc-get-capture-property :frame-count  capture) (:stop-index video))
-        ;;stop-index                (if (and (nil? (:stop-index video)) (not (nil? capture))) (oc-get-capture-property :frame-count  capture) (:stop-index video))
-        ;;               _ (println pos start-index stop-index fps (and (nil? (:stop-index video)) (not (nil? capture))) "pos sta sto fps firscond ")
         video                     {:idx filename,
                                    :destination destination-texture-key,
                                    :source capture,
@@ -76,29 +74,13 @@
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
           (do
             (.open capture filename)
-            ;;(oc-set-capture-property :fps capture fps-in)
-            ;;(.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS fps)
-            ;;(.open capture filename org.opencv.videoio.Videoio/CAP_GSTREAMER)
-            ;;(println (.set capture org.opencv.videoio.Videoio/CAP_PROP_FPS fps) "staff")
-            ;;(.set capture org.opencv.videoio.Videoio/CAP_PROP_POS_FRAMES start-index)
-            ;;(Thread/sleep 1500)
             (cutter.opencv/oc-set-capture-property :pos-msec capture start-index)
-            ;;(println (cutter.opencv/oc-get-capture-property :pos-msec capture))
-            ;;(println (.get capture org.opencv.videoio.Videoio/CAP_PROP_FRAME_COUNT) "framecount")
-            ;;(println (oc-get-capture-property :frame-count  capture))
-            ;;(println (cutter.opencv/oc-set-capture-property :pos-frames capture start-index) "stuff")
-            ;;(.open capture filename org.opencv.videoio.Videoio/CAP_V4L2)
             (swap! cutter.cutter/the-window-state assoc :videos
               (assoc videos
                 video-key (assoc video :running true
                   :fps (if (= -1 fps-in) (cutter.opencv/oc-get-capture-property :fps capture) fps-in)
                   :stop-index (oc-get-capture-property :frame-count  capture) )))
             (async/thread
-            ;;(println (:stop-index (video-key (:videos @cutter.cutter/the-window-state))) "stopindex")
-            ;;(println (:start-index (video-key (:videos @cutter.cutter/the-window-state))) "startindex")
-              ;;(set-video-property filename :pos-frames start-index)
-              ;;(.set capture org.opencv.videoio.Videoio/CAP_PROP_POS_FRAMES start-index)
-              ;(if (= -1 start-frame) nil (oc-set-capture-property :pos-frames capture start-frame))
               (while-let/while-let [running (:running (video-key (:videos @cutter.cutter/the-window-state))) ]
                 (let [capture               (:source(video-key (:videos @cutter.cutter/the-window-state)))
                       fps                   (:fps (video-key (:videos @cutter.cutter/the-window-state)))
@@ -113,26 +95,19 @@
                       mat                   (:mat (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
                       pbo_id                (:pbo (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))]
                   (reset! startTime (System/nanoTime))
-                  ;;(println mat)
                   (case mode
                     :fw nil
                     :pause (do (cutter.opencv/oc-set-capture-property :pos-frames capture pos)))
                   (do
-                    ;;(println (cutter.opencv/oc-get-capture-property :pos-frames capture))
-                    ;;(println (.get capture org.opencv.videoio.Videoio/CAP_PROP_POS_FRAMES))
-                    ;;(println frame-index)
-                    (if (< (cutter.opencv/oc-get-capture-property :pos-frames capture) (- stop-index 1))
+                    (if (< (cutter.opencv/oc-get-capture-property :pos-frames capture) (- stop-index 0))
                       (do (cutter.opencv/oc-query-frame capture mat)
-                          ;(println (.dataAddr mat))
                           (if (not(= 0 (.dataAddr mat)))
                             (async/offer!
                               queue
                                 (conj (matInfo mat) pbo_id))
-                            (do ;;(println queue)
-                                (cutter.opencv/oc-set-capture-property :pos-msec capture start-index)))                           
+                            (do (cutter.opencv/oc-set-capture-property :pos-msec capture start-index)))                           
                           )
                       (do (cutter.opencv/oc-set-capture-property :pos-msec capture start-index) 
-                          ;;(println pos "change")                 
                           )
                       ))
                   (Thread/sleep
