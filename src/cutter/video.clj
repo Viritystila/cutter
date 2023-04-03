@@ -73,7 +73,7 @@
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
           (do
             (.open capture filename)
-            (cutter.opencv/oc-set-capture-property :pos-msec capture start-index)
+            (cutter.opencv/oc-set-capture-property :pos-frames capture start-index)
             (swap! cutter.cutter/the-window-state assoc :videos
               (assoc videos
                 video-key (assoc video :running true
@@ -98,15 +98,21 @@
                     ;;:fw nil
                     :pause nil ;;(do (cutter.opencv/oc-set-capture-property :pos-frames capture frame-index))
                     :fw (do
-                    (if (< (cutter.opencv/oc-get-capture-property :pos-frames capture) (- stop-index 0))
+                    (if (< (cutter.opencv/oc-get-capture-property :pos-frames capture) (- stop-index 1))
                       (do (cutter.opencv/oc-query-frame capture mat)
+                          ;(println (async/poll! queue) )
                           (if (not(= 0 (.dataAddr mat)))
-                            (async/offer!
+                            (do (async/offer!
                               queue
                                 (conj (matInfo mat) pbo_id))
-                            (do (cutter.opencv/oc-set-capture-property :pos-msec capture start-index)))                           
+                                ;;(println (cutter.opencv/oc-get-capture-property :pos-frames capture) )
+                                )
+                            (do ;;(cutter.opencv/oc-query-frame capture mat)
+                                (cutter.opencv/oc-set-capture-property :pos-frames capture start-index)))                           
                           )
-                      (do (cutter.opencv/oc-set-capture-property :pos-msec capture start-index) 
+                      (do   ;;(println (.dataAddr mat))
+                            ;;(cutter.opencv/oc-query-frame capture mat)
+                            (cutter.opencv/oc-set-capture-property :pos-frames capture start-index) 
                           )
                       )))
                   (Thread/sleep

@@ -454,7 +454,7 @@
        tex-image-target    ^Integer (+ 0 target)
        nbytes              (* width height image-bytes)
        buffer              buffer]
-    ;(println "before choice" width height image-bytes)
+    ;;(println "before choice" width height image-bytes)
     (if (or init? (not= setnbytes nbytes))
       (do
         (set-texture tex-image-target internal-format width height format buffer)
