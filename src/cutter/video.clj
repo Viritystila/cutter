@@ -1,4 +1,3 @@
-;;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(ns cutter.video)
 (ns ^{:author "Mikael Reponen"}
   cutter.video
   (:require ;[clojure.tools.namespace.repl :refer [refresh]]
@@ -39,8 +38,8 @@
 
 
 ;Video
-(defn set-live-video [filename destination-texture-key start-frame fps-in]
-  "Set texture by filename and adds the filename to the list"
+(defn set-live-video [filename destination-texture-key start-pos fps-in]
+  "Set texture by filename and adds the filename to the list. Start-pos is in msec"
   (let [filename                  filename
         video-key                 (keyword filename)
         videos                    (:videos @cutter.cutter/the-window-state)
@@ -53,7 +52,7 @@
         mat                       (:mat (destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
         index                     (if (nil? (:index video)) 0 (:index video))
         start-index               (if (nil? (:start-index video)) 0  (:start-index video))
-        start-index               (if (= -1 start-frame) start-index start-frame)
+        start-index               (if (= -1 start-pos) start-index start-pos)
         pos                       (:pos video)
         pos                       (if (nil? pos) start-index pos)
         fps                       (if (= nil capture ) fps-in (cutter.opencv/oc-get-capture-property :fps capture))
@@ -96,9 +95,9 @@
                       pbo_id                (:pbo (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))]
                   (reset! startTime (System/nanoTime))
                   (case mode
-                    :fw nil
-                    :pause (do (cutter.opencv/oc-set-capture-property :pos-frames capture pos)))
-                  (do
+                    ;;:fw nil
+                    :pause nil ;;(do (cutter.opencv/oc-set-capture-property :pos-frames capture frame-index))
+                    :fw (do
                     (if (< (cutter.opencv/oc-get-capture-property :pos-frames capture) (- stop-index 0))
                       (do (cutter.opencv/oc-query-frame capture mat)
                           (if (not(= 0 (.dataAddr mat)))
@@ -109,7 +108,7 @@
                           )
                       (do (cutter.opencv/oc-set-capture-property :pos-msec capture start-index) 
                           )
-                      ))
+                      )))
                   (Thread/sleep
                    (cutter.general/sleepTime @startTime
                                              (System/nanoTime)
