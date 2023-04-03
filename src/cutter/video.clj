@@ -95,24 +95,18 @@
                       pbo_id                (:pbo (  destination-texture-key (:i-textures @cutter.cutter/the-window-state)))]
                   (reset! startTime (System/nanoTime))
                   (case mode
-                    ;;:fw nil
-                    :pause nil ;;(do (cutter.opencv/oc-set-capture-property :pos-frames capture frame-index))
+                    :pause nil
                     :fw (do
                     (if (< (cutter.opencv/oc-get-capture-property :pos-frames capture) (- stop-index 1))
                       (do (cutter.opencv/oc-query-frame capture mat)
-                          ;(println (async/poll! queue) )
                           (if (not(= 0 (.dataAddr mat)))
                             (do (async/offer!
                               queue
                                 (conj (matInfo mat) pbo_id))
-                                ;;(println (cutter.opencv/oc-get-capture-property :pos-frames capture) )
                                 )
-                            (do ;;(cutter.opencv/oc-query-frame capture mat)
-                                (cutter.opencv/oc-set-capture-property :pos-frames capture start-index)))                           
+                            (do (cutter.opencv/oc-set-capture-property :pos-frames capture start-index)))                           
                           )
-                      (do   ;;(println (.dataAddr mat))
-                            ;;(cutter.opencv/oc-query-frame capture mat)
-                            (cutter.opencv/oc-set-capture-property :pos-frames capture start-index) 
+                      (do  (cutter.opencv/oc-set-capture-property :pos-frames capture start-index) 
                           )
                       )))
                   (Thread/sleep
