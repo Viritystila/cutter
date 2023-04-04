@@ -73,12 +73,13 @@
         (if (and (not running?) (= :yes (:active @cutter.cutter/the-window-state)))
           (do
             (.open capture filename)
-            (cutter.opencv/oc-set-capture-property :pos-frames capture start-index)
+            (cutter.opencv/oc-set-capture-property :pos-frames capture (mod start-index (oc-get-capture-property :frame-count  capture)) )
             (swap! cutter.cutter/the-window-state assoc :videos
               (assoc videos
                 video-key (assoc video :running true
                   :fps (if (= -1 fps-in) (cutter.opencv/oc-get-capture-property :fps capture) fps-in)
-                  :stop-index (oc-get-capture-property :frame-count  capture) )))
+                  :stop-index (oc-get-capture-property :frame-count  capture)
+                  :start-index (mod start-index (oc-get-capture-property :frame-count  capture)) )))
             (async/thread
               (while-let/while-let [running (:running (video-key (:videos @cutter.cutter/the-window-state))) ]
                 (let [capture               (:source(video-key (:videos @cutter.cutter/the-window-state)))
