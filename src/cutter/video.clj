@@ -217,7 +217,7 @@
         mat                      (:mat (destination (:i-textures @cutter.cutter/the-window-state)))
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         maximum-buffer-length    (min length maximum-buffer-length)
-        ;;_ (println maximum-buffer-length)
+        ;_ (println maximum-buffer-length)
         texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
         running?                 false
         idx                      buffername
@@ -234,7 +234,7 @@
         start-index              (:start-index texture-array)
         start-index              (if (nil? start-index) 0 start-index)
         start-index              (if (= -1 start-frame) start-index start-frame)
-        ;;_ (println start-index)
+        ;_ (println start-index "start-index")
         stop-index               (:stop-index texture-array)
         stop-index               (if (nil? stop-index) maximum-buffer-length (min maximum-buffer-length (+ start-index stop-index)))
         ;texture-array            {:idx buffername, :destination bufdestination :source [], :running running?, :fps fps}
@@ -259,6 +259,7 @@
         h                        (nth init_image 4)
         w                        (nth init_image 5)
         c                        (nth init_image 6)
+        ;_ (println "here1")
         _                        (async/poll! req)
         req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
         req-delete-reply         (clojure.core.async/<!! req)
@@ -268,6 +269,7 @@
         req-buffers              (if is_good_dat (first orig_source_dat) nil)
         req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
         ]
+        ;;(println "here")
     (while  @(:request-buffers @the-window-state) (Thread/sleep 50))
     (println "Recording from: " filename " to " buffername)
     (set-video-paused filename)
