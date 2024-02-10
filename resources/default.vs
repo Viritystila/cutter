@@ -11,9 +11,9 @@ mat4 rotationMatrix(vec3 axis, float angle) {
 }
 
 #define PI 3.14159
-out vec2 texCoordV;
-out vec3 Normal;
-out VertexData {
+//out vec2 texCoordV_vs;
+//out vec3 Normal_vs;
+out VertexData_vs {
     vec4 vertexPosition_modelspace;
     vec3 colors_modelspace;
     vec3 index_modelspace;
@@ -37,15 +37,15 @@ VertexOut.modelPosition=modelPosition;
 VertexOut.modelRotation=modelRotation;
 
   vec4 _vertex=vertexPosition_modelspace;
-  float rad=texture2D(iChannel2, uv_modelspace).b;
+  float rad=texture(iChannel2, uv_modelspace).b;
   rad=rad;//*rad*rad;
 
 
-  texCoordV=uv_modelspace;
-  texCoordV.y=1.0- texCoordV.y;
-  VertexOut.uv_modelspace=texCoordV;
-  vec4 iChannel1_texture=texture2D(iChannel1, texCoordV);
-  Normal=normals_modelspace;
+  //texCoordV_vs=uv_modelspace;
+  //texCoordV_vs.y=1.0- texCoordV_vs.y;
+  //VertexOut.uv_modelspace=texCoordV_vs;
+  vec4 iChannel1_texture=texture(iChannel1, VertexOut.uv_modelspace);
+  //Normal_vs=normals_modelspace;
   float time = iGlobalTime + 20.0;
   float v = gl_VertexID;
   float vertex = mod(v, 8.);

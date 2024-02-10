@@ -34,7 +34,7 @@
                                :cameras        (cutter.camera/stop-camera (name x))
                                nil
                                         ;:textures       (cutter.)
-                               (Thread/sleep 50)
+                               (Thread/sleep 50 0)
                                ))
                            )
                          )) item-keys)))
@@ -541,7 +541,7 @@
     (cutter.video/stop-all-videos)
     (dab)
     (while (not (nil? (keys (:texture-arrays @the-window-state))))
-      (Thread/sleep 100))
+      (Thread/sleep 100 0))
     ;;(cutter.texturearray/stop-all-buffers)
     (cutter.cutter_helper/toggle-recording nil)
     ;;(dab)
@@ -577,7 +577,7 @@
     (cutter.cutter_helper/toggle-recording nil)
     (dab)
     (while (not (nil? (keys (:texture-arrays @the-window-state))))
-      (Thread/sleep 100))
+      (Thread/sleep 100 0))
     (start-shader-display
      mode
      shader-filename-or-str-atom
@@ -598,10 +598,10 @@
     (cutter.cutter_helper/toggle-recording nil)
     (dab)
     (while (not (nil? (keys (:texture-arrays @the-window-state))))
-      (Thread/sleep 100))
+      (Thread/sleep 100 0))
     (swap! the-window-state assoc :active :stopping)
     (while (not (inactive?))
-      (Thread/sleep 200)))
+      (Thread/sleep 200 0)))
   (remove-watch (:shader-str-atom @the-window-state) :shader-str-watch)
   (remove-watch (:vs-shader-str-atom @the-window-state) :vs-shader-str-watch)
   (cutter.shader/stop-watcher @vs-watcher-future)
@@ -617,7 +617,7 @@
   (cutter.video/stop-all-videos)
   (dab)
   (while (not (nil? (keys (:texture-arrays @the-window-state))))
-      (Thread/sleep 100))
+      (Thread/sleep 100 0))
               (refresh))
 
 
@@ -684,9 +684,9 @@
         ]
     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/reset-fs-string")
     (doseq [x split-input]  (if (not (nil? x)) (do (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/append-to-fs-string" x )
-                                                   (Thread/sleep 10))))
+                                                   (Thread/sleep 10 0))))
     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/save-fs-file" )
-    (Thread/sleep 10)
+    (Thread/sleep 10 0)
     (overtone.osc/osc-send (:osc-client @cutter.cutter/the-window-state) "/cutter/set-fs-shader" )
     ))
 

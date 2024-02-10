@@ -49,6 +49,7 @@
         capture                   (:source video)
         running?                  (:running video)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
+        _ (print "asdasd" capture)
         mat                       (:mat (destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
         index                     (if (nil? (:index video)) 0 (:index video))
         start-index               (if (nil? (:start-index video)) 0  (:start-index video))
@@ -113,7 +114,8 @@
                   (Thread/sleep
                    (cutter.general/sleepTime @startTime
                                              (System/nanoTime)
-                                             fps ))))
+                                             fps )
+                                             0)))
               (.release capture)))))
   nil)
 
@@ -129,7 +131,7 @@
         video                    (assoc video :running false)
         videos                   (assoc videos video-key video)]
     (swap! cutter.cutter/the-window-state assoc :videos videos)
-    (Thread/sleep 100)
+    (Thread/sleep 100 0)
     (.release capture))
   nil)
 
@@ -144,7 +146,8 @@
         video-key                 (keyword filename)
         video                     (video-key videos)
         source                    (:source video)
-        _ (println source)]
+        ;;_ (println source)
+        ]
         (if (= property :fps)
           (swap! cutter.cutter/the-window-state assoc :videos (assoc videos video-key (assoc video :fps val)))
           (cutter.opencv/oc-set-capture-property property source val)))
@@ -208,7 +211,7 @@
         video                    (video-key videos)
         start-video?             (or (nil? video) (not (:running video)))
         _                        (if start-video? (set-live-video filename :iChannelNull start-frame 100))
-        _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 500))
+        _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 500 0))
         videos                   (:videos @the-window-state)
         video                    (video-key videos)
         destination              (:destination video)
@@ -254,7 +257,7 @@
         t-a-index                (atom 0)
         out                      (if start-video? queue (clojure.core.async/chan (async/buffer 1)))
         _                        (if start-video? nil (clojure.core.async/tap mlt out))
-        _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 500))
+        _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 500 0))
         init_image               (async/poll! out)
         init_image               (async/<!! out)
         h                        (nth init_image 4)
@@ -271,12 +274,12 @@
         req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
         ]
         ;;(println "here")
-    (while  @(:request-buffers @the-window-state) (Thread/sleep 50))
+    (while  @(:request-buffers @the-window-state) (Thread/sleep 50 0))
     (println "Recording from: " filename " to " buffername)
     (set-video-paused filename)
     (set-video-pos filename start-frame)
     ;;(set-video-property filename :fps 1000)
-    (Thread/sleep 50)
+    (Thread/sleep 50 0)
     (set-video-play filename)
     ;;(cutter.opencv/oc-set-capture-property :fps source 1000)
         (async/thread

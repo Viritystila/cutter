@@ -278,7 +278,7 @@
     ;; if already reloading, wait for that to finish
     (while @reload-shader
       ;; FIXME this can hang.  We should timeout instead
-      (Thread/sleep 100))
+      (Thread/sleep 100 0))
     (reset! reload-shader-str new)
     (reset! reload-shader true)))
 
@@ -290,7 +290,7 @@
     ;; if already reloading, wait for that to finish
     (while @vs-reload-shader
       ;; FIXME this can hang.  We should timeout instead
-      (Thread/sleep 100))
+      (Thread/sleep 100 0))
     (reset! vs-reload-shader-str new)
     (reset! vs-reload-shader true)))
 
@@ -301,7 +301,7 @@
     ;; if already reloading, wait for that to finish
     (while @gs-reload-shader
       ;; FIXME this can hang.  We should timeout instead
-      (Thread/sleep 100))
+      (Thread/sleep 100 0))
     (reset! gs-reload-shader-str new)
     (reset! gs-reload-shader true)))
 

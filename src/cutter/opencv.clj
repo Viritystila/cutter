@@ -35,6 +35,7 @@
 (defn buffer-from-mat-address [mat]
   (let [address     (.getDeclaredField java.nio.Buffer "address")
         capacity    (.getDeclaredField java.nio.Buffer "capacity")
+        ;;_ (println "asdasdasdasdasd"address)
         _           (.setAccessible address true)
         _           (.setAccessible capacity true)
         bb          (java.nio.ByteBuffer/allocateDirect 0)
@@ -174,7 +175,7 @@
 
 (defn oc-query-frame [capture buffer]
   (let [flag (.read capture buffer)]
-    (if (= flag true) nil (Thread/sleep 100))
+    (if (= flag true) nil (Thread/sleep 100 0))
     buffer))
 
                                         ;(read-string (str (last "/dev/video0")))

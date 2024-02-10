@@ -3,7 +3,7 @@
 
   ;; per-os jvm-opts code cribbed from Overtone
   (def JVM-OPTS
-    {:common   []
+    {:common   ["--add-opens"   "java.base/java.nio=ALL-UNNAMED"]
      :macosx   ["-XstartOnFirstThread" "-Djava.awt.headless=true"]
      :linux    []
      :windows  []})
@@ -14,7 +14,7 @@
          (vec (set (concat (get JVM-OPTS :common)
                            (get JVM-OPTS os))))))
   (def LWJGL_NS "org.lwjgl")
-  (def LWJGL_VERSION "3.2.3")
+  (def LWJGL_VERSION "3.3.3")
   ;; Edit this to add/remove packages.
   (def LWJGL_MODULES ["lwjgl"
                       "lwjgl-glfw"
@@ -44,9 +44,9 @@
                   [while-let "0.2.0"]
                   [org.clojure/math.numeric-tower "0.0.4"]
                   [watchtower          "0.1.1"]
-                  [org.viritystila/opencv "4.7.0-linux"]
-                  [org.viritystila/opencv-native "4.7.0-linux"]
-                  [org.bytedeco/javacpp "1.4.5-SNAPSHOT"]
+                  [org.viritystila/opencv "4.8.0-linux"]
+                  [org.viritystila/opencv-native "4.8.0-linux"]
+                  [org.bytedeco/javacpp "1.5.9"]
                   [org.viritystila/v4l2 "1.0-linux"]
                   [org.viritystila/v4l2-platform "1.0-linux"]
                   [org.viritystila/v4l2-native "1.0-linux"]
