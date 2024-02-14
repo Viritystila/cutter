@@ -3,7 +3,28 @@
 
   ;; per-os jvm-opts code cribbed from Overtone
   (def JVM-OPTS
-    {:common   ["--add-opens"   "java.base/java.nio=ALL-UNNAMED"]
+    {:any
+     ["-Xms512m" "-Xmx1g"                 ; Minimum and maximum sizes of the heap
+      "-XX:MaxGCPauseMillis=20"           ; Specify a target of 20ms for max gc pauses
+      "-XX:MaxNewSize=257m"               ; Specify the max and min size of the new
+      "-XX:NewSize=256m"                  ;  generation to be small
+      "-XX:+UseTLAB"                      ; Uses thread-local object allocation blocks. This
+                                             ;  improves concurrency by reducing contention on
+                                             ;  the shared heap lock.
+      "-XX:MaxTenuringThreshold=0"]       ; Makes the full NewSize available to every NewGC
+                                             ;  cycle, and reduces the pause time by not
+                                             ;  evaluating tenured objects. Technically, this
+                                             ;  setting promotes all live objects to the older
+                                             ;  generation, rather than copying them.
+     :disabled
+     ["-XX:ConcGCThreads=2"               ; Use 2 threads with concurrent gc collections
+      "-XX:TieredCompilation"             ; JVM7 - combine both client and server compilation
+                                             ;  strategies
+      "-XX:CompileThreshold=1"            ; JIT each function after one execution
+      "-XX:+PrintGC"                      ; Print GC info to stdout
+      "-XX:+PrintGCDetails"               ;  - with details
+      "-XX:+PrintGCTimeStamps"]
+     :common   ["--add-opens=java.base/java.nio=ALL-UNNAMED"]
      :macosx   ["-XstartOnFirstThread" "-Djava.awt.headless=true"]
      :linux    []
      :windows  []})
@@ -11,8 +32,9 @@
   (defn jvm-opts
     "Return a complete vector of jvm-opts for the current os."
     [] (let [os (leiningen.core.eval/get-os)]
-         (vec (set (concat (get JVM-OPTS :common)
-                           (get JVM-OPTS os))))))
+         (vec (set (concat (get JVM-OPTS :any)
+                    (get JVM-OPTS :common)
+                    (get JVM-OPTS os))))))
   (def LWJGL_NS "org.lwjgl")
   (def LWJGL_VERSION "3.3.3")
   ;; Edit this to add/remove packages.
@@ -53,7 +75,9 @@
                   ;[overtone/osc-clj "0.7.1"]
                   ;;[org.freedesktop.gstreamer/gst1-java-core "1.4.0"]
                   ;;[net.java.dev.jna/jna-platform "5.12.1"]
-                  [overtone "0.10.6"]]
+                  [overtone-javacpp            "0.11.0"]
+                  ;;[overtone "0.10.6"]
+                  ]
   (lwjgl-deps-with-natives)))
 
 
@@ -67,6 +91,7 @@
                   ["Viritystila v4l2javacpp" "https://github.com/Viritystila/v4l2javacpp/raw/master"]]
     :dependencies ~all-dependencies
     ;:java-source-paths ["src/java"]
+    :native-path "native"
     :resource-paths ["resources"]
     :main ^{:skip-aot true} cutter.core
     :jvm-opts ^:replace ~(jvm-opts)

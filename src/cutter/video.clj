@@ -49,7 +49,7 @@
         capture                   (:source video)
         running?                  (:running video)
         capture                   (if (= nil capture ) (new org.opencv.videoio.VideoCapture) capture)
-        _ (print "asdasd" capture)
+        ;_ (print "asdasd" capture)
         mat                       (:mat (destination-texture-key (:i-textures @cutter.cutter/the-window-state)))
         index                     (if (nil? (:index video)) 0 (:index video))
         start-index               (if (nil? (:start-index video)) 0  (:start-index video))
@@ -210,7 +210,7 @@
         video-key                (keyword filename)
         video                    (video-key videos)
         start-video?             (or (nil? video) (not (:running video)))
-        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 100))
+        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 1000))
         _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 500 0))
         videos                   (:videos @the-window-state)
         video                    (video-key videos)
@@ -315,11 +315,11 @@
                                :destination bufdestination
                                :source @image-buffer
                                :running running?
-                               :fps fps ;;(cutter.opencv/oc-get-capture-property :fps source)
+                               :fps 25;;(cutter.opencv/oc-get-capture-property :fps source)
                                :index 0
                                :mode mode
                                :loop loop?
                                :start-index 1
-                               :stop-index maximum-buffer-length
+                               :stop-index @t-a-index ;;maximum-buffer-length
                                :pbo_ids  @pbo_ids)))
           (println "Finished recording from:" filename "to" buffername))))
