@@ -50,7 +50,7 @@ void main(void) {
   vec3 norm=normalize(Normal);
   vec2 uv = (gl_FragCoord.xy / iResolution.xy);
   uv.y=-1.0-uv.y;
-  vec4 iChannel1_texture=texture(iChannel1, texCoordV);
+  vec4 iChannel1_texture=texture(iChannel1, uv);
   iChannel1_texture.a=0.001;
   vec4 iChannel2_texture=texture(iChannel2, texCoordV);
   vec4 iChannel2_texture_inv=texture(iChannel2, texCoordV);

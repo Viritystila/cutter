@@ -21,7 +21,7 @@
         running-keys             (into {} (map (fn [x]  {x (:running (x item))}) item-keys))
         destination-keys         (into {} (map (fn [x]  {x (:destination (x item))}) item-keys))]
    (if true
-      (do ;(println "stop item running on " destination-texture-key)
+      (do ;println "stop item running on " destination-texture-key)
           (mapv (fn [x] (let [running (x running-keys)
                              right-channel (= destination-texture-key (:destination (x item)))]
                          ;(println x running right-channel (name x))

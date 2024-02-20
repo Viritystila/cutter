@@ -60,7 +60,7 @@
       (do (println "Stop recording")
           (reset! (:save-frames @the-window-state) false )
           (closeV4L2output)
-          (Thread/sleep 100)))))
+          (Thread/sleep 100 0)))))
 
 ;;;;;;;;;;;;;;;
 ;;Data array;;;

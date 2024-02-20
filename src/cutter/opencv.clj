@@ -163,6 +163,7 @@
       :contrast               (.get capture org.opencv.videoio.Videoio/CAP_PROP_CONTRAST)
       :saturation             (.get capture org.opencv.videoio.Videoio/CAP_PROP_SATURATION)
       :hue                    (.get capture org.opencv.videoio.Videoio/CAP_PROP_HUE)
+      :channels               (.get capture org.opencv.videoio.Videoio/CAP_PROP_VIDEO_TOTAL_CHANNELS)
       :default (throw (Exception. "Unknown Property.")))))
 
 (defn oc-open-camera-device [camera-device]

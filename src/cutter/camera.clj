@@ -88,7 +88,8 @@
               (Thread/sleep
                (cutter.general/sleepTime @startTime
                                          (System/nanoTime)
-                                         (max 1 fps) ))))
+                                         (max 1 fps) )
+                                         0)))
           (.release capture))))
     nil))
 
@@ -102,7 +103,7 @@
         cameras                  (assoc cameras camera-key camera)]
     (swap! cutter.cutter/the-window-state assoc :cameras cameras)
     (println "Stopping camera " device)
-    (Thread/sleep 500)
+    (Thread/sleep 500 0)
     ;(.release capture)
     )
   nil)
@@ -119,7 +120,7 @@
         camera                   (camera-key cameras)
         start-camera?            (or (nil? camera) (not (:running camera)))
         _                        (if start-camera? (set-live-camera-texture (str device-id) :iChannelNull)  )
-        _ (Thread/sleep 500)
+        _ (Thread/sleep 500 0)
         cameras                  (:cameras @the-window-state)
         camera                   (camera-key cameras)
         destination              (:destination camera)
@@ -167,7 +168,7 @@
         t-a-index                (atom 0)
         out                      (if start-camera? queue (clojure.core.async/chan (async/buffer 1)))
         _                        (if start-camera? nil (clojure.core.async/tap mlt out))
-        _                        (while (not  (:running (camera-key (:cameras @cutter.cutter/the-window-state)))) (Thread/sleep 500))
+        _                        (while (not  (:running (camera-key (:cameras @cutter.cutter/the-window-state)))) (Thread/sleep 500 0))
         init_image               (async/poll! out)
         init_image               (async/<!! out)
         h                        (nth init_image 4)
@@ -181,7 +182,7 @@
         is_good_dat              (vector? orig_source_dat)
         req-buffers              (if is_good_dat (first orig_source_dat) nil)
         req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)]
-     (while  @(:request-buffers @the-window-state) (Thread/sleep 500))
+     (while  @(:request-buffers @the-window-state) (Thread/sleep 500 0))
      (println "Recording from: " device " to " buffername)
      (async/thread
        ( while (and (.isOpened source) (< @t-a-index maximum-buffer-length)  is_good_dat )

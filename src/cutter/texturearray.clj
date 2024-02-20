@@ -100,7 +100,7 @@
                                                               :stop-index stop-index
                                                               :source source
                                                               :pbo_ids pbo_ids)))
-                      (Thread/sleep (cutter.general/sleepTime @startTime (System/nanoTime) fps) 0)))))))))
+                      (Thread/sleep (cutter.general/sleepTime @startTime (System/nanoTime) 25) 0)))))))))
 
 
 

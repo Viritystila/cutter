@@ -203,14 +203,70 @@
           fps
           (cutter.opencv/oc-get-capture-property property source))))
 
+(defn cut-video_2 [filename buffername start-frame length]
+  "A faster and a more realiable way of creating buffered videos"
+  (let [filename                 filename
+        capture                  (new org.opencv.videoio.VideoCapture)
+        captureok                (.open capture filename)
+        vfps                     (cutter.opencv/oc-get-capture-property :fps capture)
+        vlength                  (cutter.opencv/oc-get-capture-property :frame-count  capture)
+        texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        _                        (min length vlength)
+        buffername-key           (keyword buffername)
+        mat                      (oc-new-mat)
+        ;; Capture a fram to get the proper proerties
+        _                        (cutter.opencv/oc-query-frame capture mat) 
+        matinfo                  (matInfo mat)
+        height                   (nth matinfo 4)
+        width                    (nth matinfo 5)
+        channels                 (nth matinfo 6)
+        maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
+        maximum-buffer-length    (min length maximum-buffer-length)
+                ;_ (println maximum-buffer-length)
+        texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
+        bufdestination           (:destination texture-array)
+        bufdestination           (if (nil? bufdestination) :iChannelNull bufdestination)
+        running?                 (:running texture-array)
+        running?                 (if (nil? running?) false running?)
+        mode                     (:mode texture-array)
+        mode                     (if (nil? mode) :fw mode)
+        loop?                    (:loop texture-array)
+        loop?                    (if (nil? loop?) true loop?)
+        fps                      (:fps texture-array)
+        fps                      (if (nil? fps) vfps fps)
+        start-index              (:start-index texture-array)
+        start-index              (if (nil? start-index) 0 start-index)
+        start-index              (if (= -1 start-frame) start-index start-frame)
+        stop-index               (:stop-index texture-array) 
+        old-pbo-ids              (:pbo_ids texture-array)
+        old-pbo-ids              (if (nil? old-pbo-ids) [] old-pbo-ids)
+        stop-index               (if (nil? stop-index) maximum-buffer-length (min maximum-buffer-length (+ start-index stop-index)))
+        req                      (async/chan (async/buffer 1))
+        image-buffer             (atom [])
+        pbo_ids                  (atom [])
+        rejected-buffers         (atom [])
+        rejected-pbos            (atom [])
+        t-a-index                (atom 0)
+        destination              :null
+        ;req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
+        ;req-delete-reply         (clojure.core.async/<!! req)
+        ;req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data [[width height channels maximum-buffer-length]]})
+        ;orig_source_dat          (clojure.core.async/<!! req)
+        ;is_good_dat              (vector? orig_source_dat)
+        ;req-buffers              (if is_good_dat (first orig_source_dat) nil)
+        ;req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
+        ]
+        (println matinfo)))
+
+
 (defn cut-video [filename buffername start-frame length]
-  "Cut a segment from a video with a length of :maximum-buffer-length startin from start-frame. If thr video is already running, the recording is from the running video"
+  "Cut a segment from a video with a length of :maximum-buffer-length startin from start-frame. If the video is already running, the recording is from the running video"
   (let [device-id                filename
         videos                   (:videos @the-window-state)
         video-key                (keyword filename)
         video                    (video-key videos)
         start-video?             (or (nil? video) (not (:running video)))
-        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 1000))
+        _                        (if start-video? (set-live-video filename :iChannelNull start-frame 500))
         _                        (while (not  (:running (video-key (:videos @cutter.cutter/the-window-state)))) (Thread/sleep 500 0))
         videos                   (:videos @the-window-state)
         video                    (video-key videos)
@@ -284,7 +340,7 @@
     ;;(cutter.opencv/oc-set-capture-property :fps source 1000)
         (async/thread
           (while (and (.isOpened source) (< @t-a-index maximum-buffer-length) is_good_dat )
-            (let [fps                 (cutter.opencv/oc-get-capture-property :fps source)
+            (let [;;fps                 (cutter.opencv/oc-get-capture-property :fps source)
                   ;;_ (println fps)
                   dest-buffer         (nth req-buffers @t-a-index)
                   pbo_id              (nth req-pbo_ids @t-a-index)
@@ -323,3 +379,11 @@
                                :stop-index @t-a-index ;;maximum-buffer-length
                                :pbo_ids  @pbo_ids)))
           (println "Finished recording from:" filename "to" buffername))))
+
+
+(defn get-buffer-prop [buffername prop]
+  (let [texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
+        buffername-key           (keyword buffername)
+        texture-array            (buffername-key texture-arrays)]
+    (println (keys texture-array))
+    (prop texture-array)))

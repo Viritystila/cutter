@@ -856,7 +856,7 @@
   (when (active?)
     (swap! the-window-state assoc :active :stopping)
     (while (not (inactive?))
-      (Thread/sleep 200)))
+      (Thread/sleep 200 0)))
   (remove-watch (:shader-str-atom @the-window-state) :shader-str-watch)
   (remove-watch (:vs-shader-str-atom @the-window-state) :vs-shader-str-watch)
   (remove-watch (:gs-shader-str-atom @the-window-state) :gs-shader-str-watch)
