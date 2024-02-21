@@ -828,7 +828,8 @@
             channels     (:channels req-type)
             maxl         (:maxl req-type) ]
         (while-let.core/while-let  [r-req (async/poll!  (:request-queue @locals))]
-          (let [reply-queue      (:req ((:destination r-req) (:i-textures @locals)))]
+          (let [reply-queue      (:req ((:destination r-req) (:i-textures @locals)))
+                reply-queue      (if (nil? reply-queue) (:reply-queue r-req))]
             (request-handler r-req reply-queue locals)
             )))
       (swap! (:current-frame @locals) inc)

@@ -203,7 +203,7 @@
           fps
           (cutter.opencv/oc-get-capture-property property source))))
 
-(defn cut-video_2 [filename buffername start-frame length]
+(defn cut-video [filename buffername start-frame length]
   "A faster and a more realiable way of creating buffered videos"
   (let [filename                 filename
         capture                  (new org.opencv.videoio.VideoCapture)
@@ -211,7 +211,7 @@
         vfps                     (cutter.opencv/oc-get-capture-property :fps capture)
         vlength                  (cutter.opencv/oc-get-capture-property :frame-count  capture)
         texture-arrays           (:texture-arrays @cutter.cutter/the-window-state)
-        _                        (min length vlength)
+        length                   (min length vlength)
         buffername-key           (keyword buffername)
         mat                      (oc-new-mat)
         ;; Capture a fram to get the proper proerties
@@ -222,7 +222,6 @@
         channels                 (nth matinfo 6)
         maximum-buffer-length    (:maximum-buffer-length @cutter.cutter/the-window-state)
         maximum-buffer-length    (min length maximum-buffer-length)
-                ;_ (println maximum-buffer-length)
         texture-array            (buffername-key  (:texture-arrays @cutter.cutter/the-window-state))
         bufdestination           (:destination texture-array)
         bufdestination           (if (nil? bufdestination) :iChannelNull bufdestination)
@@ -234,13 +233,16 @@
         loop?                    (if (nil? loop?) true loop?)
         fps                      (:fps texture-array)
         fps                      (if (nil? fps) vfps fps)
-        start-index              (:start-index texture-array)
-        start-index              (if (nil? start-index) 0 start-index)
-        start-index              (if (= -1 start-frame) start-index start-frame)
-        stop-index               (:stop-index texture-array) 
+        ;start-index              (:start-index texture-array)
+        ;start-index              (if (nil? start-index) 0 start-index)
+        start-index              (if (= -1 start-frame) 0 start-frame)
+        ;;stop-index               (:stop-index texture-array) 
         old-pbo-ids              (:pbo_ids texture-array)
         old-pbo-ids              (if (nil? old-pbo-ids) [] old-pbo-ids)
-        stop-index               (if (nil? stop-index) maximum-buffer-length (min maximum-buffer-length (+ start-index stop-index)))
+        stop-index               (+ length start-index)  
+        ;start-index              (mod start-index stop-index)
+        ;;maximum-buffer-length    (Math/abs (- stop-index start-index))
+        _                        (println length maximum-buffer-length start-index stop-index)
         req                      (async/chan (async/buffer 1))
         image-buffer             (atom [])
         pbo_ids                  (atom [])
@@ -248,18 +250,60 @@
         rejected-pbos            (atom [])
         t-a-index                (atom 0)
         destination              :null
-        ;req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids})
-        ;req-delete-reply         (clojure.core.async/<!! req)
-        ;req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data [[width height channels maximum-buffer-length]]})
-        ;orig_source_dat          (clojure.core.async/<!! req)
-        ;is_good_dat              (vector? orig_source_dat)
-        ;req-buffers              (if is_good_dat (first orig_source_dat) nil)
-        ;req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
+        req-delete               (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data old-pbo-ids :reply-queue req} )
+        req-delete-reply         (clojure.core.async/<!! req)
+        req-input                (clojure.core.async/>!! (:request-queue @the-window-state) {:type :new :destination destination :buf-name buffername-key :data [[width height channels maximum-buffer-length]] :reply-queue req})
+        orig_source_dat          (clojure.core.async/<!! req)
+        is_good_dat              (vector? orig_source_dat)
+        req-buffers              (if is_good_dat (first orig_source_dat) nil)
+        req-pbo_ids              (if is_good_dat (last orig_source_dat) nil)
         ]
-        (println matinfo)))
+        (cutter.opencv/oc-set-capture-property :pos-frames capture (mod start-index vlength))
+        (async/thread
+          (while (and (.isOpened capture) (< @t-a-index maximum-buffer-length) is_good_dat)
+            (let [;;fps                 (cutter.opencv/oc-get-capture-property :fps source)
+                          ;;_ (println fps)
+                  dest-buffer         (nth req-buffers @t-a-index)
+                  pbo_id              (nth req-pbo_ids @t-a-index)
+                  _                   (cutter.opencv/oc-query-frame capture mat) 
+                  image               (matInfo mat)
+                  h                   (nth image 4)
+                  w                   (nth image 5)
+                  ib                  (nth image 6)
+                  buffer_i            (nth image 0)
+                  copybuf             (oc-mat-to-bytebuffer mat)
+                  buffer-capacity     (.capacity copybuf)
+                  dest-capacity       (.capacity dest-buffer)
+                          ;;_ (println "sad" @pbo_ids)
+                  _                   (if (= buffer-capacity dest-capacity)
+                                        (do (let [image           (assoc image 9 pbo_id)
+                                                  _               (swap! pbo_ids conj pbo_id)
+                                                  _               (swap! image-buffer conj (assoc image 0  (.flip (.put dest-buffer copybuf))))]))
+                                        (do (swap! rejected-pbos conj pbo_id)
+                                            (swap! rejected-buffers conj dest-buffer)))])
+            (swap! t-a-index inc))
+                  ;;(println "Rejected" rejected-pbos rejected-buffers)
+          (clojure.core.async/>!! (:request-queue @the-window-state) {:type :del :destination destination :buf-name buffername-key :data @rejected-pbos  :reply-queue req})
+          (.release capture)
+          (swap! cutter.cutter/the-window-state assoc :texture-arrays
+                 (assoc texture-arrays buffername-key
+                        (assoc texture-array :idx buffername
+                               :destination bufdestination
+                               :source @image-buffer
+                               :running running?
+                               :fps 25;;(cutter.opencv/oc-get-capture-property :fps source)
+                               :index 0
+                               :mode mode
+                               :loop loop?
+                               :start-index 1
+                               :stop-index @t-a-index ;;maximum-buffer-length
+                               :pbo_ids  @pbo_ids)))
+          (println "Finished recording from:" filename "to" buffername))
+        ;(println matinfo)
+        ))
 
 
-(defn cut-video [filename buffername start-frame length]
+(defn cut-video_old [filename buffername start-frame length]
   "Cut a segment from a video with a length of :maximum-buffer-length startin from start-frame. If the video is already running, the recording is from the running video"
   (let [device-id                filename
         videos                   (:videos @the-window-state)
